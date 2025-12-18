@@ -43,13 +43,12 @@ export const Survey = () => {
         </View>
         <Text>anonymous_answer</Text>
         <Text>choose_one</Text>
-
         {state.hasAnsweredAll ? (
           <Text style={styles.thanks} status={'danger'}>
             thank_you_msg
           </Text>
         ) : state.consented ? (
-          <>
+          <View style={{ minHeight: 150 }}>
             <Text
               style={[styles.question, { color: palette.secondary.text }]}
               enableTranslate={false}
@@ -57,7 +56,7 @@ export const Survey = () => {
               {question}
             </Text>
             <SurveyCollect />
-          </>
+          </View>
         ) : (
           <>
             <Text style={[styles.question, { color: palette.secondary.text }]}>
@@ -87,16 +86,24 @@ export const Survey = () => {
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    paddingVertical: 12,
+    height: 'auto',
+  },
+  container: {
+    alignItems: 'flex-start',
+  },
   page: {
     borderRadius: 20,
     width: '100%',
-    flex: 1,
+    // flex: 1,
     marginBottom: 80, // Same as Swiper footer
     maxWidth: 800,
+    // height: '100%',
   },
   body: {
     width: '100%',
-    flex: 1,
+    // flex: 1,
     marginBottom: 'auto',
     padding: 24,
   },

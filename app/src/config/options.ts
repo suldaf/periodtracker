@@ -24,6 +24,11 @@ export const questionOptions = secretQuestions.map((item) => ({
 }))
 
 export const defaultEmoji = '💁‍♀️'
+export const genders = [
+  { value: 'Male', label: 'Male', iconName: 'male' },
+  { value: 'Female', label: 'Female', iconName: 'female' },
+  { value: 'Other', label: 'Other', iconName: 'genderless' },
+]
 
 const reasons = [
   // "reason",

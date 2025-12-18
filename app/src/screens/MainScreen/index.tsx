@@ -99,6 +99,7 @@ const MainScreenInner: ScreenComponent<'Home'> = ({ navigation, route }) => {
   const carouselHidden = state.isPlaying && !['track', 'summary', 'stars'].includes(step ?? '')
 
   const goToCalendar = () => navigation.navigate('Calendar')
+  const goToLudo = () => navigation.navigate('Ludo')
   const handleDayModalResponse = async (isPeriodDay: boolean, periodDate: string) => {
     // Generate latest ML-based predictions
     const predictedPeriodDates = generatePeriodDates(predictionFullState)
@@ -164,7 +165,7 @@ const MainScreenInner: ScreenComponent<'Home'> = ({ navigation, route }) => {
       console.error('Error updating period dates:', error)
     }
   }
-  
+
   return (
     <>
       <View style={styles.screen}>
@@ -175,6 +176,9 @@ const MainScreenInner: ScreenComponent<'Home'> = ({ navigation, route }) => {
               <Text>calendar</Text>
             </TouchableOpacity>
             <Avatar style={avatarHidden && styles.hidden} />
+            <TouchableOpacity onPress={goToLudo} style={circleProgressHidden && styles.hidden}>
+              <Text>Ludo</Text>
+            </TouchableOpacity>
           </View>
 
           <View
@@ -202,7 +206,6 @@ const MainScreenInner: ScreenComponent<'Home'> = ({ navigation, route }) => {
             data={selectedItem}
             hideLaunchButton={false}
             onHandleResponse={handleDayModalResponse} // Pass the method as a prop
-
           />
         </View>
       )}

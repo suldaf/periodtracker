@@ -6,8 +6,9 @@ import { getSurveyQuestionOptions, useSurvey } from './SurveyContext'
 export const SurveyCollect = () => {
   const { state, dispatch } = useSurvey()
 
-  const onCheckboxPress = (value: number) => {
+  const onCheckboxPress = (value: number, text: string) => {
     dispatch({ type: 'answerIndex', value })
+    dispatch({ type: 'answerDraft', value: text })
   }
 
   const setAnswerDraft = (value: string) => {
@@ -31,7 +32,7 @@ export const SurveyCollect = () => {
           {options.map((option, i) => {
             const checked = state.answerIndex === i
             const onPress = () => {
-              onCheckboxPress(i)
+              onCheckboxPress(i, option)
             }
 
             return (

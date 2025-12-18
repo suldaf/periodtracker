@@ -2,6 +2,8 @@ import React from 'react'
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
 import { Button, ButtonProps } from './Button'
 import { Text } from './Text'
+import { useSelector } from 'react-redux'
+import { currentLocaleSelector } from '../redux/selectors'
 
 export type BadgeSize = 'tiny' | 'small' | 'medium' | 'large'
 
@@ -29,6 +31,7 @@ export const EmojiBadge = ({
   enableTranslate = false,
 }: EmojiBadgeProps) => {
   const dimensions = sizes[size]
+  const locale = useSelector(currentLocaleSelector)
 
   return (
     <View style={[styles.container, { width: dimensions.container }, style]}>
@@ -50,7 +53,10 @@ export const EmojiBadge = ({
           </Text>
         )}
       </Button>
-      <Text enableTranslate={enableTranslate} style={[styles.text, { fontSize: dimensions.text }]}>
+      <Text
+        enableTranslate={enableTranslate}
+        style={[styles.text, { fontSize: locale == 'id' ? 7.5 : dimensions.text }]}
+      >
         {text}
       </Text>
     </View>

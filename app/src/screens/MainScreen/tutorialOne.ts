@@ -58,17 +58,23 @@ export const getTutorialOneConfig = ({
     },
     center_card: {
       rotationAngle: 180,
+      // translationX: (topLeftLayout?.width ?? 0) - 60,
       translationX: (topLeftLayout?.width ?? 0) + WheelButtonSize,
       translationY: (wheelLayout?.height ?? 0) / 2 - 30, // arrow height
-      title: 'tutorial_2_content',
-      text: 'tutorial_2',
+      // title: 'tutorial_2_content',
+      // text: 'tutorial_2',
+      title: 'tutorial_3_content',
+      text: 'tutorial_3',
     },
     wheel_button: {
       rotationAngle: 180,
+      // translationX: (topLeftLayout?.width ?? 0) + WheelButtonSize,
       translationX: (topLeftLayout?.width ?? 0) - 60,
       translationY: (wheelLayout?.height ?? 0) / 2 - 30, // arrow height
-      title: 'tutorial_3_content',
-      text: 'tutorial_3',
+      title: 'tutorial_2_content',
+      text: 'tutorial_2',
+      // title: 'tutorial_3_content',
+      // text: 'tutorial_3',
     },
     colors: {
       rotationAngle: 90,

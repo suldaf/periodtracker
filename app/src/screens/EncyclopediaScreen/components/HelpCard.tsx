@@ -3,12 +3,13 @@ import { Image, StyleSheet, TouchableOpacity, TouchableOpacityProps } from 'reac
 import { Text } from '../../../components/Text'
 import { getAsset } from '../../../services/asset'
 import { useSelector } from 'react-redux'
-import { currentAvatarSelector } from '../../../redux/selectors'
+import { currentAvatarSelector, currentLocaleSelector } from '../../../redux/selectors'
 import { useColor } from '../../../hooks/useColor'
 
 export const HelpCard = ({ ...props }: TouchableOpacityProps) => {
   const selectedAvatar = useSelector(currentAvatarSelector)
   const { palette } = useColor()
+  const locale = useSelector(currentLocaleSelector)
 
   return (
     <TouchableOpacity style={styles.helpCard} {...props}>
@@ -17,7 +18,11 @@ export const HelpCard = ({ ...props }: TouchableOpacityProps) => {
         source={getAsset(`avatars.${selectedAvatar}.stationary_colour`)}
         style={styles.image}
       />
-      <Text style={[styles.text, { color: palette.secondary.text }]}>find help</Text>
+      <Text
+        style={[styles.text, { color: palette.secondary.text, fontSize: locale == 'id' ? 14 : 20 }]}
+      >
+        find help
+      </Text>
     </TouchableOpacity>
   )
 }

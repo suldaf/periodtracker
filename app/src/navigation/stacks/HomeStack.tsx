@@ -5,6 +5,8 @@ import DayScreen from '../../screens/DayScreen'
 import CalendarScreen from '../../screens/CalendarScreen'
 import moment from 'moment'
 import { Tutorial } from '../../screens/MainScreen/TutorialContext'
+import LudoScreen from '../../screens/LudoScreen'
+import LudoScreenL5 from '../../screens/LudoScreen/index copy'
 
 export type HomeStackParamList = {
   Home: {
@@ -14,6 +16,7 @@ export type HomeStackParamList = {
   Day: {
     date: moment.Moment
   }
+  Ludo: undefined
 }
 
 const config: StackConfig<keyof HomeStackParamList> = {
@@ -30,6 +33,10 @@ const config: StackConfig<keyof HomeStackParamList> = {
     Calendar: {
       title: 'calendar',
       component: CalendarScreen,
+    },
+    Ludo: {
+      title: 'ludo',
+      component: LudoScreenL5,
     },
   },
 }

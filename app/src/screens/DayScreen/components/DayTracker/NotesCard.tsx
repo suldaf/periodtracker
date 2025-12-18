@@ -11,6 +11,7 @@ import { answerNotesCard } from '../../../../redux/actions'
 import { useTranslate } from '../../../../hooks/useTranslate'
 import { useLoading } from '../../../../contexts/LoadingProvider'
 import { useColor } from '../../../../hooks/useColor'
+import { IS_IOS } from '../../../../services/device'
 
 export const NotesCard = ({ dataEntry, goBack }: { dataEntry?: DayData; goBack?: () => void }) => {
   const translate = useTranslate()
@@ -53,7 +54,10 @@ export const NotesCard = ({ dataEntry, goBack }: { dataEntry?: DayData; goBack?:
   }
 
   return (
-    <KeyboardAvoidingView style={[styles.container, { backgroundColor }]}>
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor }]}
+      behavior={IS_IOS ? 'padding' : 'height'}
+    >
       <View style={styles.page}>
         <Input value={title} onChangeText={setTitle} placeholder="title" />
         <Input
@@ -77,6 +81,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 800,
     borderRadius: 20,
+    maxHeight: IS_IOS ? 300 : 350,
   },
   page: {
     flex: 1,

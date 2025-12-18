@@ -1,4 +1,5 @@
 import { BadgeSize } from '../components/EmojiBadge'
+import { IS_IOS } from '../services/device'
 
 export type BreakPointSize = 's' | 'm' // | 'l' | 'xl'
 
@@ -50,7 +51,8 @@ export const responsiveConfig: Record<BreakPointSize, UIConfig> = {
     centerCard: {
       width: 100,
       numberFontSize: 26,
-      textFontSize: 12,
+      // textFontSize: 12,
+      textFontSize: IS_IOS ? 10 : 12,
     },
     tutorial: {
       paddingTop: 12,
@@ -83,7 +85,8 @@ export const responsiveConfig: Record<BreakPointSize, UIConfig> = {
     centerCard: {
       width: 120,
       numberFontSize: 36,
-      textFontSize: 14,
+      // textFontSize: 14,
+      textFontSize: IS_IOS ? 12 : 14,
     },
     tutorial: {
       paddingTop: 120,
