@@ -26,6 +26,9 @@ export class Article {
   @Column()
   lang: string
 
+  @Column({ nullable: true })
+  ageCategoryId: string
+
   @Column({ default: 0 })
   contentFilter: number
 

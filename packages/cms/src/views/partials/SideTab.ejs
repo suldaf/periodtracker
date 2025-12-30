@@ -4,8 +4,67 @@
 <a href="/data"><h6><%= __('Data Management')%></h6></a>    
 <a href="/avatar-message-management"><h6><%= __('Avatar Messages')%></h6></a>    
 <a href="/didyouknow-management"><h6><%= __('Did you knows')%></h6></a>
-<a href="/encyclopedia"><h6><%= __('Encyclopedia')%></h6></a>
+
+<!-- Encyclopedia with submenu -->
+<div class="menu-section">
+  <div class="menu-title" onclick="toggleSubmenu(this)">
+    <h6><%= __('Encyclopedia')%></h6>
+    <i class="fas fa-chevron-down submenu-icon"></i>
+  </div>
+  <div class="submenu">
+    <a href="/encyclopedia"><h6 class="submenu-item"><%= __('Articles')%></h6></a>
+    <a href="/video-management"><h6 class="submenu-item"><%= __('Videos')%></h6></a>
+  </div>
+</div>
+
+<!-- Category Management with submenu -->
+<div class="menu-section">
+  <div class="menu-title" onclick="toggleSubmenu(this)">
+    <h6><%= __('Category Management')%></h6>
+    <i class="fas fa-chevron-down submenu-icon"></i>
+  </div>
+  <div class="submenu">
+    <a href="/categories-management"><h6 class="submenu-item"><%= __('Categories')%></h6></a>
+    <a href="/age-categories-management"><h6 class="submenu-item"><%= __('Age Categories')%></h6></a>
+  </div>
+</div>
+
 <a href="/help-center-management"><h6><%= __('Help centers')%></h6></a>
+
+<script>
+function toggleSubmenu(element) {
+  const menuSection = element.parentElement;
+  const submenu = menuSection.querySelector('.submenu');
+  const icon = element.querySelector('.submenu-icon');
+  
+  if (submenu.style.maxHeight && submenu.style.maxHeight !== '0px') {
+    submenu.style.maxHeight = '0px';
+    icon.style.transform = 'rotate(0deg)';
+  } else {
+    submenu.style.maxHeight = submenu.scrollHeight + 'px';
+    icon.style.transform = 'rotate(180deg)';
+  }
+}
+
+// Auto-expand active menu
+document.addEventListener('DOMContentLoaded', function() {
+  const currentPath = window.location.pathname;
+  const menuSections = document.querySelectorAll('.menu-section');
+  
+  menuSections.forEach(section => {
+    const links = section.querySelectorAll('.submenu a');
+    links.forEach(link => {
+      if (link.getAttribute('href') === currentPath) {
+        const submenu = section.querySelector('.submenu');
+        const menuTitle = section.querySelector('.menu-title');
+        const icon = menuTitle.querySelector('.submenu-icon');
+        submenu.style.maxHeight = submenu.scrollHeight + 'px';
+        icon.style.transform = 'rotate(180deg)';
+      }
+    });
+  });
+});
+</script>
 <a href="/about-management"><h6><%= __('About')%></h6></a>
 <a href="/privacy-policy-management"><h6><%= __('Privacy Policy')%></h6></a>
 <a href="/terms-and-conditions-management"><h6><%= __('Terms and Conditions')%></h6></a>

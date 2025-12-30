@@ -22,9 +22,8 @@
               <th style="width: 20%"><%= __('Category')%></th>
               <th style="width: 20%"><%= __('Subcategory')%></th>
               <th style="width: 20%"><%= __('Article Title')%> </th>
-              <th style="width: 40%"><%= __('Article Content')%> </th>
-              <th style="width: 40%"><%= __('Filter')%> </th>
-              <th style="width: 40%"><%= __('Age Restriction')%> </th>
+              <th style="width: 30%"><%= __('Article Content')%> </th>
+              <th style="width: 20%"><%= __('Age Category')%> </th>
               <th style="width: 10%"><%= __('Live')%></th>
             </tr>
           </thead>
@@ -57,23 +56,13 @@
             </td>
             
             <td>
-              <select 
-                id="contentFilterDropdownForm"
-                class="contentFilterDropdown"
-                data-source="article"
-              >
-              <% contentFilterOptions.forEach((item) =>{ %>
-                <option value="<%-item.value%>"><%-item.description%></option>
-              <% }) %>
-            </select>
-          </td>
-          <td>
-            <select class="ageRestrictionLevel" id="ageRestrictionLevelForm" data-source="article">
-                <% ageRestrictionOptions.forEach((item) =>{ %>
-                  <option value="<%-item.value%>"><%-item.description%></option>
+              <select class="custom-select" id="colAgeCategoryTableModal">
+                <option value="">Select Age Category</option>
+                <% ageCategories.forEach((item, index) =>{ %>
+                <option value="<%-item.id%>"><%= item.name %></option>
                 <% }) %>
-            </select>
-          </td>
+              </select>
+            </td>
           
             <td >
                 <label class="switch">

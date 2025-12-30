@@ -117,12 +117,6 @@ var categoryRowReorderResult = null
 const initializeCategoriesDataTable = (data) => {
   const columns = [
     {
-      data: 'sortingKey',
-      render: (_, __, ___, meta) => {
-        return meta.row + 1
-      },
-    },
-    {
       data: 'title',
       render: (_, __, rowPayload) => {
         return `

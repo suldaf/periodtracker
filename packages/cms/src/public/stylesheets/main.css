@@ -319,7 +319,7 @@ input:checked + .slider:before {
 .sideBar {
   display: flex;
   flex-direction: column;
-  justify-content: space-evenly;
+  justify-content: flex-start;
   min-width: 250px;
   height: 90vh;
   position: fixed;
@@ -327,11 +327,81 @@ input:checked + .slider:before {
   top: 100px;
   left: 0;
   overflow-x: hidden;
+  overflow-y: auto;
   background-color: rgb(64, 135, 216);
+  padding: 15px 0;
+}
+.sideBar a,
+.sideBar h6 {
+  text-align: left;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 .sideBar .special {
   color: rgb(251, 255, 0);
   font-weight: bold;
+}
+.sideBar .menu-section {
+  margin: 8px 0;
+}
+.sideBar .menu-title {
+  font-weight: bold;
+  margin: 0;
+  padding: 8px 20px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s;
+}
+.sideBar .menu-title:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+.sideBar .menu-title h6 {
+  margin: 0;
+  padding: 0;
+  flex: 1;
+}
+.sideBar .submenu-icon {
+  font-size: 12px;
+  transition: transform 0.3s ease;
+  margin-right: 5px;
+  color: white;
+}
+.sideBar .submenu {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+.sideBar .submenu a {
+  text-decoration: none;
+  display: block;
+  padding: 5px 20px 5px 35px;
+  transition: background-color 0.2s;
+}
+.sideBar .submenu a:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+.sideBar .submenu-item {
+  font-size: 14px;
+  margin: 0;
+  padding: 5px 0;
+  font-weight: normal;
+}
+.sideBar > a {
+  display: block;
+  padding: 8px 20px;
+  text-decoration: none;
+  transition: background-color 0.2s;
+  margin: 2px 0;
+}
+.sideBar > a:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+.sideBar > a h6 {
+  margin: 0;
+  padding: 0;
 }
 .mainContentContainer {
   display: flex;

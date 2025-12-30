@@ -8,9 +8,6 @@
   <div class="mainContentContainer">
     <%- currentUser.lang %>
     <div class="homeTopTextContainer">
-      <a href="/encyclopedia">
-        <i class="fas fa-arrow-left back_arrow" aria-hidden="true"></i>
-      </a>
       <h2><%= __('Categories')%></h2>   
       <button
         type="button"
@@ -26,8 +23,7 @@
       <table id="categoryTable" class="table">
       <thead>
           <tr>
-            <th style="width: 2.5%" id="order"><%= __('Order')%></th>
-            <th style="width: 57.5%"><%= __('Category Title')%></th>
+            <th style="width: 60%"><%= __('Category Title')%></th>
             <th style="width: 20%"><%= __('Tag Name')%></th>
             <th style="width: 20%"><%= __('Primary Emoji')%></th>
             <th style="width: 2.5%"><%= __('Edit')%></th>

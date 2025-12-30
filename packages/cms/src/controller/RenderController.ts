@@ -25,6 +25,7 @@ import { env } from '../env'
 import { Video } from '../entity/Video'
 import { HelpCenterAttribute } from '../entity/HelpCenterAttribute'
 import { contentFilterOptions, ageRestrictionOptions } from '../optional'
+import { AgeCategory } from '../entity/AgeCategory'
 // import { getStorage } from 'firebase-admin/storage'
 
 export class RenderController {
@@ -45,6 +46,7 @@ export class RenderController {
   private notificationRepository = getRepository(Notification)
   private permanentNotificationRepository = getRepository(PermanentNotification)
   private avatarMessagesRepository = getRepository(AvatarMessages)
+  private ageCategoryRepository = getRepository(AgeCategory)
 
   // Apply global render options to all views here
   globalRenderOptions = {
@@ -265,10 +267,15 @@ export class RenderController {
     const subcategories = await this.subcategoryRepository.find({
       where: { lang: request.user.lang },
     })
+    const ageCategories = await this.ageCategoryRepository.find({
+      where: { lang: request.user.lang },
+      order: { sortingKey: 'ASC' },
+    })
     this.render(response, 'Encyclopedia', {
       articles,
       categories,
       subcategories,
+      ageCategories,
       contentFilterOptions,
       VOICE_OVER_BASE_URL: env.storage.baseUrl,
       ageRestrictionOptions,
@@ -444,5 +451,14 @@ export class RenderController {
 
   async renderDataManagement(request: Request, response: Response, next: NextFunction) {
     this.render(response, 'DataManagement')
+  }
+
+  async renderAgeCategoriesManagement(request: Request, response: Response, next: NextFunction) {
+    const ageCategories = await this.ageCategoryRepository.find({
+      where: { lang: request.user.lang },
+      order: { sortingKey: 'ASC' },
+    })
+
+    this.render(response, 'AgeCategories', { ageCategories })
   }
 }

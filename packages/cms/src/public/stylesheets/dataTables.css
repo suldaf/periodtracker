@@ -34,6 +34,11 @@
   font-size: 12px;
 }
 
+#categoryTable td,
+#categoryTable th {
+  text-align: left !important;
+}
+
 #helpCenterTable th,
 #articleTable th {
   text-align: center;

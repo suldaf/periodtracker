@@ -76,8 +76,9 @@ export class ArticleController {
     articleToUpdate.subcategory = request.body.subcategory
     articleToUpdate.article_heading = request.body.article_heading
     articleToUpdate.article_text = request.body.article_text
-    articleToUpdate.contentFilter = request.body.contentFilter
-    articleToUpdate.ageRestrictionLevel = Number(request.body.ageRestrictionLevel)
+    articleToUpdate.ageCategoryId = request.body.ageCategoryId || null
+    articleToUpdate.contentFilter = request.body.contentFilter || 0
+    articleToUpdate.ageRestrictionLevel = Number(request.body.ageRestrictionLevel || 0)
     // TODO:PH isAgeRestricted is redundant?
     articleToUpdate.isAgeRestricted = request.body.ageRestrictionLevel === '0' ? false : true
     articleToUpdate.live = booleanFromString

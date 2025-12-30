@@ -1,0 +1,65 @@
+<%- include('partials/Header') %>
+<!-- force new line -->
+<%- include('modals/AgeCategoryModal') %>
+<div class="homePageContainer">
+  <div class="sideBar">
+    <%- include('partials/SideTab') %> 
+  </div>
+  <div class="mainContentContainer">
+    <%- currentUser.lang %>
+    <div class="homeTopTextContainer">
+      <h2><%= __('Age Categories')%></h2>   
+      <button
+        type="button"
+        class="btn btn-primary"
+        data-toggle="modal"
+        data-target="#ageCategoryModal"
+        data-value="0"
+      >
+      <%= __('Add Age Category')%>
+      </button>
+    </div>
+    <div class="articleContainer">
+      <table id="ageCategoryTable" class="table table-striped table-borderless tableFixHead">
+      <thead>
+          <tr>
+            <th style="width: 60%"><%= __('Name')%></th>
+            <th style="width: 15%"><%= __('Min Age')%></th>
+            <th style="width: 15%"><%= __('Max Age')%></th>
+            <th style="width: 5%"><%= __('Edit')%></th>
+            <th style="width: 5%"><%= __('Delete')%></th>
+          </tr>
+      </thead>
+      <tbody>
+        <% ageCategories.forEach((ageCategory) =>{ %>
+        <tr>
+          <td><%= ageCategory.name %></td>
+          <td><%= ageCategory.minAge || '-' %></td>
+          <td><%= ageCategory.maxAge || '-' %></td>
+          <td>
+            <button
+              type="button"
+              class="btn"
+              data-toggle="modal"
+              data-target="#ageCategoryModal"
+              data-value="<%= ageCategory.id %>"
+            >
+            <i class="fas fa-edit" aria-hidden="true"></i>
+            </button>
+          </td>
+          <td>
+            <button type="button" class="btn deleteAgeCategory" data-value="<%= ageCategory.id %>">
+              <i class="fas fa-trash" aria-hidden="true"></i>
+            </button>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  </div>
+  <span id="ageCategoriesJSON" hidden><%= JSON.stringify(ageCategories); %> </span>
+  <script type="application/javascript" src="/scripts/ageCategoriesScript.js"></script>
+</div>
+<%- include('partials/Footer') %>

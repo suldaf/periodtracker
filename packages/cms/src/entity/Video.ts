@@ -23,6 +23,9 @@ export class Video {
   @Column()
   lang: string
 
+  @Column({ nullable: true })
+  ageCategoryId: string
+
   @Column({ generated: 'increment' })
   sortingKey: number
 }

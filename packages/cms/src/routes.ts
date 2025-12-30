@@ -22,6 +22,7 @@ import { HelpCenterAttributeController } from './controller/HelpCenterAttributeC
 import { ArticleVoiceOverController } from './controller/ArticleVoiceOverController'
 import { AgeRestrictionController } from './controller/AgeRestrictionController'
 import { ContentFilterController } from './controller/ContentFilterController'
+import { AgeCategoryController } from './controller/AgeCategoryController'
 
 export const Routes = [
   // ------------ Render ----------------
@@ -74,6 +75,12 @@ export const Routes = [
     route: '/categories-management/:id',
     controller: RenderController,
     action: 'renderCategoryManagement',
+  },
+  {
+    method: 'get',
+    route: '/age-categories-management',
+    controller: RenderController,
+    action: 'renderAgeCategoriesManagement',
   },
   {
     method: 'get',
@@ -348,6 +355,37 @@ export const Routes = [
     route: '/subcategories',
     controller: SubcategoryController,
     action: 'reorderRows',
+  },
+  // ------------ Age Categories Api ----------------
+  {
+    method: 'get',
+    route: '/age-categories',
+    controller: AgeCategoryController,
+    action: 'all',
+  },
+  {
+    method: 'get',
+    route: '/age-categories/:id',
+    controller: AgeCategoryController,
+    action: 'one',
+  },
+  {
+    method: 'post',
+    route: '/age-categories',
+    controller: AgeCategoryController,
+    action: 'save',
+  },
+  {
+    method: 'put',
+    route: '/age-categories/:id',
+    controller: AgeCategoryController,
+    action: 'update',
+  },
+  {
+    method: 'delete',
+    route: '/age-categories/:id',
+    controller: AgeCategoryController,
+    action: 'remove',
   },
   // ------------ Quizzes Api ----------------
   {
