@@ -41,38 +41,26 @@ type Phase = 'choose' | 'setup' | 'play'
 
 const TOTAL_SQUARES = 42
 const COLS = 6
-const PLAYABLE_SQUARES = 40
 
 const DEFAULT_SNAKES: Record<number, number> = {
-  8: 6,
-  28: 17,
-  24: 14,
-  39: 27,
-}
-
-// Map Board Index -> Asset Array Index
-// Index 0 = ular 5, Index 1 = ular 7, Index 2 = ular 2, Index 3 = ular 8
-const SNAKE_ASSET_MAP: Record<number, number> = {
-  8: 3,   // ular 8
-  28: 1,  // ular 7 (Custom Rotation)
-  24: 0,  // ular 5
-  39: 2,  // ular 2 (Custom Rotation)
-}
-
-// 3. CONFIGURATION: Rotation Offsets per Snake Image
-// Key = Asset Index (0-3), Value = Degrees to add
-const SNAKE_ROTATION_OFFSETS: Record<number, number> = {
-  0: -45, // ular 5 (Standard)
-  1: -57,  // ular 7 (Changed: Try 90 or 270 if 90 is upside down)
-  2: -90,  // ular 2 (Changed: Try 90 or 270 if 90 is upside down)
-  3: -45, // ular 8 (Standard)
+  17: 5,
+  21: 9,
+  25: 13,
+  33: 24,
+  36: 30,
+  39: 32,
+  41: 31,
 }
 
 const DEFAULT_LADDERS: Record<number, number> = {
-  2: 11,
-  10: 16,
-  23: 38,
-  30: 32,
+  2: 12,
+  4: 14,
+  7: 18,
+  11: 23,
+  15: 26,
+  19: 29,
+  22: 34,
+  28: 38,
 }
 
 const SKIN_TONES = [
@@ -84,17 +72,8 @@ const TOKEN_COLORS = ['#ef4444', '#3b82f6', '#f59e0b', '#22c55e', '#8b5cf6']
 const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
   const { width: w, height: h } = Dimensions.get('window')
   const insets = useSafeAreaInsets()
-  
-  const rows = Math.ceil(TOTAL_SQUARES / COLS)
-  const aspectRatio = rows / COLS
-  const maxBoardWidth = Math.min(w - 32, 400)
-  const maxBoardHeight = Math.min(h - 200, 400)
-  
-  let boardSize = Math.min(maxBoardWidth, maxBoardHeight / aspectRatio)
-  boardSize = Math.max(260, boardSize)
-  
+  const boardSize = Math.max(260, Math.min(520, Math.min(w, h) - 120))
   const cell = boardSize / COLS
-  const boardHeight = cell * rows
 
   const [phase, setPhase] = useState<Phase>('choose')
   const [playerCount, setPlayerCount] = useState(2)
@@ -119,24 +98,18 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
 
   const themeColors = useMemo(() => ({
     light: {
-      bg: '#FDFCF0', 
-      primary: '#E07A5F', 
-      secondary: '#81B29A', 
-      text: '#3D405B', 
-      neutral: '#D4A373', 
-      square1: '#899B5B', 
-      square2: '#D8E1D5', 
-      start: '#2E411E', 
-      finish: '#D8E1D5', 
-      cardBg: '#FFFFFF', 
-      outline: '#D4A373', 
-      shadow: '#3D405B', 
-      snake: '#E07A5F', 
-      ladder: '#81B29A', 
-      accent: '#E07A5F', 
-      accentDark: '#D4A373', 
-      muted: '#3D405B', 
-      boardBg: '#FDFCF0', 
+      bg: '#dff3ff',
+      square1: '#ffffff',
+      square2: '#f1f5f9',
+      text: '#1f2937',
+      snake: '#b91c1c',
+      ladder: '#0a8a5c',
+      boardBg: '#e7f3ff',
+      cardBg: '#ffffff',
+      accent: '#9abf44',
+      accentDark: '#7fa038',
+      muted: '#6b7280',
+      outline: '#d6e3ef',
     },
   }), [])
 
@@ -229,7 +202,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
     const current = players[turnIdx]
     const target = current.pos + d
 
-    if (target > PLAYABLE_SQUARES) {
+    if (target > TOTAL_SQUARES) {
       setInfo(`${current.name} rolled ${d} → but needs exact to finish. Giliran lanjut.`)
       if (d !== 6) setTurnIdx((s) => (s + 1) % players.length)
       return
@@ -262,7 +235,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
 
         if (special) triggerBounce(current.id)
 
-        if (final === PLAYABLE_SQUARES) {
+        if (final === TOTAL_SQUARES) {
           setInfo(`${current.name} MENANG! 🎉`)
           triggerBounce(current.id)
           return
@@ -281,21 +254,15 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
   }
 
   const squareToXY = (n: number) => {
-    const rows = Math.ceil(TOTAL_SQUARES / COLS) // 42/6 = 7 rows
+    const rows = Math.ceil(TOTAL_SQUARES / COLS)
     if (n <= 0) return { x: 0, y: rows - 1 }
 
     const idx = n - 1
     const row = Math.floor(idx / COLS)
     let col = idx % COLS
-    
-    // Snake pattern: odd rows go right-to-left
     if (row % 2 === 1) col = COLS - 1 - col
-    
-    // Y coordinate: bottom row is y=0, top row is y=rows-1
-    // But we want to flip it so tile 1 is at bottom-left
     const y = rows - 1 - row
     const x = col
-    
     return { x, y }
   }
 
@@ -309,30 +276,6 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
     const left = x * cell + cell * 0.1 + offsetX
     const top = y * cell + cell * 0.1 + offsetY
     return { left, top }
-  }
-
-  const calculateSnakePath = (fromSquare: number, toSquare: number, cell: number) => {
-    const from = squareToXY(fromSquare)
-    const to = squareToXY(toSquare)
-    
-    // HEAD position (where player gets eaten)
-    const headX = from.x * cell + cell / 2
-    const headY = from.y * cell + cell / 2
-    
-    // TAIL position (where player lands)
-    const tailX = to.x * cell + cell / 2
-    const tailY = to.y * cell + cell / 2
-    
-    // Calculate angle for rotation
-    const dx = tailX - headX
-    const dy = tailY - headY
-    const angle = Math.atan2(dy, dx) * (180 / Math.PI)
-    
-    // Calculate midpoint for curve
-    const midX = (headX + tailX) / 2
-    const midY = (headY + tailY) / 2
-    
-    return { headX, headY, tailX, tailY, midX, midY, angle, from, to }
   }
 
   const triggerBounce = (id: number) => {
@@ -388,7 +331,8 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
     }
 
     if (setupTab === 'hair') {
-      const hairList = genderAssets?.hair as ImageSourcePropType[] | undefined
+  const hairList = genderAssets?.hair as ImageSourcePropType[] | undefined
+
       return (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionsScroll}>
           <View style={styles.optionsGrid}>
@@ -407,7 +351,8 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
     }
 
     if (setupTab === 'clothes') {
-      const clothesList = genderAssets?.clothes as ImageSourcePropType[] | undefined
+  const clothesList = genderAssets?.clothes as ImageSourcePropType[] | undefined
+
       return (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionsScroll}>
           <View style={styles.optionsGrid}>
@@ -425,7 +370,8 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
       )
     }
 
-    const accessoryList = Object.values(genderAssets?.accessories || {}) as ImageSourcePropType[]
+  const accessoryList = Object.values(genderAssets?.accessories || {}) as ImageSourcePropType[]
+
     return (
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionsScroll}>
         <View style={styles.optionsGrid}>
@@ -460,11 +406,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
         style={styles.inner}
         imageStyle={{ resizeMode: 'cover', opacity: 0.08 }}
       >
-      <Image 
-        source={assets.ular_tangga?.logo} 
-        style={styles.logoImage}
-        resizeMode="contain"
-      />
+      <Text style={[styles.title, { color: themeColors[theme].text }]}>ULAR TANGGA</Text>
 
       {phase === 'choose' && (
         <View style={[styles.phaseContainer, { backgroundColor: themeColors[theme].cardBg }]}> 
@@ -489,11 +431,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
       )}
 
       {phase === 'setup' && (
-        <ScrollView 
-          style={styles.setupScrollView} 
-          contentContainerStyle={styles.setupScrollContent}
-          showsVerticalScrollIndicator={false}
-        >
+        <>
           <View style={[styles.setupCard, { backgroundColor: themeColors[theme].cardBg }]}> 
             <View style={styles.topRow}>
               <View style={styles.nameBlock}>
@@ -590,37 +528,21 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
           >
             <Text style={styles.startFloatingText}>Mulai Main</Text>
           </Pressable>
-        </ScrollView>
+        </>
       )}
 
       {phase === 'play' && players.length > 0 && (
-        <ScrollView 
-          style={styles.setupScrollView} 
-          contentContainerStyle={styles.setupScrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Logo above the board */}
-          <Image 
-            source={assets.ular_tangga?.logo} 
-            style={[styles.logoImage, { marginBottom: 16 }]}
-            resizeMode="contain"
-          />
-          
-          <View style={[styles.boardWrap, { width: boardSize, height: boardHeight }]}> 
+        <>
+          <View style={[styles.boardWrap, { width: boardSize, height: boardSize }]}> 
             <ImageBackground
               source={assets.ular_tangga?.background}
-              style={{ width: boardSize, height: boardHeight }}
+              style={{ width: boardSize, height: boardSize }}
               imageStyle={{ resizeMode: 'cover', opacity: 0.95 }}
             >
-              <View style={{ width: boardSize, height: boardHeight }}>
+              <View style={{ width: boardSize, height: boardSize }}>
                 {Array.from({ length: TOTAL_SQUARES }).map((_, i) => {
                   const n = i + 1
                   const { x, y } = squareToXY(n)
-                  
-                  const displayNumber = n === 1 ? null : n === TOTAL_SQUARES ? null : n - 1
-                  const isStartSquare = n === 1
-                  const isFinishSquare = n === TOTAL_SQUARES
-                  
                   return (
                     <View
                       key={`sq-${n}`}
@@ -631,20 +553,16 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                         width: cell,
                         height: cell,
                         borderWidth: 0.5,
-                        borderColor: themeColors[theme].text,
-                        backgroundColor: isStartSquare ? themeColors[theme].start : 
-                                         isFinishSquare ? themeColors[theme].finish :
-                                         (x + y) % 2 === 0 ? themeColors[theme].square1 : themeColors[theme].square2,
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                        borderColor: '#111827',
+                        backgroundColor: (x + y) % 2 === 0 ? themeColors[theme].square1 : themeColors[theme].square2,
                       }}
                     >
-                      {isStartSquare ? (
-                        <Text style={{ fontSize: Math.max(10, cell * 0.18), fontWeight: '700', color: '#FFFFFF', textAlign: 'center' }}>MULAI</Text>
-                      ) : isFinishSquare ? (
-                        <Text style={{ fontSize: Math.max(10, cell * 0.18), fontWeight: '700', color: '#FFFFFF', textAlign: 'center' }}>SELESAI</Text>
-                      ) : (
-                        <Text style={{ fontSize: Math.max(8, cell * 0.15), color: themeColors[theme].text, fontWeight: '600' }}>{displayNumber}</Text>
+                      <Text style={{ fontSize: 10, color: themeColors[theme].text, padding: 2 }}>{n}</Text>
+                      {n === 1 && (
+                        <Text style={{ position: 'absolute', left: 4, bottom: 4, fontSize: 8, fontWeight: '700', color: themeColors[theme].text }}>START</Text>
+                      )}
+                      {n === TOTAL_SQUARES && (
+                        <Text style={{ position: 'absolute', right: 4, bottom: 4, fontSize: 8, fontWeight: '700', color: themeColors[theme].text }}>FINISH</Text>
                       )}
                     </View>
                   )
@@ -652,107 +570,28 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
 
                 {Object.entries(ladders.current).map(([from, to]) => {
                   const f = Number(from)
-                  const t = Number(to)
                   const p1 = squareToXY(f)
-                  const fromPlayable = f - 1
-                  const toPlayable = t - 1
                   return (
                     <View
                       key={`lad-${from}`}
                       style={{ position: 'absolute', left: (p1.x + 0.15) * cell, top: (p1.y + 0.15) * cell }}
                     >
                       <Text style={{ color: themeColors[theme].ladder, fontWeight: '700' }}>🔼</Text>
-                      <Text style={{ fontSize: 9, color: themeColors[theme].ladder }}>{fromPlayable}→{toPlayable}</Text>
+                      <Text style={{ fontSize: 9, color: themeColors[theme].ladder }}>{from}→{to}</Text>
                     </View>
                   )
                 })}
 
                 {Object.entries(snakes.current).map(([from, to]) => {
-                  const fromNum = Number(from)
-                  const toNum = Number(to)
-                  const path = calculateSnakePath(fromNum, toNum, cell)
-                  
-                  const fromPlayable = fromNum - 1
-                  const toPlayable = toNum - 1
-                  
-                  // Use specific snake asset if defined in map, otherwise default to 0
-                  const snakeImageIndex = SNAKE_ASSET_MAP[fromNum] ?? 0;
-                  const snakeImage = assets.ular_tangga?.snakes?.[snakeImageIndex]
-                  
-                  // Get rotation offset for this specific snake (or default to 180)
-                  const rotationOffset = SNAKE_ROTATION_OFFSETS[snakeImageIndex] ?? 180;
-
-                  const distance = Math.sqrt(
-                    Math.pow(path.tailX - path.headX, 2) + 
-                    Math.pow(path.tailY - path.headY, 2)
-                  )
-                  
-                  // Add specific offset to path angle
-                  const snakeRotation = path.angle + rotationOffset
-                  
-                  const snakeHeight = distance
-                  const snakeWidth = snakeHeight * 0.8
-                  
+                  const f = Number(from)
+                  const p1 = squareToXY(f)
                   return (
-                    <View key={`sna-${from}`} style={{ position: 'absolute' }}>
-                      <View
-                        style={{
-                          position: 'absolute',
-                          // Added offset to the right (20% of a cell width)
-                          left: path.headX + (cell * 0.5),
-                          top: path.headY,
-                          width: snakeWidth,
-                          height: snakeHeight,
-                          transform: [
-                            { translateX: -snakeWidth / 2 },
-                            { translateY: 0 },
-                            { rotate: `${snakeRotation}deg` },
-                          ],
-                          transformOrigin: '50% 0%',
-                          zIndex: 5,
-                        }}
-                      >
-                        {snakeImage ? (
-                          <SvgUri 
-                            uri={Image.resolveAssetSource(snakeImage).uri}
-                            width={snakeWidth}
-                            height={snakeHeight}
-                            preserveAspectRatio="xMidYMin meet"
-                          />
-                        ) : (
-                          <View style={{
-                            width: '100%',
-                            height: '100%',
-                            backgroundColor: themeColors[theme].snake,
-                            borderRadius: snakeWidth * 0.3,
-                            opacity: 0.8,
-                          }} />
-                        )}
-                      </View>
-                      
-                      <View
-                        style={{
-                          position: 'absolute',
-                          left: path.headX - cell * 0.2,
-                          top: path.headY - cell * 0.35,
-                          backgroundColor: 'rgba(255,255,255,0.95)',
-                          paddingHorizontal: 5,
-                          paddingVertical: 2,
-                          borderRadius: 6,
-                          borderWidth: 1.5,
-                          borderColor: themeColors[theme].snake,
-                          zIndex: 10,
-                        }}
-                      >
-                        <Text style={{ 
-                          fontSize: Math.max(8, cell * 0.13), 
-                          color: themeColors[theme].snake,
-                          fontWeight: '800',
-                          textAlign: 'center',
-                        }}>
-                          🐍 {fromPlayable}→{toPlayable}
-                        </Text>
-                      </View>
+                    <View
+                      key={`sna-${from}`}
+                      style={{ position: 'absolute', left: (p1.x + 0.15) * cell, top: (p1.y + 0.15) * cell }}
+                    >
+                      <Text style={{ color: themeColors[theme].snake, fontWeight: '700' }}>🔽</Text>
+                      <Text style={{ fontSize: 9, color: themeColors[theme].snake }}>{from}→{to}</Text>
                     </View>
                   )
                 })}
@@ -801,15 +640,8 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
               </Pressable>
             </View>
           </View>
-        </ScrollView>
+        </>
       )}
-      
-      {/* Background Footer Image */}
-      <Image 
-        source={assets.ular_tangga?.background_footer}
-        style={styles.backgroundFooter}
-        resizeMode="cover"
-      />
       </ImageBackground>
     </View>
   )
@@ -828,19 +660,11 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
   },
-  logoImage: {
-    width: 200,
-    height: 60,
+  title: {
+    fontSize: 22,
+    fontWeight: '800',
     marginBottom: 12,
-  },
-  backgroundFooter: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    width: '100%',
-    height: 150,
-    zIndex: -1,
+    letterSpacing: 0.4,
   },
   phaseContainer: {
     width: '100%',
@@ -1385,13 +1209,5 @@ const styles = StyleSheet.create({
     color: '#1f2937',
     fontSize: 16,
     fontWeight: '700',
-  },
-  setupScrollView: {
-    flex: 1,
-    width: '100%',
-  },
-  setupScrollContent: {
-    alignItems: 'center',
-    paddingBottom: 20,
   },
 })
