@@ -12,11 +12,13 @@ import { UserIcon } from '../components/icons/UserIcon'
 import { IS_IOS } from '../services/device'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useColor } from '../hooks/useColor'
+import UlarTangga from '../screens/UlarTangga'
 
 export type MainStackParamList = {
   profile: NavigatorScreenParams<ProfileStackParamList>
   home: NavigatorScreenParams<HomeStackParamList>
   encyclopedia: NavigatorScreenParams<EncyclopediaStackParamList>
+  game: undefined
   settings: NavigatorScreenParams<SettingsStackParamList>
 }
 
@@ -81,6 +83,18 @@ function MainNavigator() {
           tabBarIcon: ({ focused, size }) => (
             <TabIcon focused={focused} accessibilityLabel={'encyclopedia'}>
               <FontAwesome size={size} name={'book'} color={'#fff'} />
+            </TabIcon>
+          ),
+        }}
+      />
+      <Tab.Screen
+        name={'game'}
+        component={UlarTangga}
+        options={{
+          ...options,
+          tabBarIcon: ({ focused, size }) => (
+            <TabIcon focused={focused} accessibilityLabel={'game'}>
+              <FontAwesome size={size} name={'gamepad'} color={'#fff'} />
             </TabIcon>
           ),
         }}
