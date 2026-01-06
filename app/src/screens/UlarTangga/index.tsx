@@ -17,6 +17,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { assets } from '../../resources/assets'
 import { ScreenComponent } from '../../navigation/RootNavigator'
 
+// Import SVG files directly
+import Ular2Svg from '../../resources/assets/images/ular_tangga/ular_2.svg'
+import Ular5Svg from '../../resources/assets/images/ular_tangga/ular_5.svg'
+import Ular7Svg from '../../resources/assets/images/ular_tangga/ular_7.svg'
+import Ular8Svg from '../../resources/assets/images/ular_tangga/ular_8.svg'
+import Tangga1Svg from '../../resources/assets/images/ular_tangga/tangga_1.svg'
+import Tangga2Svg from '../../resources/assets/images/ular_tangga/tangga_2.svg'
+import Tangga3Svg from '../../resources/assets/images/ular_tangga/tangga_3.svg'
+import Tangga4Svg from '../../resources/assets/images/ular_tangga/tangga_4.svg'
+import FooterSvg from '../../resources/assets/images/ular_tangga/bottom_page_ular_tangga.svg'
+import LogoSvg from '../../resources/assets/images/ular_tangga/EduFun_ular_tangga.svg'
+
 type Gender = 'boy' | 'girl'
 
 type AvatarSpec = {
@@ -41,7 +53,7 @@ type Phase = 'choose' | 'setup' | 'play'
 
 const TOTAL_SQUARES = 42
 const COLS = 6
-const PLAYABLE_SQUARES = 40
+const PLAYABLE_SQUARES = 42
 
 const DEFAULT_SNAKES: Record<number, number> = {
   8: 6,
@@ -59,6 +71,9 @@ const SNAKE_ASSET_MAP: Record<number, number> = {
   39: 2,  // ular 2 (Custom Rotation)
 }
 
+// Array of snake SVG components
+const SNAKE_SVG_COMPONENTS = [Ular5Svg, Ular7Svg, Ular2Svg, Ular8Svg]
+
 // 3. CONFIGURATION: Rotation Offsets per Snake Image
 // Key = Asset Index (0-3), Value = Degrees to add
 const SNAKE_ROTATION_OFFSETS: Record<number, number> = {
@@ -73,6 +88,36 @@ const DEFAULT_LADDERS: Record<number, number> = {
   10: 16,
   23: 38,
   30: 32,
+}
+
+// Map Board Index -> Ladder Asset Array Index
+// Index 0 = tangga_1, Index 1 = tangga_2, Index 2 = tangga_3, Index 3 = tangga_4
+const LADDER_ASSET_MAP: Record<number, number> = {
+  2: 0,   // tangga_1
+  10: 2,  // tangga_3
+  23: 1,  // tangga_2
+  30: 3,  // tangga_4
+}
+
+// Array of ladder SVG components
+const LADDER_SVG_COMPONENTS = [Tangga1Svg, Tangga2Svg, Tangga3Svg, Tangga4Svg]
+
+// Rotation Offsets per Ladder Image
+// Key = Asset Index (0-3), Value = Degrees to add
+const LADDER_ROTATION_OFFSETS: Record<number, number> = {
+  0: -90,   // tangga_1
+  1: -90,   // tangga_2
+  2: -112,   // tangga_3
+  3: -57,   // tangga_4
+}
+
+// Horizontal Position Offsets per Ladder Image
+// Key = Asset Index (0-3), Value = Multiplier for cell offset
+const LADDER_POSITION_OFFSETS: Record<number, number> = {
+  0: 0,  // tangga_1 (default)
+  1: 0,  // tangga_2 (default)
+  2: 0.3,   // tangga_3 (more right)
+  3: -0.5,  // tangga_4 (more left)
 }
 
 const SKIN_TONES = [
@@ -230,7 +275,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
     const target = current.pos + d
 
     if (target > PLAYABLE_SQUARES) {
-      setInfo(`${current.name} rolled ${d} → but needs exact to finish. Giliran lanjut.`)
+      setInfo(`${current.name} rolled ${d} → but needs exact ${PLAYABLE_SQUARES - current.pos} to finish. Giliran lanjut.`)
       if (d !== 6) setTurnIdx((s) => (s + 1) % players.length)
       return
     }
@@ -460,11 +505,27 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
         style={styles.inner}
         imageStyle={{ resizeMode: 'cover', opacity: 0.08 }}
       >
-      <Image 
-        source={assets.ular_tangga?.logo} 
-        style={styles.logoImage}
-        resizeMode="contain"
-      />
+
+      {/* --- 1. FOOTER (Place this FIRST) --- */}
+      {/* Since it is rendered first, it sits at the back */}
+      <View style={styles.footerContainer} pointerEvents="none">
+        <FooterSvg 
+          width="100%"
+          height={120}
+          preserveAspectRatio="none"
+        />
+      </View>
+
+      {/* --- 2. MAIN CONTENT (Place this SECOND) --- */}
+      {/* Since it is rendered second, it sits ON TOP of the footer */}
+      {(phase === 'choose' || phase === 'setup') && (
+        <LogoSvg 
+          width={400}
+          height={120}
+          style={styles.logoImage}
+          preserveAspectRatio="xMidYMid meet"
+        />
+      )}
 
       {phase === 'choose' && (
         <View style={[styles.phaseContainer, { backgroundColor: themeColors[theme].cardBg }]}> 
@@ -491,7 +552,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
       {phase === 'setup' && (
         <ScrollView 
           style={styles.setupScrollView} 
-          contentContainerStyle={styles.setupScrollContent}
+          contentContainerStyle={[styles.setupScrollContent, { paddingBottom: 160 }]}
           showsVerticalScrollIndicator={false}
         >
           <View style={[styles.setupCard, { backgroundColor: themeColors[theme].cardBg }]}> 
@@ -596,14 +657,15 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
       {phase === 'play' && players.length > 0 && (
         <ScrollView 
           style={styles.setupScrollView} 
-          contentContainerStyle={styles.setupScrollContent}
+          contentContainerStyle={[styles.setupScrollContent, { paddingBottom: 160 }]}
           showsVerticalScrollIndicator={false}
         >
           {/* Logo above the board */}
-          <Image 
-            source={assets.ular_tangga?.logo} 
+          <LogoSvg 
+            width={400}
+            height={120}
             style={[styles.logoImage, { marginBottom: 16 }]}
-            resizeMode="contain"
+            preserveAspectRatio="xMidYMid meet"
           />
           
           <View style={[styles.boardWrap, { width: boardSize, height: boardHeight }]}> 
@@ -651,18 +713,92 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                 })}
 
                 {Object.entries(ladders.current).map(([from, to]) => {
-                  const f = Number(from)
-                  const t = Number(to)
-                  const p1 = squareToXY(f)
-                  const fromPlayable = f - 1
-                  const toPlayable = t - 1
+                  const fromNum = Number(from)
+                  const toNum = Number(to)
+                  const path = calculateSnakePath(fromNum, toNum, cell)
+                  
+                  const fromPlayable = fromNum - 1
+                  const toPlayable = toNum - 1
+                  
+                  // Use specific ladder asset if defined in map, otherwise default to 0
+                  const ladderImageIndex = LADDER_ASSET_MAP[fromNum] ?? 0;
+                  const LadderSvgComponent = LADDER_SVG_COMPONENTS[ladderImageIndex]
+                  
+                  // Get rotation offset for this specific ladder (or default to 0)
+                  const rotationOffset = LADDER_ROTATION_OFFSETS[ladderImageIndex] ?? 0;
+                  
+                  // Get horizontal position offset for this specific ladder (or default to -0.1)
+                  const positionOffset = LADDER_POSITION_OFFSETS[ladderImageIndex] ?? -0.1;
+
+                  const distance = Math.sqrt(
+                    Math.pow(path.tailX - path.headX, 2) + 
+                    Math.pow(path.tailY - path.headY, 2)
+                  )
+                  
+                  // Add specific offset to path angle
+                  const ladderRotation = path.angle + rotationOffset
+                  
+                  const ladderHeight = distance
+                  const ladderWidth = ladderHeight * 0.6
+                  
                   return (
-                    <View
-                      key={`lad-${from}`}
-                      style={{ position: 'absolute', left: (p1.x + 0.15) * cell, top: (p1.y + 0.15) * cell }}
-                    >
-                      <Text style={{ color: themeColors[theme].ladder, fontWeight: '700' }}>🔼</Text>
-                      <Text style={{ fontSize: 9, color: themeColors[theme].ladder }}>{fromPlayable}→{toPlayable}</Text>
+                    <View key={`lad-${from}`} style={{ position: 'absolute' }}>
+                      <View
+                        style={{
+                          position: 'absolute',
+                          left: path.headX + (cell * positionOffset),
+                          top: path.headY,
+                          width: ladderWidth,
+                          height: ladderHeight,
+                          transform: [
+                            { translateX: -ladderWidth / 2 },
+                            { translateY: 0 },
+                            { rotate: `${ladderRotation}deg` },
+                          ],
+                          transformOrigin: '50% 0%',
+                          zIndex: 5,
+                        }}
+                      >
+                        {LadderSvgComponent ? (
+                          <LadderSvgComponent 
+                            width={ladderWidth}
+                            height={ladderHeight}
+                            preserveAspectRatio="xMidYMin meet"
+                          />
+                        ) : (
+                          <View style={{
+                            width: '100%',
+                            height: '100%',
+                            backgroundColor: themeColors[theme].ladder,
+                            borderRadius: ladderWidth * 0.2,
+                            opacity: 0.8,
+                          }} />
+                        )}
+                      </View>
+                      
+                      <View
+                        style={{
+                          position: 'absolute',
+                          left: path.headX - cell * 0.2,
+                          top: path.headY - cell * 0.35,
+                          backgroundColor: 'rgba(255,255,255,0.95)',
+                          paddingHorizontal: 5,
+                          paddingVertical: 2,
+                          borderRadius: 6,
+                          borderWidth: 1.5,
+                          borderColor: themeColors[theme].ladder,
+                          zIndex: 10,
+                        }}
+                      >
+                        <Text style={{ 
+                          fontSize: Math.max(8, cell * 0.13), 
+                          color: themeColors[theme].ladder,
+                          fontWeight: '800',
+                          textAlign: 'center',
+                        }}>
+                          🪜 {fromPlayable}→{toPlayable}
+                        </Text>
+                      </View>
                     </View>
                   )
                 })}
@@ -677,7 +813,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                   
                   // Use specific snake asset if defined in map, otherwise default to 0
                   const snakeImageIndex = SNAKE_ASSET_MAP[fromNum] ?? 0;
-                  const snakeImage = assets.ular_tangga?.snakes?.[snakeImageIndex]
+                  const SnakeSvgComponent = SNAKE_SVG_COMPONENTS[snakeImageIndex]
                   
                   // Get rotation offset for this specific snake (or default to 180)
                   const rotationOffset = SNAKE_ROTATION_OFFSETS[snakeImageIndex] ?? 180;
@@ -698,7 +834,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                       <View
                         style={{
                           position: 'absolute',
-                          // Added offset to the right (20% of a cell width)
+                          // Added offset to the right (50% of a cell width)
                           left: path.headX + (cell * 0.5),
                           top: path.headY,
                           width: snakeWidth,
@@ -712,9 +848,8 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                           zIndex: 5,
                         }}
                       >
-                        {snakeImage ? (
-                          <SvgUri 
-                            uri={Image.resolveAssetSource(snakeImage).uri}
+                        {SnakeSvgComponent ? (
+                          <SnakeSvgComponent 
                             width={snakeWidth}
                             height={snakeHeight}
                             preserveAspectRatio="xMidYMin meet"
@@ -803,15 +938,12 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
           </View>
         </ScrollView>
       )}
-      
-      {/* Background Footer Image */}
-      <Image 
-        source={assets.ular_tangga?.background_footer}
-        style={styles.backgroundFooter}
-        resizeMode="cover"
-      />
+
       </ImageBackground>
+      
+
     </View>
+    
   )
 }
 
@@ -820,7 +952,7 @@ export default UlarTangga
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    paddingHorizontal: 16,
+    
     alignItems: 'center',
   },
   inner: {
@@ -833,14 +965,14 @@ const styles = StyleSheet.create({
     height: 60,
     marginBottom: 12,
   },
-  backgroundFooter: {
+  footerContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
     width: '100%',
-    height: 150,
-    zIndex: -1,
+    height: 120,
+    zIndex: 0,
   },
   phaseContainer: {
     width: '100%',
@@ -848,6 +980,7 @@ const styles = StyleSheet.create({
     padding: 22,
     borderRadius: 18,
     marginTop: 12,
+    marginBottom: 150,
     shadowColor: '#8ea8c2',
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.24,
@@ -856,6 +989,7 @@ const styles = StyleSheet.create({
     gap: 10,
     borderWidth: 1,
     borderColor: '#e2ecf5',
+    zIndex: 10,
   },
   phaseTitle: {
     fontSize: 18,
