@@ -36,16 +36,14 @@ export interface AppAssets {
   videos?: Record<string, any> // TODO: VideoSourcePropType ?
   ular_tangga?: {
     background: ImageSourcePropType
-    boy: {
-      base: ImageSourcePropType
-      hair: ImageSourcePropType[]
-      clothes: ImageSourcePropType[]
+    female: {
+      hair: Record<string, ImageSourcePropType>
+      clothes: Record<string, ImageSourcePropType>
       accessories: Record<string, ImageSourcePropType>
     }
-    girl: {
-      base: ImageSourcePropType
-      hair: ImageSourcePropType[]
-      clothes: ImageSourcePropType[]
+    male: {
+      hair: Record<string, ImageSourcePropType>
+      clothes: Record<string, ImageSourcePropType>
       accessories: Record<string, ImageSourcePropType>
     }
   }
