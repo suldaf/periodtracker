@@ -46,10 +46,9 @@ export interface AppAssets {
       clothes: ImageSourcePropType[]
       accessories: Record<string, ImageSourcePropType>
     }
-    girl: {
-      base: ImageSourcePropType
-      hair: ImageSourcePropType[]
-      clothes: ImageSourcePropType[]
+    male: {
+      hair: Record<string, ImageSourcePropType>
+      clothes: Record<string, ImageSourcePropType>
       accessories: Record<string, ImageSourcePropType>
     }
     snakes: ImageSourcePropType[]
