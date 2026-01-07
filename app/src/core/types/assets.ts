@@ -53,5 +53,13 @@ export interface AppAssets {
       accessories: Record<string, ImageSourcePropType>
     }
     snakes: ImageSourcePropType[]
+    audio?: {
+      main_bg: number
+      dice: number
+      bonus_dice: number
+      movement_bounces: number
+      finish_game: number
+      fail_game: number
+    }
   }
 }

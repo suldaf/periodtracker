@@ -12,6 +12,7 @@ import {
   ScrollView,
   ImageSourcePropType,
 } from 'react-native'
+import { Audio } from 'expo-av'
 import { SvgUri } from 'react-native-svg'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { assets } from '../../resources/assets'
@@ -148,6 +149,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
   const [dice, setDice] = useState(1)
   const [info, setInfo] = useState('Pilih jumlah pemain (2-5)')
   const [isAnimating, setIsAnimating] = useState(false)
+  const [gameEnded, setGameEnded] = useState(false)
 
   const [currentPlayerSetup, setCurrentPlayerSetup] = useState(0)
   const [setupTab, setSetupTab] = useState<SetupTab>('skin')
@@ -159,6 +161,13 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
   const moveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const animPos = useRef<Record<number, Animated.ValueXY>>({})
   const animScale = useRef<Record<number, Animated.Value>>({})
+  
+  // Audio refs
+  const bgMusic = useRef<Audio.Sound | null>(null)
+  const diceSound = useRef<Audio.Sound | null>(null)
+  const bonusDiceSound = useRef<Audio.Sound | null>(null)
+  const movementSound = useRef<Audio.Sound | null>(null)
+  const finishGameSound = useRef<Audio.Sound | null>(null)
 
   const avatarAssets = assets.ular_tangga
 
@@ -188,8 +197,80 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
   const [theme] = useState<'light'>('light')
 
   useEffect(() => {
+    // Load audio files
+    const loadAudio = async () => {
+      try {
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: false,
+        })
+
+        const audioAssets = assets.ular_tangga?.audio
+        if (!audioAssets) return
+
+        // Load background music
+        if (audioAssets.main_bg) {
+          const { sound: bg } = await Audio.Sound.createAsync(
+            audioAssets.main_bg,
+            { shouldPlay: false, isLooping: true, volume: 0.3 }
+          )
+          bgMusic.current = bg
+        }
+
+        // Load dice sound
+        if (audioAssets.dice) {
+          const { sound: dice } = await Audio.Sound.createAsync(
+            audioAssets.dice,
+            { shouldPlay: false, volume: 0.5 }
+          )
+          diceSound.current = dice
+        }
+
+        // Load bonus dice sound
+        if (audioAssets.bonus_dice) {
+          const { sound: bonus } = await Audio.Sound.createAsync(
+            audioAssets.bonus_dice,
+            { shouldPlay: false, volume: 0.6 }
+          )
+          bonusDiceSound.current = bonus
+        }
+
+        // Load movement sound
+        if (audioAssets.movement_bounces) {
+          const { sound: movement } = await Audio.Sound.createAsync(
+            audioAssets.movement_bounces,
+            { shouldPlay: false, volume: 0.4 }
+          )
+          movementSound.current = movement
+        }
+
+        // Load finish game sound
+        if (audioAssets.finish_game) {
+          const { sound: finish } = await Audio.Sound.createAsync(
+            audioAssets.finish_game,
+            { shouldPlay: false, volume: 0.7 }
+          )
+          finishGameSound.current = finish
+        }
+      } catch (error) {
+        // Silently handle audio loading errors
+      }
+    }
+
+    loadAudio()
+
     return () => {
       if (moveTimer.current) clearTimeout(moveTimer.current)
+      
+      // Stop background music when leaving screen
+      bgMusic.current?.stopAsync().catch(() => {})
+      
+      // Cleanup audio
+      bgMusic.current?.unloadAsync()
+      diceSound.current?.unloadAsync()
+      bonusDiceSound.current?.unloadAsync()
+      movementSound.current?.unloadAsync()
+      finishGameSound.current?.unloadAsync()
     }
   }, [])
 
@@ -206,7 +287,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
     }
   }, [phase, playerCount])
 
-  const startGame = () => {
+  const startGame = async () => {
     if (phase !== 'setup') return
 
     const newPlayers = tempAvatars.map((avatar, i) => {
@@ -228,13 +309,28 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
     setTurnIdx(0)
     setInfo(`Game dimulai! Giliran ${newPlayers[0].name}`)
     setPhase('play')
+    
+    // Start background music
+    try {
+      await bgMusic.current?.replayAsync()
+    } catch (error) {
+      // Silently handle audio playback errors
+    }
   }
 
-  const resetGame = () => {
+  const resetGame = async () => {
     setPlayers([])
     setPhase('choose')
     setInfo('Pilih jumlah pemain (2-5)')
     setTurnIdx(0)
+    setGameEnded(false)
+    
+    // Stop background music
+    try {
+      await bgMusic.current?.stopAsync()
+    } catch (error) {
+      // Silently handle audio stop errors
+    }
   }
 
   const updateTempAvatar = (updates: Partial<AvatarSpec>) => {
@@ -265,18 +361,52 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
     })
   }
 
-  const roll = () => {
+  const getActivePlayers = () => players.filter(p => p.pos < PLAYABLE_SQUARES)
+
+  const getNextActiveTurnIdx = (currentIdx: number) => {
+    const activePlayers = getActivePlayers()
+    if (activePlayers.length === 0) return currentIdx
+    
+    let nextIdx = (currentIdx + 1) % players.length
+    let attempts = 0
+    
+    while (players[nextIdx].pos >= PLAYABLE_SQUARES && attempts < players.length) {
+      nextIdx = (nextIdx + 1) % players.length
+      attempts++
+    }
+    
+    return nextIdx
+  }
+
+  const roll = async () => {
     if (phase !== 'play' || isAnimating || players.length === 0) return
+
+    const activePlayers = getActivePlayers()
+    if (activePlayers.length === 0) {
+      setInfo('Semua pemain telah selesai! 🎉')
+      return
+    }
 
     const d = Math.floor(Math.random() * 6) + 1
     setDice(d)
+    
+    // Play dice sound effect
+    try {
+      if (d === 6) {
+        await bonusDiceSound.current?.replayAsync()
+      } else {
+        await diceSound.current?.replayAsync()
+      }
+    } catch (error) {
+      // Silently handle audio playback errors
+    }
 
     const current = players[turnIdx]
     const target = current.pos + d
 
     if (target > PLAYABLE_SQUARES) {
       setInfo(`${current.name} rolled ${d} → but needs exact ${PLAYABLE_SQUARES - current.pos} to finish. Giliran lanjut.`)
-      if (d !== 6) setTurnIdx((s) => (s + 1) % players.length)
+      if (d !== 6) setTurnIdx((s) => getNextActiveTurnIdx(s))
       return
     }
 
@@ -302,18 +432,64 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
           special = true
         }
 
-        setPlayers((ps) => ps.map((pl) => (pl.id === current.id ? { ...pl, pos: final } : pl)))
-        setIsAnimating(false)
-
-        if (special) triggerBounce(current.id)
-
-        if (final === PLAYABLE_SQUARES) {
-          setInfo(`${current.name} MENANG! 🎉`)
-          triggerBounce(current.id)
-          return
+        setPlayers((ps) => {
+          const updatedPlayers = ps.map((pl) => (pl.id === current.id ? { ...pl, pos: final } : pl))
+          
+          // Check game end conditions with updated player data
+          setIsAnimating(false)
+          
+          if (special) triggerBounce(current.id)
+          
+          if (final === PLAYABLE_SQUARES) {
+            triggerBounce(current.id)
+            
+            const finishedPlayers = updatedPlayers.filter(p => p.pos >= PLAYABLE_SQUARES)
+            const activePlayers = updatedPlayers.filter(p => p.pos < PLAYABLE_SQUARES)
+            
+            // Game ends if only 1 active player remains
+            if (activePlayers.length === 1) {
+              const loser = activePlayers[0]
+              setInfo(`${current.name} MENANG! 🎉 | ${loser.name} kalah (terakhir yang tersisa)`)
+              setGameEnded(true)
+              
+              // Play victory sound
+              finishGameSound.current?.replayAsync().catch(() => {})
+              
+              return updatedPlayers
+            }
+            
+            // Game ends if 3+ total players AND 3 have finished
+            if (updatedPlayers.length >= 3 && finishedPlayers.length >= 3) {
+              const losers = activePlayers.map(p => p.name).join(', ')
+              setInfo(`${current.name} MENANG! 🎉 | Game berakhir! Yang kalah: ${losers}`)
+              setGameEnded(true)
+              
+              // Play victory sound
+              finishGameSound.current?.replayAsync().catch(() => {})
+              
+              return updatedPlayers
+            }
+            
+            // Continue game - advance turn
+            setInfo(`${current.name} MENANG! 🎉, tersisa ${activePlayers.length} pemain yang tersisa`)
+            
+            // Play victory sound for this player
+            finishGameSound.current?.replayAsync().catch(() => {})
+            
+            if (activePlayers.length > 0) {
+              setTimeout(() => setTurnIdx((s) => getNextActiveTurnIdx(s)), 100)
+            }
+          }
+          
+          return updatedPlayers
+        })
+        
+        if (final !== PLAYABLE_SQUARES) {
+          setIsAnimating(false)
+          if (special) triggerBounce(current.id)
         }
 
-        if (d !== 6) setTurnIdx((s) => (s + 1) % players.length)
+        if (d !== 6) setTurnIdx((s) => getNextActiveTurnIdx(s))
         return
       }
 
@@ -919,14 +1095,16 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
 
           <View style={styles.gameControls}>
             <View style={styles.gameInfo}>
-              <Text style={[styles.turnInfo, { color: themeColors[theme].text }]}>Giliran: {players[turnIdx]?.name}</Text>
+              {getActivePlayers().length > 0 && (
+                <Text style={[styles.turnInfo, { color: themeColors[theme].text }]}>Giliran: {players[turnIdx]?.name}</Text>
+              )}
               <Text style={[styles.gameStatus, { color: themeColors[theme].text }]}>{info}</Text>
             </View>
 
             <View style={styles.diceSection}>
               <Text style={[styles.diceLabel, { color: themeColors[theme].text }]}>Dadu: {dice}</Text>
-              <Pressable onPress={roll} disabled={isAnimating} style={[styles.rollButton, isAnimating && styles.rollButtonDisabled]}>
-                <Text style={styles.rollButtonText}>{isAnimating ? 'BERGERAK...' : 'LEMPAR DADU'}</Text>
+              <Pressable onPress={roll} disabled={isAnimating || gameEnded} style={[styles.rollButton, (isAnimating || gameEnded) && styles.rollButtonDisabled]}>
+                <Text style={styles.rollButtonText}>{isAnimating ? 'BERGERAK...' : gameEnded ? 'GAME BERAKHIR' : 'LEMPAR DADU'}</Text>
               </Pressable>
             </View>
 
