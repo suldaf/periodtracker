@@ -36,21 +36,24 @@ export interface AppAssets {
   videos?: Record<string, any> // TODO: VideoSourcePropType ?
   
   ular_tangga?: {
-    logo: ImageSourcePropType
-    icon: ImageSourcePropType
     background: ImageSourcePropType
-    background_footer: ImageSourcePropType
+    logo: any // SVG
+    icon: any // SVG
+    background_footer: any // SVG
     female: {
       hair: Record<string, ImageSourcePropType>
       clothes: Record<string, ImageSourcePropType>
       accessories: Record<string, ImageSourcePropType>
+      sets: Record<string, any>
     }
     male: {
       hair: Record<string, ImageSourcePropType>
       clothes: Record<string, ImageSourcePropType>
       accessories: Record<string, ImageSourcePropType>
+      sets: Record<string, any>
     }
     snakes: ImageSourcePropType[]
+    ladders: ImageSourcePropType[]
     audio?: {
       main_bg: number
       dice: number

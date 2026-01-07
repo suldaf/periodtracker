@@ -12,6 +12,7 @@ import {
   ScrollView,
   // ImageSourcePropType,
 } from 'react-native'
+import { SvgUri } from 'react-native-svg'
 import { Audio } from 'expo-av'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { assets } from '../../resources/assets'
@@ -92,7 +93,6 @@ const DEFAULT_LADDERS: Record<number, number> = {
 }
 
 // Map Board Index -> Ladder Asset Array Index
-// Index 0 = tangga_1, Index 1 = tangga_2, Index 2 = tangga_3, Index 3 = tangga_4
 const LADDER_ASSET_MAP: Record<number, number> = {
   2: 0,   // tangga_1
   10: 2,  // tangga_3
@@ -104,19 +104,17 @@ const LADDER_ASSET_MAP: Record<number, number> = {
 const LADDER_SVG_COMPONENTS = [Tangga1Svg, Tangga2Svg, Tangga3Svg, Tangga4Svg]
 
 // Rotation Offsets per Ladder Image
-// Key = Asset Index (0-3), Value = Degrees to add
 const LADDER_ROTATION_OFFSETS: Record<number, number> = {
   0: -90,   // tangga_1
   1: -90,   // tangga_2
-  2: -112,   // tangga_3
+  2: -112,  // tangga_3
   3: -57,   // tangga_4
 }
 
 // Horizontal Position Offsets per Ladder Image
-// Key = Asset Index (0-3), Value = Multiplier for cell offset
 const LADDER_POSITION_OFFSETS: Record<number, number> = {
-  0: 0,  // tangga_1 (default)
-  1: 0,  // tangga_2 (default)
+  0: 0,     // tangga_1
+  1: 0,     // tangga_2
   2: 0.3,   // tangga_3 (more right)
   3: -0.5,  // tangga_4 (more left)
 }
@@ -125,11 +123,56 @@ const SKIN_TONES: SkinTone[] = ['LIGHT', 'MEDIUM', 'DARK']
 
 const TOKEN_COLORS = ['#ef4444', '#3b82f6', '#f59e0b', '#22c55e', '#8b5cf6']
 
-// Skin tone colors for avatar preview
-const SKIN_TONE_COLORS: Record<SkinTone, string> = {
-  LIGHT: '#F5D5C3',
-  MEDIUM: '#D4A574',
-  DARK: '#8D5524',
+// Available avatar set combinations (based on actual folders)
+const AVAILABLE_SETS = {
+  Female: [
+    'F-DARK-BRAID-BASIC-FLOWER',
+    'F-DARK-BRAID-BASIC-NONE',
+    'F-DARK-PONYTAIL-BASIC-FLOWER',
+    'F-LIGHT-BRAID-BASIC-FLOWER',
+    'F-LIGHT-BRAID-BASIC-NONE',
+    'F-LIGHT-PONYTAIL-BASIC-FLOWER',
+    'F-MEDIUM-BOB-BASIC-FLOWER',
+    'F-MEDIUM-BRAID-BASIC-FLOWER',
+    'F-MEDIUM-BRAID-BASIC-NONE',
+    'F-MEDIUM-BUN-BASIC-FLOWER',
+    'F-MEDIUM-PONYTAIL-BASIC-FLOWER',
+  ],
+  Male: [
+    'M-DARK-HAIR1-BASIC-NONE',
+    'M-LIGHT-HAIR1-BASIC-NONE',
+    'M-LIGHT-HAIR2-BASIC-NONE',
+    'M-LIGHT-HAIR3-BASIC-NONE',
+    'M-MEDIUM-HAIR1-BASIC-NONE',
+  ],
+}
+
+// Helper function to check if combination is available
+const isSetAvailable = (avatar: AvatarSpec): boolean => {
+  const { gender, skinTone, hair, clothes, accessory } = avatar
+  if (!hair || !clothes) return false
+  
+  const accessoryPart = accessory || 'NONE'
+  const prefix = gender === 'Female' ? 'F' : 'M'
+  const setName = `${prefix}-${skinTone}-${hair}-${clothes}-${accessoryPart}`
+  
+  return AVAILABLE_SETS[gender].includes(setName)
+}
+
+// Helper function to build avatar set key for asset lookup
+const buildAvatarPath = (avatar: AvatarSpec): string | null => {
+  const { gender, skinTone, hair, clothes, accessory } = avatar
+  if (!hair || !clothes) return null // Minimum required
+  
+  // Check if combination is available
+  if (!isSetAvailable(avatar)) return null
+  
+  // Use 'NONE' if no accessory is selected
+  const accessoryPart = accessory || 'NONE'
+  const prefix = gender === 'Female' ? 'F' : 'M'
+  
+  // Return the set key that matches the asset registration
+  return `${prefix}-${skinTone}-${hair}-${clothes}-${accessoryPart}`
 }
 
 const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
@@ -822,29 +865,38 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                 </Pressable>
 
                 <View style={[styles.avatarPreviewLarge, { borderColor: TOKEN_COLORS[currentPlayerSetup % TOKEN_COLORS.length] }]}>
-                  <View style={[styles.skinPreview, { backgroundColor: SKIN_TONE_COLORS[tempAvatars[currentPlayerSetup]?.skinTone || 'LIGHT'] }]}>
+                  <View style={styles.skinPreview}>
                     {(() => {
                       const currentAvatar = tempAvatars[currentPlayerSetup]
                       if (!currentAvatar) return null
-                      
-                      const genderAssets = currentAvatar.gender === 'Female' ? avatarAssets?.female : avatarAssets?.male
-                      const hairImage = currentAvatar.hair ? genderAssets?.hair[currentAvatar.hair] : null
-                      const clothesImage = currentAvatar.clothes ? genderAssets?.clothes[currentAvatar.clothes] : null
-                      const accessoryImage = currentAvatar.accessory ? genderAssets?.accessories[currentAvatar.accessory] : null
-                      
-                      return (
-                        <>
-                          {clothesImage && (
-                            <Image source={clothesImage} style={styles.layerClothes} />
-                          )}
-                          {hairImage && (
-                            <Image source={hairImage} style={styles.layerHair} />
-                          )}
-                          {accessoryImage && (
-                            <Image source={accessoryImage} style={styles.layerAccessory} />
-                          )}
-                        </>
-                      )
+
+                      const { gender, skinTone, hair, clothes, accessory } = currentAvatar
+                      if (!hair || !clothes) return <Text style={{ color: '#94a3b8' }}>Pilih lengkap</Text>
+
+                      const accessoryPart = accessory || 'NONE'
+                      const prefix = gender === 'Female' ? 'F' : 'M'
+                      const setKey = `${prefix}-${skinTone}-${hair}-${clothes}-${accessoryPart}`
+
+                      if (!isSetAvailable(currentAvatar)) {
+                        return (
+                          <Text style={{ color: '#ef4444', fontSize: 11, textAlign: 'center' }}>
+                            Set tidak tersedia
+                          </Text>
+                        )
+                      }
+
+                      const genderAssets = gender === 'Female' ? avatarAssets?.female : avatarAssets?.male
+                      const setSource = genderAssets?.sets?.[setKey]
+                      if (!setSource) {
+                        return (
+                          <Text style={{ color: '#ef4444', fontSize: 11, textAlign: 'center' }}>
+                            Asset tidak ditemukan
+                          </Text>
+                        )
+                      }
+
+                      const uri = Image.resolveAssetSource(setSource).uri
+                      return <SvgUri uri={uri} width={160} height={180} />
                     })()}
                   </View>
                 </View>
@@ -1126,11 +1178,10 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                   const s = animScale.current[pl.id] ?? new Animated.Value(1)
                   const transform = a ? a.getTranslateTransform() : [{ translateX: 0 }, { translateY: 0 }]
                   
+                  // Get avatar set key
+                  const setKey = buildAvatarPath(pl.avatar)
                   const genderAssets = pl.avatar.gender === 'Female' ? avatarAssets?.female : avatarAssets?.male
-                  const hairImage = pl.avatar.hair ? genderAssets?.hair[pl.avatar.hair] : null
-                  const clothesImage = pl.avatar.clothes ? genderAssets?.clothes[pl.avatar.clothes] : null
-                  const accessoryImage = pl.avatar.accessory ? genderAssets?.accessories[pl.avatar.accessory] : null
-                  const skinColor = SKIN_TONE_COLORS[pl.avatar.skinTone || 'LIGHT']
+                  const avatarSetSource = setKey ? genderAssets?.sets?.[setKey] : null
                   
                   return (
                     <Animated.View
@@ -1139,10 +1190,16 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                     >
                       <View style={styles.tokenContainer}>
                         <View style={[styles.tokenOuter, { backgroundColor: pl.avatar.color || '#6b7280' }]}>
-                          <View style={[styles.tokenInner, { backgroundColor: skinColor }]}>
-                            {clothesImage && <Image source={clothesImage} style={styles.tokenClothes} />}
-                            {hairImage && <Image source={hairImage} style={styles.tokenHair} />}
-                            {accessoryImage && <Image source={accessoryImage} style={styles.tokenAccessory} />}
+                          <View style={styles.tokenInner}>
+                            {avatarSetSource ? (
+                              <SvgUri 
+                                uri={Image.resolveAssetSource(avatarSetSource).uri}
+                                width="100%" 
+                                height="100%" 
+                              />
+                            ) : (
+                              <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: '#fff' }} />
+                            )}
                           </View>
                         </View>
                       </View>
@@ -1781,6 +1838,6 @@ const styles = StyleSheet.create({
   },
   setupScrollContent: {
     alignItems: 'center',
-    paddingBottom: 20,
+    paddingBottom: 100,
   },
 })
