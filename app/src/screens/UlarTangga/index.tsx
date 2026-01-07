@@ -80,10 +80,49 @@ const SKIN_TONES: SkinTone[] = ['LIGHT', 'MEDIUM', 'DARK']
 
 const TOKEN_COLORS = ['#ef4444', '#3b82f6', '#f59e0b', '#22c55e', '#8b5cf6']
 
+// Available avatar set combinations (based on actual folders)
+const AVAILABLE_SETS = {
+  Female: [
+    'F-DARK-BRAID-BASIC-FLOWER',
+    'F-DARK-BRAID-BASIC-NONE',
+    'F-DARK-PONYTAIL-BASIC-FLOWER',
+    'F-LIGHT-BRAID-BASIC-FLOWER',
+    'F-LIGHT-BRAID-BASIC-NONE',
+    'F-LIGHT-PONYTAIL-BASIC-FLOWER',
+    'F-MEDIUM-BOB-BASIC-FLOWER',
+    'F-MEDIUM-BRAID-BASIC-FLOWER',
+    'F-MEDIUM-BRAID-BASIC-NONE',
+    'F-MEDIUM-BUN-BASIC-FLOWER',
+    'F-MEDIUM-PONYTAIL-BASIC-FLOWER',
+  ],
+  Male: [
+    'M-DARK-HAIR1-BASIC-NONE',
+    'M-LIGHT-HAIR1-BASIC-NONE',
+    'M-LIGHT-HAIR2-BASIC-NONE',
+    'M-LIGHT-HAIR3-BASIC-NONE',
+    'M-MEDIUM-HAIR1-BASIC-NONE',
+  ],
+}
+
+// Helper function to check if combination is available
+const isSetAvailable = (avatar: AvatarSpec): boolean => {
+  const { gender, skinTone, hair, clothes, accessory } = avatar
+  if (!hair || !clothes) return false
+  
+  const accessoryPart = accessory || 'NONE'
+  const prefix = gender === 'Female' ? 'F' : 'M'
+  const setName = `${prefix}-${skinTone}-${hair}-${clothes}-${accessoryPart}`
+  
+  return AVAILABLE_SETS[gender].includes(setName)
+}
+
 // Helper function to build avatar set folder path
 const buildAvatarPath = (avatar: AvatarSpec): string | null => {
   const { gender, skinTone, hair, clothes, accessory } = avatar
   if (!hair || !clothes) return null // Minimum required
+  
+  // Check if combination is available
+  if (!isSetAvailable(avatar)) return null
   
   // Use 'NONE' if no accessory is selected
   const accessoryPart = accessory || 'NONE'
@@ -872,7 +911,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
       
       {/* Background Footer Image */}
       <Image 
-        source={assets.ular_tangga?.background_footer}
+        source={assets.ular_tangga?.footer}
         style={styles.backgroundFooter}
         resizeMode="cover"
       />
@@ -1475,6 +1514,6 @@ const styles = StyleSheet.create({
   },
   setupScrollContent: {
     alignItems: 'center',
-    paddingBottom: 20,
+    paddingBottom: 100,
   },
 })
