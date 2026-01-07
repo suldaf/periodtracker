@@ -40,16 +40,14 @@ export interface AppAssets {
     icon: ImageSourcePropType
     background: ImageSourcePropType
     background_footer: ImageSourcePropType
-    boy: {
-      base: ImageSourcePropType
-      hair: ImageSourcePropType[]
-      clothes: ImageSourcePropType[]
+    female: {
+      hair: Record<string, ImageSourcePropType>
+      clothes: Record<string, ImageSourcePropType>
       accessories: Record<string, ImageSourcePropType>
     }
-    girl: {
-      base: ImageSourcePropType
-      hair: ImageSourcePropType[]
-      clothes: ImageSourcePropType[]
+    male: {
+      hair: Record<string, ImageSourcePropType>
+      clothes: Record<string, ImageSourcePropType>
       accessories: Record<string, ImageSourcePropType>
     }
     snakes: ImageSourcePropType[]

@@ -10,21 +10,22 @@ import {
   Image,
   ImageBackground,
   ScrollView,
-  ImageSourcePropType,
+  // ImageSourcePropType,
 } from 'react-native'
 import { SvgUri } from 'react-native-svg'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { assets } from '../../resources/assets'
 import { ScreenComponent } from '../../navigation/RootNavigator'
 
-type Gender = 'boy' | 'girl'
+type Gender = 'Female' | 'Male'
+type SkinTone = 'LIGHT' | 'MEDIUM' | 'DARK'
 
 type AvatarSpec = {
   gender: Gender
-  skinColor: string
-  hair?: ImageSourcePropType
-  clothes?: ImageSourcePropType
-  accessory?: ImageSourcePropType
+  skinTone: SkinTone
+  hair?: string
+  clothes?: string
+  accessory?: string
   color?: string
 }
 
@@ -63,11 +64,26 @@ const DEFAULT_LADDERS: Record<number, number> = {
   28: 38,
 }
 
-const SKIN_TONES = [
-  '#F7C6A3', '#F4AA87', '#F29A7C', '#D67852'
-]
+const SKIN_TONES: SkinTone[] = ['LIGHT', 'MEDIUM', 'DARK']
 
 const TOKEN_COLORS = ['#ef4444', '#3b82f6', '#f59e0b', '#22c55e', '#8b5cf6']
+
+// Helper function to build avatar set folder path
+const buildAvatarPath = (avatar: AvatarSpec): string | null => {
+  const { gender, skinTone, hair, clothes, accessory } = avatar
+  if (!hair || !clothes) return null // Minimum required
+  
+  // Use 'NONE' if no accessory is selected
+  const accessoryPart = accessory || 'NONE'
+  
+  if (gender === 'Male') {
+    const folderName = `M-${skinTone}-${hair}-${clothes}-${accessoryPart}`
+    return `Male/set/${folderName}/IDLE.svg`
+  } else {
+    const folderName = `F-${skinTone}-${hair}-${clothes}-${accessoryPart}`
+    return `Female/set/${folderName}/IDLE.svg`
+  }
+}
 
 const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
   const { width: w, height: h } = Dimensions.get('window')
@@ -123,11 +139,19 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
 
   useEffect(() => {
     if (phase === 'setup') {
-      setTempAvatars(Array(playerCount).fill(null).map((_, i) => ({
-        gender: 'girl',
-        skinColor: SKIN_TONES[0],
-        color: TOKEN_COLORS[i % TOKEN_COLORS.length],
-      })))
+      setTempAvatars(Array(playerCount).fill(null).map((_, i) => {
+        // Alternate between Female and Male for variety, or all Female by default
+        const gender: Gender = 'Female' // Change to i % 2 === 0 ? 'Female' : 'Male' for alternating
+        
+        return {
+          gender,
+          skinTone: 'LIGHT',
+          hair: gender === 'Female' ? 'BRAID' : 'HAIR1',
+          clothes: 'BASIC',
+          accessory: undefined,
+          color: TOKEN_COLORS[i % TOKEN_COLORS.length],
+        }
+      }))
       setTempNames(Array(playerCount).fill(null).map((_, i) => `Pemain ${i + 1}`))
       setCurrentPlayerSetup(0)
       setSetupTab('skin')
@@ -138,19 +162,37 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
     if (phase !== 'setup') return
 
     const newPlayers = tempAvatars.map((avatar, i) => {
-      const genderAssets = avatar.gender === 'boy' ? avatarAssets?.boy : avatarAssets?.girl
+      const genderAssets = avatar.gender === 'Female' ? avatarAssets?.female : avatarAssets?.male
+      const hairOptions = Object.keys(genderAssets?.hair || {})
+      const clothesOptions = Object.keys(genderAssets?.clothes || {})
+      
+      // Ensure we have valid hair and clothes for the selected gender
+      let finalHair = avatar.hair
+      let finalClothes = avatar.clothes
+      
+      // If hair is not valid for current gender, use first available option
+      if (!finalHair || !hairOptions.includes(finalHair)) {
+        finalHair = hairOptions[0] || (avatar.gender === 'Female' ? 'BRAID' : 'HAIR1')
+      }
+      
+      // If clothes is not valid for current gender, use first available option
+      if (!finalClothes || !clothesOptions.includes(finalClothes)) {
+        finalClothes = clothesOptions[0] || 'BASIC'
+      }
+      
       return {
-      id: i,
-      name: (tempNames[i] || `Pemain ${i + 1}`).trim() || `Pemain ${i + 1}`,
-      avatar: {
-        ...avatar,
-        hair: avatar.hair || genderAssets?.hair?.[0],
-        clothes: avatar.clothes || genderAssets?.clothes?.[0],
-        accessory: avatar.accessory,
-        color: TOKEN_COLORS[i % TOKEN_COLORS.length] || '#6b7280',
-      },
-      pos: 0,
-    }})
+        id: i,
+        name: (tempNames[i] || `Pemain ${i + 1}`).trim() || `Pemain ${i + 1}`,
+        avatar: {
+          ...avatar,
+          hair: finalHair,
+          clothes: finalClothes,
+          accessory: avatar.accessory,
+          color: TOKEN_COLORS[i % TOKEN_COLORS.length] || '#6b7280',
+        },
+        pos: 0,
+      }
+    })
 
     setPlayers(newPlayers)
     setTurnIdx(0)
@@ -307,23 +349,30 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
   }, [players, cell])
 
   const renderTabContent = () => {
-    const currentAvatar = tempAvatars[currentPlayerSetup] || { gender: 'girl', skinColor: SKIN_TONES[0] }
-    const genderAssets = currentAvatar.gender === 'boy' ? avatarAssets?.boy : avatarAssets?.girl
+    const currentAvatar = tempAvatars[currentPlayerSetup] || { 
+      gender: 'Female', 
+      skinTone: 'LIGHT',
+      hair: 'BRAID',
+      clothes: 'BASIC',
+      accessory: undefined
+    }
+    const genderAssets = currentAvatar.gender === 'Female' ? avatarAssets?.female : avatarAssets?.male
 
     if (setupTab === 'skin') {
       return (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.skinScroll}>
           <View style={styles.skinColorsGrid}>
-            {SKIN_TONES.map((color, index) => (
+            {SKIN_TONES.map((skinTone, index) => (
               <Pressable
                 key={index}
-                onPress={() => updateTempAvatar({ skinColor: color })}
+                onPress={() => updateTempAvatar({ skinTone })}
                 style={[
                   styles.skinColorOption,
-                  { backgroundColor: color },
-                  currentAvatar.skinColor === color && styles.selectedSkinColor
+                  currentAvatar.skinTone === skinTone && styles.selectedSkinColor
                 ]}
-              />
+              >
+                <Text style={styles.skinToneLabel}>{skinTone}</Text>
+              </Pressable>
             ))}
           </View>
         </ScrollView>
@@ -331,18 +380,18 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
     }
 
     if (setupTab === 'hair') {
-  const hairList = genderAssets?.hair as ImageSourcePropType[] | undefined
+      const hairOptions = Object.entries(genderAssets?.hair || {})
 
       return (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionsScroll}>
           <View style={styles.optionsGrid}>
-            {(hairList || []).map((hair: ImageSourcePropType, index: number) => (
+            {hairOptions.map(([key, imageSource]) => (
               <Pressable
-                key={index}
-                onPress={() => updateTempAvatar({ hair })}
-                style={[styles.optionItem, currentAvatar.hair === hair && styles.selectedOption]}
+                key={key}
+                onPress={() => updateTempAvatar({ hair: key })}
+                style={[styles.optionItem, currentAvatar.hair === key && styles.selectedOption]}
               >
-                <Image source={hair} style={styles.optionImage} />
+                <Image source={imageSource} style={styles.optionImage} />
               </Pressable>
             ))}
           </View>
@@ -351,18 +400,18 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
     }
 
     if (setupTab === 'clothes') {
-  const clothesList = genderAssets?.clothes as ImageSourcePropType[] | undefined
+      const clothesOptions = Object.entries(genderAssets?.clothes || {})
 
       return (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionsScroll}>
           <View style={styles.optionsGrid}>
-            {(clothesList || []).map((clothes: ImageSourcePropType, index: number) => (
+            {clothesOptions.map(([key, imageSource]) => (
               <Pressable
-                key={index}
-                onPress={() => updateTempAvatar({ clothes })}
-                style={[styles.optionItem, currentAvatar.clothes === clothes && styles.selectedOption]}
+                key={key}
+                onPress={() => updateTempAvatar({ clothes: key })}
+                style={[styles.optionItem, currentAvatar.clothes === key && styles.selectedOption]}
               >
-                <Image source={clothes} style={styles.optionImage} />
+                <Image source={imageSource} style={styles.optionImage} />
               </Pressable>
             ))}
           </View>
@@ -370,7 +419,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
       )
     }
 
-  const accessoryList = Object.values(genderAssets?.accessories || {}) as ImageSourcePropType[]
+    const accessoryOptions = Object.entries(genderAssets?.accessories || {})
 
     return (
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionsScroll}>
@@ -383,13 +432,13 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
               <Text style={styles.skipText}>Lewati</Text>
             </View>
           </Pressable>
-          {(accessoryList || []).map((accessory: ImageSourcePropType, index: number) => (
+          {accessoryOptions.map(([key, imageSource]) => (
             <Pressable
-              key={index}
-              onPress={() => updateTempAvatar({ accessory })}
-              style={[styles.optionItem, currentAvatar.accessory === accessory && styles.selectedOption]}
+              key={key}
+              onPress={() => updateTempAvatar({ accessory: key })}
+              style={[styles.optionItem, currentAvatar.accessory === key && styles.selectedOption]}
             >
-              <Image source={accessory} style={styles.optionImage} />
+              <Image source={imageSource} style={styles.optionImage} />
             </Pressable>
           ))}
         </View>
@@ -451,14 +500,24 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
               <Text style={[styles.sectionLabel, { color: themeColors[theme].text }]}>Gender</Text>
               <View style={styles.genderSwitch}>
                 <Pressable
-                  onPress={() => updateTempAvatar({ gender: 'boy', hair: undefined, clothes: undefined, accessory: undefined })}
-                  style={[styles.genderChip, (tempAvatars[currentPlayerSetup]?.gender || 'girl') === 'boy' && styles.genderChipActive]}
+                  onPress={() => updateTempAvatar({ 
+                    gender: 'Male', 
+                    hair: 'HAIR1',
+                    clothes: 'BASIC',
+                    accessory: undefined 
+                  })}
+                  style={[styles.genderChip, (tempAvatars[currentPlayerSetup]?.gender || 'Female') === 'Male' && styles.genderChipActive]}
                 >
                   <Text style={styles.genderChipText}>Laki-laki</Text>
                 </Pressable>
                 <Pressable
-                  onPress={() => updateTempAvatar({ gender: 'girl', hair: undefined, clothes: undefined, accessory: undefined })}
-                  style={[styles.genderChip, (tempAvatars[currentPlayerSetup]?.gender || 'girl') === 'girl' && styles.genderChipActive]}
+                  onPress={() => updateTempAvatar({ 
+                    gender: 'Female', 
+                    hair: 'BRAID',
+                    clothes: 'BASIC',
+                    accessory: undefined 
+                  })}
+                  style={[styles.genderChip, (tempAvatars[currentPlayerSetup]?.gender || 'Female') === 'Female' && styles.genderChipActive]}
                 >
                   <Text style={styles.genderChipText}>Perempuan</Text>
                 </Pressable>
@@ -473,27 +532,21 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
 
                 <View style={[styles.avatarPreviewLarge, { borderColor: TOKEN_COLORS[currentPlayerSetup % TOKEN_COLORS.length] }]}>
                   <View style={styles.skinPreview}>
-                    <View style={styles.layerFill}>
-                      {(() => {
-                        const genderAssets = (tempAvatars[currentPlayerSetup]?.gender === 'boy'
-                          ? avatarAssets?.boy
-                          : avatarAssets?.girl)
-                        const baseUri = genderAssets?.base
-                          ? Image.resolveAssetSource(genderAssets.base).uri
-                          : undefined
-                        const skinColor = tempAvatars[currentPlayerSetup]?.skinColor || SKIN_TONES[0]
-                        return baseUri ? <SvgUri uri={baseUri} width={160} height={180} color={skinColor} /> : null
-                      })()}
-                    </View>
-                    {tempAvatars[currentPlayerSetup]?.clothes && (
-                      <Image source={tempAvatars[currentPlayerSetup]?.clothes} style={styles.layerClothes} />
-                    )}
-                    {tempAvatars[currentPlayerSetup]?.hair && (
-                      <Image source={tempAvatars[currentPlayerSetup]?.hair} style={styles.layerHair} />
-                    )}
-                    {tempAvatars[currentPlayerSetup]?.accessory && (
-                      <Image source={tempAvatars[currentPlayerSetup]?.accessory} style={styles.layerAccessory} />
-                    )}
+                    {(() => {
+                      const currentAvatar = tempAvatars[currentPlayerSetup]
+                      if (!currentAvatar) return null
+                      
+                      const avatarPath = buildAvatarPath(currentAvatar)
+                      if (!avatarPath) return <Text style={{ color: '#94a3b8' }}>Pilih lengkap</Text>
+                      
+                      // Build absolute path for avatar SVG
+                      const avatarSource = assets.ular_tangga?.background // Use this to get base path
+                      const resolvedPath = avatarSource 
+                        ? Image.resolveAssetSource(avatarSource).uri.replace('background.png', avatarPath)
+                        : null
+                      
+                      return resolvedPath ? <SvgUri uri={resolvedPath} width={160} height={180} /> : null
+                    })()}
                   </View>
                 </View>
 
@@ -600,6 +653,14 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                   const a = animPos.current[pl.id]
                   const s = animScale.current[pl.id] ?? new Animated.Value(1)
                   const transform = a ? a.getTranslateTransform() : [{ translateX: 0 }, { translateY: 0 }]
+                  
+                  // Get avatar IDLE.svg path using buildAvatarPath
+                  const avatarPath = buildAvatarPath(pl.avatar)
+                  const avatarSource = assets.ular_tangga?.background
+                  const resolvedUri = (avatarPath && avatarSource)
+                    ? Image.resolveAssetSource(avatarSource).uri.replace('background.png', avatarPath)
+                    : null
+                  
                   return (
                     <Animated.View
                       key={`pl-${pl.id}`}
@@ -607,10 +668,12 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                     >
                       <View style={styles.tokenContainer}>
                         <View style={[styles.tokenOuter, { backgroundColor: pl.avatar.color || '#6b7280' }]}>
-                          <View style={[styles.tokenInner, { backgroundColor: pl.avatar.skinColor || SKIN_TONES[0] }]}> 
-                            {pl.avatar.clothes && <Image source={pl.avatar.clothes} style={styles.tokenClothes} />}
-                            {pl.avatar.hair && <Image source={pl.avatar.hair} style={styles.tokenHair} />}
-                            {pl.avatar.accessory && <Image source={pl.avatar.accessory} style={styles.tokenAccessory} />}
+                          <View style={styles.tokenInner}>
+                            {resolvedUri ? (
+                              <SvgUri uri={resolvedUri} width="100%" height="100%" />
+                            ) : (
+                              <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: '#fff' }} />
+                            )}
                           </View>
                         </View>
                       </View>
@@ -829,10 +892,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(154, 191, 68, 0.18)',
     borderColor: '#9abf44',
   },
+  genderChipDisabled: {
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
+    opacity: 0.5,
+  },
   genderChipText: {
     color: '#1f2937',
     fontSize: 14,
     fontWeight: '700',
+  },
+  genderChipTextDisabled: {
+    color: '#94a3b8',
   },
   avatarStrip: {
     flexDirection: 'row',
@@ -1001,19 +1072,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   skinColorOption: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     borderWidth: 3,
     borderColor: 'transparent',
     shadowColor: '#b8cde1',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.35,
     shadowRadius: 6,
+    backgroundColor: '#f8fbff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  skinToneLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#1f2937',
   },
   selectedSkinColor: {
     borderColor: '#9abf44',
     transform: [{ scale: 1.06 }],
+    backgroundColor: 'rgba(154, 191, 68, 0.18)',
   },
   optionsScroll: {
     marginVertical: 6,
