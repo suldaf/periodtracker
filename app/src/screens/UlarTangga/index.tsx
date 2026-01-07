@@ -70,15 +70,19 @@ const TOKEN_COLORS = ['#ef4444', '#3b82f6', '#f59e0b', '#22c55e', '#8b5cf6']
 
 // Helper function to build avatar set folder path
 const buildAvatarPath = (avatar: AvatarSpec): string | null => {
-  if (avatar.gender === 'Male') return null // Male assets not ready yet
-  
-  const { skinTone, hair, clothes, accessory } = avatar
+  const { gender, skinTone, hair, clothes, accessory } = avatar
   if (!hair || !clothes) return null // Minimum required
   
   // Use 'NONE' if no accessory is selected
   const accessoryPart = accessory || 'NONE'
-  const folderName = `F-${skinTone}-${hair}-${clothes}-${accessoryPart}`
-  return `Female/set/${folderName}/IDLE.svg`
+  
+  if (gender === 'Male') {
+    const folderName = `M-${skinTone}-${hair}-${clothes}-${accessoryPart}`
+    return `Male/set/${folderName}/IDLE.svg`
+  } else {
+    const folderName = `F-${skinTone}-${hair}-${clothes}-${accessoryPart}`
+    return `Female/set/${folderName}/IDLE.svg`
+  }
 }
 
 const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
@@ -135,14 +139,19 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
 
   useEffect(() => {
     if (phase === 'setup') {
-      setTempAvatars(Array(playerCount).fill(null).map((_, i) => ({
-        gender: 'Female',
-        skinTone: 'LIGHT',
-        hair: 'BRAID',
-        clothes: 'BASIC',
-        accessory: undefined,
-        color: TOKEN_COLORS[i % TOKEN_COLORS.length],
-      })))
+      setTempAvatars(Array(playerCount).fill(null).map((_, i) => {
+        // Alternate between Female and Male for variety, or all Female by default
+        const gender: Gender = 'Female' // Change to i % 2 === 0 ? 'Female' : 'Male' for alternating
+        
+        return {
+          gender,
+          skinTone: 'LIGHT',
+          hair: gender === 'Female' ? 'BRAID' : 'HAIR1',
+          clothes: 'BASIC',
+          accessory: undefined,
+          color: TOKEN_COLORS[i % TOKEN_COLORS.length],
+        }
+      }))
       setTempNames(Array(playerCount).fill(null).map((_, i) => `Pemain ${i + 1}`))
       setCurrentPlayerSetup(0)
       setSetupTab('skin')
@@ -157,18 +166,33 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
       const hairOptions = Object.keys(genderAssets?.hair || {})
       const clothesOptions = Object.keys(genderAssets?.clothes || {})
       
+      // Ensure we have valid hair and clothes for the selected gender
+      let finalHair = avatar.hair
+      let finalClothes = avatar.clothes
+      
+      // If hair is not valid for current gender, use first available option
+      if (!finalHair || !hairOptions.includes(finalHair)) {
+        finalHair = hairOptions[0] || (avatar.gender === 'Female' ? 'BRAID' : 'HAIR1')
+      }
+      
+      // If clothes is not valid for current gender, use first available option
+      if (!finalClothes || !clothesOptions.includes(finalClothes)) {
+        finalClothes = clothesOptions[0] || 'BASIC'
+      }
+      
       return {
-      id: i,
-      name: (tempNames[i] || `Pemain ${i + 1}`).trim() || `Pemain ${i + 1}`,
-      avatar: {
-        ...avatar,
-        hair: avatar.hair || hairOptions[0],
-        clothes: avatar.clothes || clothesOptions[0],
-        accessory: avatar.accessory,
-        color: TOKEN_COLORS[i % TOKEN_COLORS.length] || '#6b7280',
-      },
-      pos: 0,
-    }})
+        id: i,
+        name: (tempNames[i] || `Pemain ${i + 1}`).trim() || `Pemain ${i + 1}`,
+        avatar: {
+          ...avatar,
+          hair: finalHair,
+          clothes: finalClothes,
+          accessory: avatar.accessory,
+          color: TOKEN_COLORS[i % TOKEN_COLORS.length] || '#6b7280',
+        },
+        pos: 0,
+      }
+    })
 
     setPlayers(newPlayers)
     setTurnIdx(0)
@@ -476,14 +500,23 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
               <Text style={[styles.sectionLabel, { color: themeColors[theme].text }]}>Gender</Text>
               <View style={styles.genderSwitch}>
                 <Pressable
-                  onPress={() => updateTempAvatar({ gender: 'Male', hair: undefined, clothes: undefined, accessory: undefined })}
-                  disabled={true}
-                  style={[styles.genderChip, styles.genderChipDisabled]}
+                  onPress={() => updateTempAvatar({ 
+                    gender: 'Male', 
+                    hair: 'HAIR1',
+                    clothes: 'BASIC',
+                    accessory: undefined 
+                  })}
+                  style={[styles.genderChip, (tempAvatars[currentPlayerSetup]?.gender || 'Female') === 'Male' && styles.genderChipActive]}
                 >
-                  <Text style={[styles.genderChipText, styles.genderChipTextDisabled]}>Laki-laki</Text>
+                  <Text style={styles.genderChipText}>Laki-laki</Text>
                 </Pressable>
                 <Pressable
-                  onPress={() => updateTempAvatar({ gender: 'Female', hair: undefined, clothes: undefined, accessory: undefined })}
+                  onPress={() => updateTempAvatar({ 
+                    gender: 'Female', 
+                    hair: 'BRAID',
+                    clothes: 'BASIC',
+                    accessory: undefined 
+                  })}
                   style={[styles.genderChip, (tempAvatars[currentPlayerSetup]?.gender || 'Female') === 'Female' && styles.genderChipActive]}
                 >
                   <Text style={styles.genderChipText}>Perempuan</Text>
