@@ -117,7 +117,8 @@ export const SNAKE_ROTATION_OFFSETS: Record<number, number> = {
 /**
  * Available skin tones for player avatars
  */
-export const SKIN_TONES = ['#F7C6A3', '#F4AA87', '#F29A7C', '#D67852'] as const
+export type SkinTone = 'LIGHT' | 'MEDIUM' | 'DARK'
+export const SKIN_TONES: SkinTone[] = ['LIGHT', 'MEDIUM', 'DARK']
 
 /**
  * Available token colors for players
@@ -176,14 +177,14 @@ export const THEME_COLORS: Record<'light', ThemeColors> = {
 // TYPE DEFINITIONS
 // ============================================
 
-export type Gender = 'boy' | 'girl'
+export type Gender = 'Female' | 'Male'
 
 export type AvatarSpec = {
   gender: Gender
-  skinColor: string
-  hair?: ImageSourcePropType
-  clothes?: ImageSourcePropType
-  accessory?: ImageSourcePropType
+  skinTone: SkinTone
+  hair?: string
+  clothes?: string
+  accessory?: string
   color?: string
 }
 
@@ -204,14 +205,36 @@ export type Phase = 'choose' | 'setup' | 'play'
 // ============================================
 
 /**
+ * Build avatar set folder path for loading avatar images
+ */
+export function buildAvatarPath(avatar: AvatarSpec): string | null {
+  const { gender, skinTone, hair, clothes, accessory } = avatar
+  if (!hair || !clothes) return null // Minimum required
+
+  // Use 'NONE' if no accessory is selected
+  const accessoryPart = accessory || 'NONE'
+
+  if (gender === 'Male') {
+    const folderName = `M-${skinTone}-${hair}-${clothes}-${accessoryPart}`
+    return `Male/set/${folderName}/IDLE.svg`
+  } else {
+    const folderName = `F-${skinTone}-${hair}-${clothes}-${accessoryPart}`
+    return `Female/set/${folderName}/IDLE.svg`
+  }
+}
+
+/**
  * Create initial player avatars for setup phase
  */
 export function createInitialAvatars(playerCount: number): AvatarSpec[] {
   return Array(playerCount)
     .fill(null)
     .map((_, i) => ({
-      gender: 'girl' as Gender,
-      skinColor: SKIN_TONES[0],
+      gender: 'Female' as Gender,
+      skinTone: 'LIGHT' as SkinTone,
+      hair: 'BRAID',
+      clothes: 'BASIC',
+      accessory: undefined,
       color: TOKEN_COLORS[i % TOKEN_COLORS.length],
     }))
 }

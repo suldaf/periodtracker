@@ -16,19 +16,13 @@ export {
   SKIN_TONES,
   TOKEN_COLORS,
   THEME_COLORS,
+  buildAvatarPath,
   createInitialAvatars,
   createInitialNames,
   calculateBoardDimensions,
 } from './config'
 
-export type {
-  ThemeColors,
-  Gender,
-  AvatarSpec,
-  Player,
-  SetupTab,
-  Phase,
-} from './config'
+export type { ThemeColors, SkinTone, Gender, AvatarSpec, Player, SetupTab, Phase } from './config'
 
 // Grid Systems - Coordinate mapping and board layout
 export {

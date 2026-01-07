@@ -28,10 +28,12 @@ import {
   SKIN_TONES,
   TOKEN_COLORS,
   THEME_COLORS,
+  buildAvatarPath,
   createInitialAvatars,
   createInitialNames,
   calculateBoardDimensions,
   // Types
+  SkinTone,
   Gender,
   AvatarSpec,
   Player,
@@ -59,8 +61,19 @@ import {
   Emoticon,
 } from '../../features/edufun-snakes-ladders/engine'
 
+// Import GameModeSelector component
+import {
+  GameModeSelector,
+  GameModeSelection,
+} from '../../features/edufun-snakes-ladders/components/GameModeSelector'
+
+// Extended phase type to include mode selection
+type GamePhase = 'select_mode' | Phase
+
 // Use board configuration from engine
 const { TOTAL_SQUARES, COLS, PLAYABLE_SQUARES } = BOARD_CONFIG_42
+
+// Use theme colors from engine
 const themeColors = THEME_COLORS
 
 const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
@@ -73,7 +86,8 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
     [w, h],
   )
 
-  const [phase, setPhase] = useState<Phase>('choose')
+  // Start with mode selection phase
+  const [phase, setPhase] = useState<GamePhase>('select_mode')
   const [playerCount, setPlayerCount] = useState(2)
   const [players, setPlayers] = useState<Player[]>([])
   const [turnIdx, setTurnIdx] = useState(0)
@@ -99,6 +113,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
   const snakes = useRef(DEFAULT_SNAKES_42)
   const ladders = useRef(DEFAULT_LADDERS_42)
   const moveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const botTurnTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const animPos = useRef<Record<number, Animated.ValueXY>>({})
   const animScale = useRef<Record<number, Animated.Value>>({})
 
@@ -110,49 +125,145 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
   useEffect(() => {
     return () => {
       if (moveTimer.current) clearTimeout(moveTimer.current)
+      if (botTurnTimer.current) clearTimeout(botTurnTimer.current)
     }
   }, [])
 
   useEffect(() => {
     if (phase === 'setup') {
-      // Use engine functions to initialize avatars and names
-      setTempAvatars(createInitialAvatars(playerCount))
-      setTempNames(createInitialNames(playerCount))
+      // In solo mode, only create avatars for the human player
+      const humanCount = gameMode === 'solo' ? 1 : playerCount
+      setTempAvatars(
+        Array(humanCount)
+          .fill(null)
+          .map((_, i) => {
+            // Alternate between Female and Male for variety, or all Female by default
+            const gender: Gender = 'Female' // Change to i % 2 === 0 ? 'Female' : 'Male' for alternating
+
+            return {
+              gender,
+              skinTone: 'LIGHT',
+              hair: gender === 'Female' ? 'BRAID' : 'HAIR1',
+              clothes: 'BASIC',
+              accessory: undefined,
+              color: TOKEN_COLORS[i % TOKEN_COLORS.length],
+            }
+          }),
+      )
+      setTempNames(
+        Array(humanCount)
+          .fill(null)
+          .map((_, i) => (gameMode === 'solo' ? 'Kamu' : `Pemain ${i + 1}`)),
+      )
       setCurrentPlayerSetup(0)
       setSetupTab('skin')
     }
-  }, [phase, playerCount])
+  }, [phase, playerCount, gameMode])
 
   const startGame = () => {
     if (phase !== 'setup') return
 
-    const newPlayers = tempAvatars.map((avatar, i) => {
-      const genderAssets = avatar.gender === 'boy' ? avatarAssets?.boy : avatarAssets?.girl
+    // Create human players from tempAvatars
+    const humanPlayerCount = gameMode === 'solo' ? 1 : playerCount
+    const humanPlayers: Player[] = tempAvatars.slice(0, humanPlayerCount).map((avatar, i) => {
+      const genderAssets = avatar.gender === 'Female' ? avatarAssets?.female : avatarAssets?.male
+      const hairOptions = Object.keys(genderAssets?.hair || {})
+      const clothesOptions = Object.keys(genderAssets?.clothes || {})
+
+      // Ensure we have valid hair and clothes for the selected gender
+      let finalHair = avatar.hair
+      let finalClothes = avatar.clothes
+
+      // If hair is not valid for current gender, use first available option
+      if (!finalHair || !hairOptions.includes(finalHair)) {
+        finalHair = hairOptions[0] || (avatar.gender === 'Female' ? 'BRAID' : 'HAIR1')
+      }
+
+      // If clothes is not valid for current gender, use first available option
+      if (!finalClothes || !clothesOptions.includes(finalClothes)) {
+        finalClothes = clothesOptions[0] || 'BASIC'
+      }
+
       return {
         id: i,
         name: (tempNames[i] || `Pemain ${i + 1}`).trim() || `Pemain ${i + 1}`,
         avatar: {
           ...avatar,
-          hair: avatar.hair || genderAssets?.hair?.[0],
-          clothes: avatar.clothes || genderAssets?.clothes?.[0],
+          hair: finalHair,
+          clothes: finalClothes,
           accessory: avatar.accessory,
           color: TOKEN_COLORS[i % TOKEN_COLORS.length] || '#6b7280',
         },
         pos: 0,
+        isBot: false,
       }
     })
 
-    setPlayers(newPlayers)
+    // Add bot players in solo mode
+    let allPlayers: Player[] = [...humanPlayers]
+    if (gameMode === 'solo' && bots.length > 0) {
+      // Different avatar configurations for bots
+      const botAvatarConfigs: Array<{
+        gender: Gender
+        skinTone: SkinTone
+        hair: string
+        clothes: string
+      }> = [
+        { gender: 'Male', skinTone: 'MEDIUM', hair: 'HAIR1', clothes: 'BASIC' },
+        { gender: 'Female', skinTone: 'DARK', hair: 'PONYTAIL', clothes: 'DRESS' },
+        { gender: 'Male', skinTone: 'LIGHT', hair: 'HAIR2', clothes: 'CASUAL' },
+      ]
+
+      const botPlayers: Player[] = bots.map((bot, i) => {
+        const avatarConfig = botAvatarConfigs[i % botAvatarConfigs.length]
+        return {
+          id: humanPlayerCount + i,
+          name: bot.name,
+          avatar: {
+            gender: avatarConfig.gender,
+            skinTone: avatarConfig.skinTone,
+            hair: avatarConfig.hair,
+            clothes: avatarConfig.clothes,
+            color: TOKEN_COLORS[(humanPlayerCount + i) % TOKEN_COLORS.length] || '#6b7280',
+          },
+          pos: 0,
+          isBot: true,
+        }
+      })
+      allPlayers = [...humanPlayers, ...botPlayers]
+    }
+
+    setPlayers(allPlayers)
     setTurnIdx(0)
-    setInfo(`Game dimulai! Giliran ${newPlayers[0].name}`)
+    setInfo(`Game dimulai! Giliran ${allPlayers[0].name}`)
     setPhase('play')
   }
 
   const resetGame = () => {
     setPlayers([])
-    setPhase('choose')
+    setPhase('select_mode')
     setInfo('Pilih jumlah pemain (2-5)')
     setTurnIdx(0)
+    setGameMode('multiplayer')
+    setBots([])
+    setBotReaction(null)
+    setConsecutiveSnakeHits({})
+  }
+
+  // Handle game mode selection from GameModeSelector
+  const handleModeSelected = (selection: GameModeSelection) => {
+    setGameMode(selection.mode)
+    setDifficulty(selection.difficulty)
+    setBots(selection.bots)
+    setPlayerCount(selection.playerCount)
+
+    if (selection.mode === 'solo') {
+      // Solo mode: 1 human player + bots
+      setPhase('setup')
+    } else {
+      // Multiplayer mode: go to player count selection
+      setPhase('choose')
+    }
   }
 
   const updateTempAvatar = (updates: Partial<AvatarSpec>) => {
@@ -186,17 +297,46 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
   const roll = () => {
     if (phase !== 'play' || isAnimating || players.length === 0) return
 
-    // Use engine's dice roll function and extract the value
-    const diceResult = rollDice()
+    const current = players[turnIdx]
+    if (!current) return // Safety check
+
+    const currentId = current.id // Store the ID to ensure we always update the correct player
+    const isCurrentBot = current.isBot
+
+    // Use bot dice logic for bot players, regular dice for human players
+    let diceResult
+    if (isCurrentBot && gameMode === 'solo') {
+      const bot = bots.find((b) => b.name === current.name)
+      if (bot) {
+        const gameContext = {
+          humanPosition: players.find((p) => !p.isBot)?.pos || 0,
+          botPositions: players.filter((p) => p.isBot).map((p) => p.pos),
+          consecutiveSnakeHits,
+          snakes: snakes.current,
+          ladders: ladders.current,
+          totalSquares: TOTAL_SQUARES,
+        }
+        const botAction = executeBotTurn(bot, current.pos, gameContext)
+        diceResult = { value: botAction.diceValue }
+        setInfo(getBotMessage(bot.name, bot.personality, 'rolling'))
+      } else {
+        diceResult = rollDice()
+      }
+    } else {
+      diceResult = rollDice()
+    }
+
     const d = diceResult.value
     setDice(d)
 
-    const current = players[turnIdx]
     const target = current.pos + d
 
     if (target > PLAYABLE_SQUARES) {
       setInfo(`${current.name} rolled ${d} → but needs exact to finish. Giliran lanjut.`)
-      if (d !== 6) setTurnIdx((s) => (s + 1) % players.length)
+      if (d !== 6) {
+        const nextIdx = (turnIdx + 1) % players.length
+        setTurnIdx(nextIdx)
+      }
       return
     }
 
@@ -207,29 +347,45 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
     const hop = () => {
       if (step >= target) {
         let final = step
-        let special = false
+        let hitSnake = false
+        let hitLadder = false
 
         if (ladders.current[final]) {
           const to = ladders.current[final]
           setInfo((s) => `${s} | TANGGA ${final} → ${to}`)
           final = to
-          special = true
+          hitLadder = true
+
+          // Bot reaction to player ladder
+          if (!isCurrentBot && gameMode === 'solo') {
+            showBotReaction('player_ladder')
+          }
         }
         if (snakes.current[final]) {
           const to = snakes.current[final]
           setInfo((s) => `${s} | ULAR ${final} → ${to}`)
           final = to
-          special = true
+          hitSnake = true
+
+          // Bot reaction to player snake
+          if (!isCurrentBot && gameMode === 'solo') {
+            showBotReaction('player_snake')
+          }
         }
 
-        setPlayers((ps) => ps.map((pl) => (pl.id === current.id ? { ...pl, pos: final } : pl)))
+        setPlayers((ps) => ps.map((pl) => (pl.id === currentId ? { ...pl, pos: final } : pl)))
         setIsAnimating(false)
 
-        if (special) triggerBounce(current.id)
+        if (hitSnake || hitLadder) triggerBounce(currentId)
 
         if (final === PLAYABLE_SQUARES) {
           setInfo(`${current.name} MENANG! 🎉`)
-          triggerBounce(current.id)
+          triggerBounce(currentId)
+
+          // Bot reaction to win/lose
+          if (gameMode === 'solo') {
+            showBotReaction(isCurrentBot ? 'bot_win' : 'player_win')
+          }
           return
         }
 
@@ -237,26 +393,60 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
         const canRollAgain = d === 6
         const nextIdx = getNextPlayerIndex(turnIdx, players.length, canRollAgain)
         setTurnIdx(nextIdx)
-
-        // If next player is a bot, trigger their turn after delay
-        if (gameMode === 'solo') {
-          const nextPlayer = players[nextIdx]
-          if (nextPlayer && bots.some((b) => b.id === nextPlayer.id)) {
-            const bot = bots.find((b) => b.id === nextPlayer.id)!
-            const delays = calculateBotActionDelays(bot.personality)
-            // Bot takes their turn after delay
-            setTimeout(() => roll(), delays.beforeRoll)
-          }
-        }
         return
       }
 
       step += 1
-      setPlayers((ps) => ps.map((pl) => (pl.id === current.id ? { ...pl, pos: step } : pl)))
+      setPlayers((ps) => ps.map((pl) => (pl.id === currentId ? { ...pl, pos: step } : pl)))
       moveTimer.current = setTimeout(hop, 140)
     }
 
     hop()
+  }
+
+  // Helper function to trigger bot turn
+  const triggerBotTurnIfNeeded = (playerIdx: number) => {
+    // Clear any existing bot turn timer
+    if (botTurnTimer.current) {
+      clearTimeout(botTurnTimer.current)
+      botTurnTimer.current = null
+    }
+
+    if (gameMode === 'solo') {
+      const nextPlayer = players[playerIdx]
+      if (nextPlayer?.isBot) {
+        const bot = bots.find((b) => b.name === nextPlayer.name)
+        if (bot) {
+          const delays = calculateBotActionDelays(bot.personality)
+          setInfo(getBotMessage(bot.name, bot.personality, 'thinking'))
+          botTurnTimer.current = setTimeout(() => {
+            botTurnTimer.current = null
+            roll()
+          }, delays.beforeRoll)
+        }
+      }
+    }
+  }
+
+  // Helper function to show bot reaction
+  const showBotReaction = (
+    event: 'player_snake' | 'player_ladder' | 'bot_snake' | 'bot_ladder' | 'bot_win' | 'player_win',
+  ) => {
+    if (bots.length > 0) {
+      const bot = bots[0]
+      const { reaction, emoticon } = determineBotReaction(bot.personality, event)
+      if (reaction !== 'none') {
+        setBotReaction({
+          message: getBotMessage(
+            bot.name,
+            bot.personality,
+            event === 'player_snake' ? 'snake' : 'landed',
+          ),
+          emoticon,
+        })
+        setTimeout(() => setBotReaction(null), 2500)
+      }
+    }
   }
 
   // Use engine's grid functions with local board config
@@ -326,27 +516,39 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
     })
   }, [players, cell, getTokenPosition])
 
+  // Trigger bot turn when turnIdx changes and it's a bot's turn
+  useEffect(() => {
+    if (phase === 'play' && !isAnimating && players.length > 0) {
+      triggerBotTurnIfNeeded(turnIdx)
+    }
+  }, [turnIdx, phase, isAnimating, players.length])
+
   const renderTabContent = () => {
     const currentAvatar = tempAvatars[currentPlayerSetup] || {
-      gender: 'girl',
-      skinColor: SKIN_TONES[0],
+      gender: 'Female',
+      skinTone: 'LIGHT',
+      hair: 'BRAID',
+      clothes: 'BASIC',
+      accessory: undefined,
     }
-    const genderAssets = currentAvatar.gender === 'boy' ? avatarAssets?.boy : avatarAssets?.girl
+    const genderAssets =
+      currentAvatar.gender === 'Female' ? avatarAssets?.female : avatarAssets?.male
 
     if (setupTab === 'skin') {
       return (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.skinScroll}>
           <View style={styles.skinColorsGrid}>
-            {SKIN_TONES.map((color, index) => (
+            {SKIN_TONES.map((skinTone, index) => (
               <Pressable
                 key={index}
-                onPress={() => updateTempAvatar({ skinColor: color })}
+                onPress={() => updateTempAvatar({ skinTone })}
                 style={[
                   styles.skinColorOption,
-                  { backgroundColor: color },
-                  currentAvatar.skinColor === color && styles.selectedSkinColor,
+                  currentAvatar.skinTone === skinTone && styles.selectedSkinColor,
                 ]}
-              />
+              >
+                <Text style={styles.skinToneLabel}>{skinTone}</Text>
+              </Pressable>
             ))}
           </View>
         </ScrollView>
@@ -354,17 +556,18 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
     }
 
     if (setupTab === 'hair') {
-      const hairList = genderAssets?.hair as ImageSourcePropType[] | undefined
+      const hairOptions = Object.entries(genderAssets?.hair || {})
+
       return (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionsScroll}>
           <View style={styles.optionsGrid}>
-            {(hairList || []).map((hair: ImageSourcePropType, index: number) => (
+            {hairOptions.map(([key, imageSource]) => (
               <Pressable
-                key={index}
-                onPress={() => updateTempAvatar({ hair })}
-                style={[styles.optionItem, currentAvatar.hair === hair && styles.selectedOption]}
+                key={key}
+                onPress={() => updateTempAvatar({ hair: key })}
+                style={[styles.optionItem, currentAvatar.hair === key && styles.selectedOption]}
               >
-                <Image source={hair} style={styles.optionImage} />
+                <Image source={imageSource} style={styles.optionImage} />
               </Pressable>
             ))}
           </View>
@@ -373,20 +576,18 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
     }
 
     if (setupTab === 'clothes') {
-      const clothesList = genderAssets?.clothes as ImageSourcePropType[] | undefined
+      const clothesOptions = Object.entries(genderAssets?.clothes || {})
+
       return (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionsScroll}>
           <View style={styles.optionsGrid}>
-            {(clothesList || []).map((clothes: ImageSourcePropType, index: number) => (
+            {clothesOptions.map(([key, imageSource]) => (
               <Pressable
-                key={index}
-                onPress={() => updateTempAvatar({ clothes })}
-                style={[
-                  styles.optionItem,
-                  currentAvatar.clothes === clothes && styles.selectedOption,
-                ]}
+                key={key}
+                onPress={() => updateTempAvatar({ clothes: key })}
+                style={[styles.optionItem, currentAvatar.clothes === key && styles.selectedOption]}
               >
-                <Image source={clothes} style={styles.optionImage} />
+                <Image source={imageSource} style={styles.optionImage} />
               </Pressable>
             ))}
           </View>
@@ -394,7 +595,8 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
       )
     }
 
-    const accessoryList = Object.values(genderAssets?.accessories || {}) as ImageSourcePropType[]
+    const accessoryOptions = Object.entries(genderAssets?.accessories || {})
+
     return (
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionsScroll}>
         <View style={styles.optionsGrid}>
@@ -406,16 +608,13 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
               <Text style={styles.skipText}>Lewati</Text>
             </View>
           </Pressable>
-          {(accessoryList || []).map((accessory: ImageSourcePropType, index: number) => (
+          {accessoryOptions.map(([key, imageSource]) => (
             <Pressable
-              key={index}
-              onPress={() => updateTempAvatar({ accessory })}
-              style={[
-                styles.optionItem,
-                currentAvatar.accessory === accessory && styles.selectedOption,
-              ]}
+              key={key}
+              onPress={() => updateTempAvatar({ accessory: key })}
+              style={[styles.optionItem, currentAvatar.accessory === key && styles.selectedOption]}
             >
-              <Image source={accessory} style={styles.optionImage} />
+              <Image source={imageSource} style={styles.optionImage} />
             </Pressable>
           ))}
         </View>
@@ -424,6 +623,11 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
   }
 
   const canStart = tempNames.every((n) => n && n.trim())
+
+  // Render game mode selector first
+  if (phase === 'select_mode') {
+    return <GameModeSelector onModeSelected={handleModeSelected} />
+  }
 
   return (
     <View
@@ -503,15 +707,15 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                   <Pressable
                     onPress={() =>
                       updateTempAvatar({
-                        gender: 'boy',
-                        hair: undefined,
-                        clothes: undefined,
+                        gender: 'Male',
+                        hair: 'HAIR1',
+                        clothes: 'BASIC',
                         accessory: undefined,
                       })
                     }
                     style={[
                       styles.genderChip,
-                      (tempAvatars[currentPlayerSetup]?.gender || 'girl') === 'boy' &&
+                      (tempAvatars[currentPlayerSetup]?.gender || 'Female') === 'Male' &&
                         styles.genderChipActive,
                     ]}
                   >
@@ -520,15 +724,15 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                   <Pressable
                     onPress={() =>
                       updateTempAvatar({
-                        gender: 'girl',
-                        hair: undefined,
-                        clothes: undefined,
+                        gender: 'Female',
+                        hair: 'BRAID',
+                        clothes: 'BASIC',
                         accessory: undefined,
                       })
                     }
                     style={[
                       styles.genderChip,
-                      (tempAvatars[currentPlayerSetup]?.gender || 'girl') === 'girl' &&
+                      (tempAvatars[currentPlayerSetup]?.gender || 'Female') === 'Female' &&
                         styles.genderChipActive,
                     ]}
                   >
@@ -550,40 +754,27 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                     ]}
                   >
                     <View style={styles.skinPreview}>
-                      <View style={styles.layerFill}>
-                        {(() => {
-                          const genderAssets =
-                            tempAvatars[currentPlayerSetup]?.gender === 'boy'
-                              ? avatarAssets?.boy
-                              : avatarAssets?.girl
-                          const baseUri = genderAssets?.base
-                            ? Image.resolveAssetSource(genderAssets.base).uri
-                            : undefined
-                          const skinColor =
-                            tempAvatars[currentPlayerSetup]?.skinColor || SKIN_TONES[0]
-                          return baseUri ? (
-                            <SvgUri uri={baseUri} width={160} height={180} color={skinColor} />
-                          ) : null
-                        })()}
-                      </View>
-                      {tempAvatars[currentPlayerSetup]?.clothes && (
-                        <Image
-                          source={tempAvatars[currentPlayerSetup]?.clothes}
-                          style={styles.layerClothes}
-                        />
-                      )}
-                      {tempAvatars[currentPlayerSetup]?.hair && (
-                        <Image
-                          source={tempAvatars[currentPlayerSetup]?.hair}
-                          style={styles.layerHair}
-                        />
-                      )}
-                      {tempAvatars[currentPlayerSetup]?.accessory && (
-                        <Image
-                          source={tempAvatars[currentPlayerSetup]?.accessory}
-                          style={styles.layerAccessory}
-                        />
-                      )}
+                      {(() => {
+                        const currentAvatar = tempAvatars[currentPlayerSetup]
+                        if (!currentAvatar) return null
+
+                        const avatarPath = buildAvatarPath(currentAvatar)
+                        if (!avatarPath)
+                          return <Text style={{ color: '#94a3b8' }}>Pilih lengkap</Text>
+
+                        // Build absolute path for avatar SVG
+                        const avatarSource = assets.ular_tangga?.background // Use this to get base path
+                        const resolvedPath = avatarSource
+                          ? Image.resolveAssetSource(avatarSource).uri.replace(
+                              'background.png',
+                              avatarPath,
+                            )
+                          : null
+
+                        return resolvedPath ? (
+                          <SvgUri uri={resolvedPath} width={160} height={180} />
+                        ) : null
+                      })()}
                     </View>
                   </View>
 
@@ -649,9 +840,10 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                 <View style={{ width: boardSize, height: boardHeight }}>
                   {Array.from({ length: TOTAL_SQUARES }).map((_, i) => {
                     const n = i + 1
-                    const { x, y } = squareToXY(n)
+                    const { x, y } = getSquareXY(n)
 
-                    const displayNumber = n === 1 ? null : n === TOTAL_SQUARES ? null : n - 1
+                    // Display actual square numbers (1 to TOTAL_SQUARES)
+                    const displayNumber = n === 1 ? null : n === TOTAL_SQUARES ? null : n
                     const isStartSquare = n === 1
                     const isFinishSquare = n === TOTAL_SQUARES
 
@@ -717,9 +909,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                   {Object.entries(ladders.current).map(([from, to]) => {
                     const f = Number(from)
                     const t = Number(to)
-                    const p1 = squareToXY(f)
-                    const fromPlayable = f - 1
-                    const toPlayable = t - 1
+                    const p1 = getSquareXY(f)
                     return (
                       <View
                         key={`lad-${from}`}
@@ -733,7 +923,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                           🔼
                         </Text>
                         <Text style={{ fontSize: 9, color: themeColors[theme].ladder }}>
-                          {fromPlayable}→{toPlayable}
+                          {f}→{t}
                         </Text>
                       </View>
                     )
@@ -743,9 +933,6 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                     const fromNum = Number(from)
                     const toNum = Number(to)
                     const path = calculateSnakePath(fromNum, toNum, cell)
-
-                    const fromPlayable = fromNum - 1
-                    const toPlayable = toNum - 1
 
                     // Use specific snake asset if defined in map, otherwise default to 0
                     const snakeImageIndex = SNAKE_ASSET_MAP[fromNum] ?? 0
@@ -825,7 +1012,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                               textAlign: 'center',
                             }}
                           >
-                            🐍 {fromPlayable}→{toPlayable}
+                            🐍 {fromNum}→{toNum}
                           </Text>
                         </View>
                       </View>
@@ -838,6 +1025,18 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                     const transform = a
                       ? a.getTranslateTransform()
                       : [{ translateX: 0 }, { translateY: 0 }]
+
+                    // Get avatar IDLE.svg path using buildAvatarPath
+                    const avatarPath = buildAvatarPath(pl.avatar)
+                    const avatarSource = assets.ular_tangga?.background
+                    const resolvedUri =
+                      avatarPath && avatarSource
+                        ? Image.resolveAssetSource(avatarSource).uri.replace(
+                            'background.png',
+                            avatarPath,
+                          )
+                        : null
+
                     return (
                       <Animated.View
                         key={`pl-${pl.id}`}
@@ -855,20 +1054,18 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                               { backgroundColor: pl.avatar.color || '#6b7280' },
                             ]}
                           >
-                            <View
-                              style={[
-                                styles.tokenInner,
-                                { backgroundColor: pl.avatar.skinColor || SKIN_TONES[0] },
-                              ]}
-                            >
-                              {pl.avatar.clothes && (
-                                <Image source={pl.avatar.clothes} style={styles.tokenClothes} />
-                              )}
-                              {pl.avatar.hair && (
-                                <Image source={pl.avatar.hair} style={styles.tokenHair} />
-                              )}
-                              {pl.avatar.accessory && (
-                                <Image source={pl.avatar.accessory} style={styles.tokenAccessory} />
+                            <View style={styles.tokenInner}>
+                              {resolvedUri ? (
+                                <SvgUri uri={resolvedUri} width="100%" height="100%" />
+                              ) : (
+                                <View
+                                  style={{
+                                    width: 20,
+                                    height: 20,
+                                    borderRadius: 10,
+                                    backgroundColor: '#fff',
+                                  }}
+                                />
                               )}
                             </View>
                           </View>
@@ -883,9 +1080,18 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
             <View style={styles.gameControls}>
               <View style={styles.gameInfo}>
                 <Text style={[styles.turnInfo, { color: themeColors[theme].text }]}>
-                  Giliran: {players[turnIdx]?.name}
+                  Giliran: {players[turnIdx]?.name} {players[turnIdx]?.isBot ? '🤖' : ''}
                 </Text>
                 <Text style={[styles.gameStatus, { color: themeColors[theme].text }]}>{info}</Text>
+
+                {/* Bot reaction display */}
+                {botReaction && (
+                  <View style={styles.botReactionContainer}>
+                    <Text style={styles.botReactionText}>
+                      {botReaction.emoticon} {botReaction.message}
+                    </Text>
+                  </View>
+                )}
               </View>
 
               <View style={styles.diceSection}>
@@ -894,11 +1100,18 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                 </Text>
                 <Pressable
                   onPress={roll}
-                  disabled={isAnimating}
-                  style={[styles.rollButton, isAnimating && styles.rollButtonDisabled]}
+                  disabled={isAnimating || players[turnIdx]?.isBot}
+                  style={[
+                    styles.rollButton,
+                    (isAnimating || players[turnIdx]?.isBot) && styles.rollButtonDisabled,
+                  ]}
                 >
                   <Text style={styles.rollButtonText}>
-                    {isAnimating ? 'BERGERAK...' : 'LEMPAR DADU'}
+                    {isAnimating
+                      ? 'BERGERAK...'
+                      : players[turnIdx]?.isBot
+                      ? 'GILIRAN BOT...'
+                      : 'LEMPAR DADU'}
                   </Text>
                 </Pressable>
               </View>
@@ -1115,10 +1328,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(154, 191, 68, 0.18)',
     borderColor: '#9abf44',
   },
+  genderChipDisabled: {
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
+    opacity: 0.5,
+  },
   genderChipText: {
     color: '#1f2937',
     fontSize: 14,
     fontWeight: '700',
+  },
+  genderChipTextDisabled: {
+    color: '#94a3b8',
   },
   avatarStrip: {
     flexDirection: 'row',
@@ -1287,19 +1508,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   skinColorOption: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     borderWidth: 3,
     borderColor: 'transparent',
     shadowColor: '#b8cde1',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.35,
     shadowRadius: 6,
+    backgroundColor: '#f8fbff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  skinToneLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#1f2937',
   },
   selectedSkinColor: {
     borderColor: '#9abf44',
     transform: [{ scale: 1.06 }],
+    backgroundColor: 'rgba(154, 191, 68, 0.18)',
   },
   optionsScroll: {
     marginVertical: 6,
@@ -1444,6 +1674,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     opacity: 0.9,
+  },
+  botReactionContainer: {
+    marginTop: 8,
+    padding: 10,
+    backgroundColor: 'rgba(154, 191, 68, 0.15)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#9abf44',
+  },
+  botReactionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+    color: '#3D405B',
   },
   diceSection: {
     alignItems: 'center',
