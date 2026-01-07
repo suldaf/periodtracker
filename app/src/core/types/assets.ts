@@ -34,8 +34,12 @@ export interface AppAssets {
   // TODO:
   // eslint-disable-next-line
   videos?: Record<string, any> // TODO: VideoSourcePropType ?
+  
   ular_tangga?: {
+    logo: ImageSourcePropType
+    icon: ImageSourcePropType
     background: ImageSourcePropType
+    background_footer: ImageSourcePropType
     boy: {
       base: ImageSourcePropType
       hair: ImageSourcePropType[]
@@ -48,5 +52,6 @@ export interface AppAssets {
       clothes: ImageSourcePropType[]
       accessories: Record<string, ImageSourcePropType>
     }
+    snakes: ImageSourcePropType[]
   }
 }

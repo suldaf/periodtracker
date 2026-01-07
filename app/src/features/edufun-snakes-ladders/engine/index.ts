@@ -3,6 +3,33 @@
  * Exports all game logic modules
  */
 
+// Configuration - Board settings, types, and constants
+export {
+  BOARD_CONFIG_42,
+  BOARD_CONFIG_100,
+  DEFAULT_SNAKES_42,
+  DEFAULT_LADDERS_42,
+  DEFAULT_SNAKES_100,
+  DEFAULT_LADDERS_100,
+  SNAKE_ASSET_MAP,
+  SNAKE_ROTATION_OFFSETS,
+  SKIN_TONES,
+  TOKEN_COLORS,
+  THEME_COLORS,
+  createInitialAvatars,
+  createInitialNames,
+  calculateBoardDimensions,
+} from './config'
+
+export type {
+  ThemeColors,
+  Gender,
+  AvatarSpec,
+  Player,
+  SetupTab,
+  Phase,
+} from './config'
+
 // Grid Systems - Coordinate mapping and board layout
 export {
   TOTAL_SQUARES,
@@ -24,10 +51,6 @@ export type { GridPosition, PixelPosition, BoardConfig } from './grid-systems'
 
 // Rules - Game mechanics, snakes/ladders, dice logic
 export {
-  DEFAULT_SNAKES_100,
-  DEFAULT_LADDERS_100,
-  DEFAULT_SNAKES_42,
-  DEFAULT_LADDERS_42,
   rollDice,
   rollDiceWithBias,
   checkSnake,
