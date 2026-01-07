@@ -639,17 +639,34 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                     {(() => {
                       const currentAvatar = tempAvatars[currentPlayerSetup]
                       if (!currentAvatar) return null
-                      
-                      const avatarPath = buildAvatarPath(currentAvatar)
-                      if (!avatarPath) return <Text style={{ color: '#94a3b8' }}>Pilih lengkap</Text>
-                      
-                      // Build absolute path for avatar SVG
-                      const avatarSource = assets.ular_tangga?.background // Use this to get base path
-                      const resolvedPath = avatarSource 
-                        ? Image.resolveAssetSource(avatarSource).uri.replace('background.png', avatarPath)
-                        : null
-                      
-                      return resolvedPath ? <SvgUri uri={resolvedPath} width={160} height={180} /> : null
+
+                      const { gender, skinTone, hair, clothes, accessory } = currentAvatar
+                      if (!hair || !clothes) return <Text style={{ color: '#94a3b8' }}>Pilih lengkap</Text>
+
+                      const accessoryPart = accessory || 'NONE'
+                      const prefix = gender === 'Female' ? 'F' : 'M'
+                      const setKey = `${prefix}-${skinTone}-${hair}-${clothes}-${accessoryPart}`
+
+                      if (!isSetAvailable(currentAvatar)) {
+                        return (
+                          <Text style={{ color: '#ef4444', fontSize: 11, textAlign: 'center' }}>
+                            Set tidak tersedia
+                          </Text>
+                        )
+                      }
+
+                      const genderAssets = gender === 'Female' ? assets.ular_tangga?.female : assets.ular_tangga?.male
+                      const setSource = genderAssets?.sets?.[setKey]
+                      if (!setSource) {
+                        return (
+                          <Text style={{ color: '#ef4444', fontSize: 11, textAlign: 'center' }}>
+                            Asset tidak ditemukan
+                          </Text>
+                        )
+                      }
+
+                      const uri = Image.resolveAssetSource(setSource).uri
+                      return <SvgUri uri={uri} width={160} height={180} />
                     })()}
                   </View>
                 </View>
