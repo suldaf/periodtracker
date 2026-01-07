@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef, useEffect } from 'react'
+import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react'
 import {
   Dimensions,
   Pressable,
@@ -16,6 +16,35 @@ import { SvgUri } from 'react-native-svg'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { assets } from '../../resources/assets'
 import { ScreenComponent } from '../../navigation/RootNavigator'
+
+// Import game engine modules
+import {
+  squareToXY,
+  calculateTokenPosition,
+  isSpecialSquare,
+} from '../../features/edufun-snakes-ladders/engine/grid-systems'
+import {
+  DEFAULT_SNAKES_42,
+  DEFAULT_LADDERS_42,
+  rollDice,
+  calculateMove,
+  getNextPlayerIndex,
+  updateSnakeHitCounter,
+  GameMode,
+  Difficulty,
+} from '../../features/edufun-snakes-ladders/engine/rules'
+import {
+  BotConfig,
+  BotPersonality,
+  createBotConfigs,
+  executeBotTurn,
+  determineBotReaction,
+  calculateBotActionDelays,
+  getBotMessage,
+  isBotTurn,
+  calculateHumanDiceRoll,
+  Emoticon,
+} from '../../features/edufun-snakes-ladders/engine/bot-logic'
 
 type Gender = 'boy' | 'girl'
 
@@ -39,33 +68,11 @@ type SetupTab = 'skin' | 'hair' | 'clothes' | 'accessory'
 
 type Phase = 'choose' | 'setup' | 'play'
 
+// Board configuration for 42 squares (6x7)
 const TOTAL_SQUARES = 42
 const COLS = 6
 
-const DEFAULT_SNAKES: Record<number, number> = {
-  17: 5,
-  21: 9,
-  25: 13,
-  33: 24,
-  36: 30,
-  39: 32,
-  41: 31,
-}
-
-const DEFAULT_LADDERS: Record<number, number> = {
-  2: 12,
-  4: 14,
-  7: 18,
-  11: 23,
-  15: 26,
-  19: 29,
-  22: 34,
-  28: 38,
-}
-
-const SKIN_TONES = [
-  '#F7C6A3', '#F4AA87', '#F29A7C', '#D67852'
-]
+const SKIN_TONES = ['#F7C6A3', '#F4AA87', '#F29A7C', '#D67852']
 
 const TOKEN_COLORS = ['#ef4444', '#3b82f6', '#f59e0b', '#22c55e', '#8b5cf6']
 
@@ -88,30 +95,43 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
   const [tempAvatars, setTempAvatars] = useState<AvatarSpec[]>([])
   const [tempNames, setTempNames] = useState<string[]>([])
 
-  const snakes = useRef(DEFAULT_SNAKES)
-  const ladders = useRef(DEFAULT_LADDERS)
+  // Game mode and bot states
+  const [gameMode, setGameMode] = useState<GameMode>('multiplayer')
+  const [difficulty, setDifficulty] = useState<Difficulty>('santai')
+  const [bots, setBots] = useState<BotConfig[]>([])
+  const [botReaction, setBotReaction] = useState<{ message: string; emoticon: Emoticon } | null>(
+    null,
+  )
+  const [consecutiveSnakeHits, setConsecutiveSnakeHits] = useState<Record<number, number>>({})
+
+  // Use engine's default snakes and ladders
+  const snakes = useRef(DEFAULT_SNAKES_42)
+  const ladders = useRef(DEFAULT_LADDERS_42)
   const moveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const animPos = useRef<Record<number, Animated.ValueXY>>({})
   const animScale = useRef<Record<number, Animated.Value>>({})
 
   const avatarAssets = assets.ular_tangga
 
-  const themeColors = useMemo(() => ({
-    light: {
-      bg: '#dff3ff',
-      square1: '#ffffff',
-      square2: '#f1f5f9',
-      text: '#1f2937',
-      snake: '#b91c1c',
-      ladder: '#0a8a5c',
-      boardBg: '#e7f3ff',
-      cardBg: '#ffffff',
-      accent: '#9abf44',
-      accentDark: '#7fa038',
-      muted: '#6b7280',
-      outline: '#d6e3ef',
-    },
-  }), [])
+  const themeColors = useMemo(
+    () => ({
+      light: {
+        bg: '#dff3ff',
+        square1: '#ffffff',
+        square2: '#f1f5f9',
+        text: '#1f2937',
+        snake: '#b91c1c',
+        ladder: '#0a8a5c',
+        boardBg: '#e7f3ff',
+        cardBg: '#ffffff',
+        accent: '#9abf44',
+        accentDark: '#7fa038',
+        muted: '#6b7280',
+        outline: '#d6e3ef',
+      },
+    }),
+    [],
+  )
 
   const [theme] = useState<'light'>('light')
 
@@ -123,12 +143,20 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
 
   useEffect(() => {
     if (phase === 'setup') {
-      setTempAvatars(Array(playerCount).fill(null).map((_, i) => ({
-        gender: 'girl',
-        skinColor: SKIN_TONES[0],
-        color: TOKEN_COLORS[i % TOKEN_COLORS.length],
-      })))
-      setTempNames(Array(playerCount).fill(null).map((_, i) => `Pemain ${i + 1}`))
+      setTempAvatars(
+        Array(playerCount)
+          .fill(null)
+          .map((_, i) => ({
+            gender: 'girl',
+            skinColor: SKIN_TONES[0],
+            color: TOKEN_COLORS[i % TOKEN_COLORS.length],
+          })),
+      )
+      setTempNames(
+        Array(playerCount)
+          .fill(null)
+          .map((_, i) => `Pemain ${i + 1}`),
+      )
       setCurrentPlayerSetup(0)
       setSetupTab('skin')
     }
@@ -140,17 +168,18 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
     const newPlayers = tempAvatars.map((avatar, i) => {
       const genderAssets = avatar.gender === 'boy' ? avatarAssets?.boy : avatarAssets?.girl
       return {
-      id: i,
-      name: (tempNames[i] || `Pemain ${i + 1}`).trim() || `Pemain ${i + 1}`,
-      avatar: {
-        ...avatar,
-        hair: avatar.hair || genderAssets?.hair?.[0],
-        clothes: avatar.clothes || genderAssets?.clothes?.[0],
-        accessory: avatar.accessory,
-        color: TOKEN_COLORS[i % TOKEN_COLORS.length] || '#6b7280',
-      },
-      pos: 0,
-    }})
+        id: i,
+        name: (tempNames[i] || `Pemain ${i + 1}`).trim() || `Pemain ${i + 1}`,
+        avatar: {
+          ...avatar,
+          hair: avatar.hair || genderAssets?.hair?.[0],
+          clothes: avatar.clothes || genderAssets?.clothes?.[0],
+          accessory: avatar.accessory,
+          color: TOKEN_COLORS[i % TOKEN_COLORS.length] || '#6b7280',
+        },
+        pos: 0,
+      }
+    })
 
     setPlayers(newPlayers)
     setTurnIdx(0)
@@ -193,90 +222,163 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
     })
   }
 
-  const roll = () => {
-    if (phase !== 'play' || isAnimating || players.length === 0) return
-
-    const d = Math.floor(Math.random() * 6) + 1
-    setDice(d)
-
-    const current = players[turnIdx]
-    const target = current.pos + d
-
-    if (target > TOTAL_SQUARES) {
-      setInfo(`${current.name} rolled ${d} → but needs exact to finish. Giliran lanjut.`)
-      if (d !== 6) setTurnIdx((s) => (s + 1) % players.length)
-      return
+  // Create game context for bot/RNG decisions
+  const createGameContext = useCallback(() => {
+    const humanPlayer = players.find((p) => !bots.some((b) => b.id === p.id))
+    const botPositions = players.filter((p) => bots.some((b) => b.id === p.id)).map((p) => p.pos)
+    return {
+      humanPosition: humanPlayer?.pos || 0,
+      botPositions,
+      consecutiveSnakeHits,
+      snakes: snakes.current,
+      ladders: ladders.current,
+      totalSquares: TOTAL_SQUARES,
     }
+  }, [players, bots, consecutiveSnakeHits])
 
-    setIsAnimating(true)
-    setInfo(`${current.name} rolled ${d} → moving...`)
+  // Execute a move with engine logic
+  const executeMove = useCallback(
+    (playerId: number, diceValue: number) => {
+      const current = players.find((p) => p.id === playerId)
+      if (!current) return
 
-    let step = current.pos
-    const hop = () => {
-      if (step >= target) {
-        let final = step
-        let special = false
+      const moveResult = calculateMove(
+        current.pos,
+        diceValue,
+        snakes.current,
+        ladders.current,
+        TOTAL_SQUARES,
+        current.name,
+      )
 
-        if (ladders.current[final]) {
-          const to = ladders.current[final]
-          setInfo((s) => `${s} | TANGGA ${final} → ${to}`)
-          final = to
-          special = true
-        }
-        if (snakes.current[final]) {
-          const to = snakes.current[final]
-          setInfo((s) => `${s} | ULAR ${final} → ${to}`)
-          final = to
-          special = true
-        }
+      setInfo(moveResult.message)
 
-        setPlayers((ps) => ps.map((pl) => (pl.id === current.id ? { ...pl, pos: final } : pl)))
-        setIsAnimating(false)
+      // Update snake hit counter
+      if (moveResult.hitSnake) {
+        setConsecutiveSnakeHits((prev) => updateSnakeHitCounter(playerId, true, prev))
+      } else {
+        setConsecutiveSnakeHits((prev) => updateSnakeHitCounter(playerId, false, prev))
+      }
 
-        if (special) triggerBounce(current.id)
+      // Animate step by step
+      setIsAnimating(true)
+      let step = current.pos
+      const target = moveResult.landingPosition
 
-        if (final === TOTAL_SQUARES) {
-          setInfo(`${current.name} MENANG! 🎉`)
-          triggerBounce(current.id)
+      const hop = () => {
+        if (step >= target) {
+          // Apply snake or ladder
+          setPlayers((ps) =>
+            ps.map((pl) => (pl.id === playerId ? { ...pl, pos: moveResult.finalPosition } : pl)),
+          )
+          setIsAnimating(false)
+
+          if (moveResult.hitSnake || moveResult.hitLadder) {
+            triggerBounce(playerId)
+
+            // Bot reactions to player events
+            if (gameMode === 'solo' && !bots.some((b) => b.id === playerId)) {
+              // Human player hit something, bots react
+              bots.forEach((bot) => {
+                const event = moveResult.hitSnake ? 'player_snake' : 'player_ladder'
+                const reaction = determineBotReaction(bot.personality, event)
+                if (reaction.emoticon) {
+                  setBotReaction({ message: `${bot.name}`, emoticon: reaction.emoticon })
+                  setTimeout(() => setBotReaction(null), 2000)
+                }
+              })
+            }
+          }
+
+          if (moveResult.isWin) {
+            triggerBounce(playerId)
+            return
+          }
+
+          // Determine next turn
+          const nextIdx = getNextPlayerIndex(turnIdx, players.length, moveResult.canRollAgain)
+          setTurnIdx(nextIdx)
+
+          // If next player is a bot, trigger their turn after delay
+          if (gameMode === 'solo') {
+            const nextPlayer = players[nextIdx]
+            if (nextPlayer && bots.some((b) => b.id === nextPlayer.id)) {
+              const bot = bots.find((b) => b.id === nextPlayer.id)!
+              const delays = calculateBotActionDelays(bot.personality)
+              setTimeout(() => executeBotMove(bot, nextPlayer), delays.beforeRoll)
+            }
+          }
           return
         }
 
-        if (d !== 6) setTurnIdx((s) => (s + 1) % players.length)
-        return
+        step += 1
+        setPlayers((ps) => ps.map((pl) => (pl.id === playerId ? { ...pl, pos: step } : pl)))
+        moveTimer.current = setTimeout(hop, 140)
       }
 
-      step += 1
-      setPlayers((ps) => ps.map((pl) => (pl.id === current.id ? { ...pl, pos: step } : pl)))
-      moveTimer.current = setTimeout(hop, 140)
+      hop()
+    },
+    [players, turnIdx, gameMode, bots],
+  )
+
+  // Execute bot's turn
+  const executeBotMove = useCallback(
+    (bot: BotConfig, player: Player) => {
+      const context = createGameContext()
+      const botAction = executeBotTurn(bot, player.pos, context)
+
+      setInfo(getBotMessage(bot.name, bot.personality, 'thinking'))
+
+      setTimeout(() => {
+        setDice(botAction.diceValue)
+        setInfo(getBotMessage(bot.name, bot.personality, 'rolling'))
+
+        setTimeout(
+          () => {
+            executeMove(player.id, botAction.diceValue)
+          },
+          botAction.animationSpeed === 'fast' ? 300 : 600,
+        )
+      }, botAction.thinkingDuration)
+    },
+    [createGameContext, executeMove],
+  )
+
+  const roll = () => {
+    if (phase !== 'play' || isAnimating || players.length === 0) return
+
+    const current = players[turnIdx]
+
+    // Check if current player is a bot
+    if (
+      isBotTurn(
+        current.id,
+        bots.map((b) => b.id),
+      )
+    ) {
+      return // Bot turns are handled automatically
     }
 
-    hop()
+    // Human player roll - apply mercy rule if needed
+    const context = createGameContext()
+    const diceResult = calculateHumanDiceRoll(current.id, current.pos, context)
+    const d = diceResult.value
+
+    setDice(d)
+    executeMove(current.id, d)
   }
 
-  const squareToXY = (n: number) => {
-    const rows = Math.ceil(TOTAL_SQUARES / COLS)
-    if (n <= 0) return { x: 0, y: rows - 1 }
+  // Use engine's grid functions with local board config
+  const getSquareXY = useCallback((n: number) => {
+    return squareToXY(n, COLS, TOTAL_SQUARES)
+  }, [])
 
-    const idx = n - 1
-    const row = Math.floor(idx / COLS)
-    let col = idx % COLS
-    if (row % 2 === 1) col = COLS - 1 - col
-    const y = rows - 1 - row
-    const x = col
-    return { x, y }
-  }
-
-  const squareToPixel = (n: number, id: number) => {
-    const { x, y } = squareToXY(n)
-    const cols = 3
-    const col = id % cols
-    const row = Math.floor(id / cols)
-    const offsetX = col * (cell * 0.25)
-    const offsetY = row * (cell * 0.25)
-    const left = x * cell + cell * 0.1 + offsetX
-    const top = y * cell + cell * 0.1 + offsetY
-    return { left, top }
-  }
+  const getTokenPosition = useCallback(
+    (n: number, id: number) => {
+      return calculateTokenPosition(n, id, cell, COLS, TOTAL_SQUARES)
+    },
+    [cell],
+  )
 
   const triggerBounce = (id: number) => {
     const s = animScale.current[id]
@@ -290,24 +392,31 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
   useEffect(() => {
     players.forEach((p) => {
       if (!animPos.current[p.id]) {
-        const { left, top } = squareToPixel(p.pos, p.id)
+        const { left, top } = getTokenPosition(p.pos, p.id)
         animPos.current[p.id] = new Animated.ValueXY({ x: left, y: top })
       }
       if (!animScale.current[p.id]) animScale.current[p.id] = new Animated.Value(1)
     })
-  }, [players])
+  }, [players, getTokenPosition])
 
   useEffect(() => {
     players.forEach((p) => {
       const a = animPos.current[p.id]
       if (!a) return
-      const { left, top } = squareToPixel(p.pos, p.id)
-      Animated.timing(a, { toValue: { x: left, y: top }, duration: 240, useNativeDriver: true }).start()
+      const { left, top } = getTokenPosition(p.pos, p.id)
+      Animated.timing(a, {
+        toValue: { x: left, y: top },
+        duration: 240,
+        useNativeDriver: true,
+      }).start()
     })
-  }, [players, cell])
+  }, [players, cell, getTokenPosition])
 
   const renderTabContent = () => {
-    const currentAvatar = tempAvatars[currentPlayerSetup] || { gender: 'girl', skinColor: SKIN_TONES[0] }
+    const currentAvatar = tempAvatars[currentPlayerSetup] || {
+      gender: 'girl',
+      skinColor: SKIN_TONES[0],
+    }
     const genderAssets = currentAvatar.gender === 'boy' ? avatarAssets?.boy : avatarAssets?.girl
 
     if (setupTab === 'skin') {
@@ -321,7 +430,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                 style={[
                   styles.skinColorOption,
                   { backgroundColor: color },
-                  currentAvatar.skinColor === color && styles.selectedSkinColor
+                  currentAvatar.skinColor === color && styles.selectedSkinColor,
                 ]}
               />
             ))}
@@ -331,7 +440,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
     }
 
     if (setupTab === 'hair') {
-  const hairList = genderAssets?.hair as ImageSourcePropType[] | undefined
+      const hairList = genderAssets?.hair as ImageSourcePropType[] | undefined
 
       return (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionsScroll}>
@@ -351,7 +460,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
     }
 
     if (setupTab === 'clothes') {
-  const clothesList = genderAssets?.clothes as ImageSourcePropType[] | undefined
+      const clothesList = genderAssets?.clothes as ImageSourcePropType[] | undefined
 
       return (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionsScroll}>
@@ -360,7 +469,10 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
               <Pressable
                 key={index}
                 onPress={() => updateTempAvatar({ clothes })}
-                style={[styles.optionItem, currentAvatar.clothes === clothes && styles.selectedOption]}
+                style={[
+                  styles.optionItem,
+                  currentAvatar.clothes === clothes && styles.selectedOption,
+                ]}
               >
                 <Image source={clothes} style={styles.optionImage} />
               </Pressable>
@@ -370,7 +482,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
       )
     }
 
-  const accessoryList = Object.values(genderAssets?.accessories || {}) as ImageSourcePropType[]
+    const accessoryList = Object.values(genderAssets?.accessories || {}) as ImageSourcePropType[]
 
     return (
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionsScroll}>
@@ -387,7 +499,10 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
             <Pressable
               key={index}
               onPress={() => updateTempAvatar({ accessory })}
-              style={[styles.optionItem, currentAvatar.accessory === accessory && styles.selectedOption]}
+              style={[
+                styles.optionItem,
+                currentAvatar.accessory === accessory && styles.selectedOption,
+              ]}
             >
               <Image source={accessory} style={styles.optionImage} />
             </Pressable>
@@ -400,248 +515,397 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
   const canStart = tempNames.every((n) => n && n.trim())
 
   return (
-    <View style={[styles.screen, { paddingTop: 24 + insets.top, paddingBottom: 16 + insets.bottom, backgroundColor: themeColors[theme].bg }]}>
+    <View
+      style={[
+        styles.screen,
+        {
+          paddingTop: 24 + insets.top,
+          paddingBottom: 16 + insets.bottom,
+          backgroundColor: themeColors[theme].bg,
+        },
+      ]}
+    >
       <ImageBackground
         source={assets.ular_tangga?.background}
         style={styles.inner}
         imageStyle={{ resizeMode: 'cover', opacity: 0.08 }}
       >
-      <Text style={[styles.title, { color: themeColors[theme].text }]}>ULAR TANGGA</Text>
+        <Text style={[styles.title, { color: themeColors[theme].text }]}>ULAR TANGGA</Text>
 
-      {phase === 'choose' && (
-        <View style={[styles.phaseContainer, { backgroundColor: themeColors[theme].cardBg }]}> 
-          <Text style={[styles.phaseTitle, { color: themeColors[theme].text }]}>Mau main sama berapa orang?</Text>
-          <Text style={[styles.phaseSubtitle, { color: themeColors[theme].text }]}>2-5 pemain</Text>
-          <View style={styles.playerCountGrid}>
-            {[2, 3, 4, 5].map((n) => (
-              <Pressable
-                key={`player-count-${n}`}
-                onPress={() => setPlayerCount(n)}
-                style={[styles.playerCountButton, playerCount === n && styles.playerCountButtonActive]}
-              >
-                <Text style={styles.playerCountText}>{n} Pemain</Text>
-              </Pressable>
-            ))}
-          </View>
-
-          <Pressable onPress={() => setPhase('setup')} style={styles.nextButton}>
-            <Text style={styles.nextButtonText}>Mulai Custom Pemain</Text>
-          </Pressable>
-        </View>
-      )}
-
-      {phase === 'setup' && (
-        <>
-          <View style={[styles.setupCard, { backgroundColor: themeColors[theme].cardBg }]}> 
-            <View style={styles.topRow}>
-              <View style={styles.nameBlock}>
-                <Text style={[styles.playerLabel, { color: themeColors[theme].text }]}>Pemain {currentPlayerSetup + 1}</Text>
-                <TextInput
-                  value={tempNames[currentPlayerSetup] || ''}
-                  onChangeText={updateTempName}
-                  placeholder={`Pemain ${currentPlayerSetup + 1}`}
-                  placeholderTextColor="#94a3b8"
-                  style={styles.nameInputField}
-                  maxLength={14}
-                />
-              </View>
-            </View>
-
-            <View style={styles.genderRow}>
-              <Text style={[styles.sectionLabel, { color: themeColors[theme].text }]}>Gender</Text>
-              <View style={styles.genderSwitch}>
+        {phase === 'choose' && (
+          <View style={[styles.phaseContainer, { backgroundColor: themeColors[theme].cardBg }]}>
+            <Text style={[styles.phaseTitle, { color: themeColors[theme].text }]}>
+              Mau main sama berapa orang?
+            </Text>
+            <Text style={[styles.phaseSubtitle, { color: themeColors[theme].text }]}>
+              2-5 pemain
+            </Text>
+            <View style={styles.playerCountGrid}>
+              {[2, 3, 4, 5].map((n) => (
                 <Pressable
-                  onPress={() => updateTempAvatar({ gender: 'boy', hair: undefined, clothes: undefined, accessory: undefined })}
-                  style={[styles.genderChip, (tempAvatars[currentPlayerSetup]?.gender || 'girl') === 'boy' && styles.genderChipActive]}
+                  key={`player-count-${n}`}
+                  onPress={() => setPlayerCount(n)}
+                  style={[
+                    styles.playerCountButton,
+                    playerCount === n && styles.playerCountButtonActive,
+                  ]}
                 >
-                  <Text style={styles.genderChipText}>Laki-laki</Text>
+                  <Text style={styles.playerCountText}>{n} Pemain</Text>
                 </Pressable>
-                <Pressable
-                  onPress={() => updateTempAvatar({ gender: 'girl', hair: undefined, clothes: undefined, accessory: undefined })}
-                  style={[styles.genderChip, (tempAvatars[currentPlayerSetup]?.gender || 'girl') === 'girl' && styles.genderChipActive]}
-                >
-                  <Text style={styles.genderChipText}>Perempuan</Text>
-                </Pressable>
-              </View>
+              ))}
             </View>
 
-            <View style={styles.avatarStrip}>
-              <View style={styles.avatarCenterRow}>
-                <Pressable style={styles.arrowCircle} onPress={() => gotoPlayer(-1)}>
-                  <Text style={styles.arrowText}>‹</Text>
-                </Pressable>
-
-                <View style={[styles.avatarPreviewLarge, { borderColor: TOKEN_COLORS[currentPlayerSetup % TOKEN_COLORS.length] }]}>
-                  <View style={styles.skinPreview}>
-                    <View style={styles.layerFill}>
-                      {(() => {
-                        const genderAssets = (tempAvatars[currentPlayerSetup]?.gender === 'boy'
-                          ? avatarAssets?.boy
-                          : avatarAssets?.girl)
-                        const baseUri = genderAssets?.base
-                          ? Image.resolveAssetSource(genderAssets.base).uri
-                          : undefined
-                        const skinColor = tempAvatars[currentPlayerSetup]?.skinColor || SKIN_TONES[0]
-                        return baseUri ? <SvgUri uri={baseUri} width={160} height={180} color={skinColor} /> : null
-                      })()}
-                    </View>
-                    {tempAvatars[currentPlayerSetup]?.clothes && (
-                      <Image source={tempAvatars[currentPlayerSetup]?.clothes} style={styles.layerClothes} />
-                    )}
-                    {tempAvatars[currentPlayerSetup]?.hair && (
-                      <Image source={tempAvatars[currentPlayerSetup]?.hair} style={styles.layerHair} />
-                    )}
-                    {tempAvatars[currentPlayerSetup]?.accessory && (
-                      <Image source={tempAvatars[currentPlayerSetup]?.accessory} style={styles.layerAccessory} />
-                    )}
-                  </View>
-                </View>
-
-                <Pressable style={styles.arrowCircle} onPress={() => gotoPlayer(1)}>
-                  <Text style={styles.arrowText}>›</Text>
-                </Pressable>
-              </View>
-            </View>
-
-            <View style={styles.tabCard}>
-              <View style={styles.tabRow}>
-                {(['skin', 'hair', 'clothes', 'accessory'] as SetupTab[]).map((tab) => (
-                  <Pressable
-                    key={tab}
-                    onPress={() => setSetupTab(tab)}
-                    style={[styles.tabButton, setupTab === tab && styles.tabButtonActive]}
-                  >
-                    <Text style={[styles.tabText, setupTab === tab && styles.tabTextActive]}>
-                      {tab === 'skin' ? 'Skin' : tab === 'hair' ? 'Rambut' : tab === 'clothes' ? 'Pakaian' : 'Aksesoris'}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-              <View style={styles.tabContent}>{renderTabContent()}</View>
-            </View>
+            <Pressable onPress={() => setPhase('setup')} style={styles.nextButton}>
+              <Text style={styles.nextButtonText}>Mulai Custom Pemain</Text>
+            </Pressable>
           </View>
+        )}
 
-          <Pressable
-            onPress={startGame}
-            style={[styles.startFloating, !canStart && styles.startFloatingDisabled]}
-            disabled={!canStart}
+        {phase === 'setup' && (
+          <ScrollView
+            style={styles.setupScrollView}
+            contentContainerStyle={styles.setupScrollContent}
+            showsVerticalScrollIndicator={false}
           >
-            <Text style={styles.startFloatingText}>Mulai Main</Text>
-          </Pressable>
-        </>
-      )}
+            <View style={[styles.setupCard, { backgroundColor: themeColors[theme].cardBg }]}>
+              <View style={styles.topRow}>
+                <View style={styles.nameBlock}>
+                  <Text style={[styles.playerLabel, { color: themeColors[theme].text }]}>
+                    Pemain {currentPlayerSetup + 1}
+                  </Text>
+                  <TextInput
+                    value={tempNames[currentPlayerSetup] || ''}
+                    onChangeText={updateTempName}
+                    placeholder={`Pemain ${currentPlayerSetup + 1}`}
+                    placeholderTextColor="#94a3b8"
+                    style={styles.nameInputField}
+                    maxLength={14}
+                  />
+                </View>
+              </View>
 
-      {phase === 'play' && players.length > 0 && (
-        <>
-          <View style={[styles.boardWrap, { width: boardSize, height: boardSize }]}> 
-            <ImageBackground
-              source={assets.ular_tangga?.background}
-              style={{ width: boardSize, height: boardSize }}
-              imageStyle={{ resizeMode: 'cover', opacity: 0.95 }}
+              <View style={styles.genderRow}>
+                <Text style={[styles.sectionLabel, { color: themeColors[theme].text }]}>
+                  Gender
+                </Text>
+                <View style={styles.genderSwitch}>
+                  <Pressable
+                    onPress={() =>
+                      updateTempAvatar({
+                        gender: 'boy',
+                        hair: undefined,
+                        clothes: undefined,
+                        accessory: undefined,
+                      })
+                    }
+                    style={[
+                      styles.genderChip,
+                      (tempAvatars[currentPlayerSetup]?.gender || 'girl') === 'boy' &&
+                        styles.genderChipActive,
+                    ]}
+                  >
+                    <Text style={styles.genderChipText}>Laki-laki</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() =>
+                      updateTempAvatar({
+                        gender: 'girl',
+                        hair: undefined,
+                        clothes: undefined,
+                        accessory: undefined,
+                      })
+                    }
+                    style={[
+                      styles.genderChip,
+                      (tempAvatars[currentPlayerSetup]?.gender || 'girl') === 'girl' &&
+                        styles.genderChipActive,
+                    ]}
+                  >
+                    <Text style={styles.genderChipText}>Perempuan</Text>
+                  </Pressable>
+                </View>
+              </View>
+
+              <View style={styles.avatarStrip}>
+                <View style={styles.avatarCenterRow}>
+                  <Pressable style={styles.arrowCircle} onPress={() => gotoPlayer(-1)}>
+                    <Text style={styles.arrowText}>‹</Text>
+                  </Pressable>
+
+                  <View
+                    style={[
+                      styles.avatarPreviewLarge,
+                      { borderColor: TOKEN_COLORS[currentPlayerSetup % TOKEN_COLORS.length] },
+                    ]}
+                  >
+                    <View style={styles.skinPreview}>
+                      <View style={styles.layerFill}>
+                        {(() => {
+                          const genderAssets =
+                            tempAvatars[currentPlayerSetup]?.gender === 'boy'
+                              ? avatarAssets?.boy
+                              : avatarAssets?.girl
+                          const baseUri = genderAssets?.base
+                            ? Image.resolveAssetSource(genderAssets.base).uri
+                            : undefined
+                          const skinColor =
+                            tempAvatars[currentPlayerSetup]?.skinColor || SKIN_TONES[0]
+                          return baseUri ? (
+                            <SvgUri uri={baseUri} width={160} height={180} color={skinColor} />
+                          ) : null
+                        })()}
+                      </View>
+                      {tempAvatars[currentPlayerSetup]?.clothes && (
+                        <Image
+                          source={tempAvatars[currentPlayerSetup]?.clothes}
+                          style={styles.layerClothes}
+                        />
+                      )}
+                      {tempAvatars[currentPlayerSetup]?.hair && (
+                        <Image
+                          source={tempAvatars[currentPlayerSetup]?.hair}
+                          style={styles.layerHair}
+                        />
+                      )}
+                      {tempAvatars[currentPlayerSetup]?.accessory && (
+                        <Image
+                          source={tempAvatars[currentPlayerSetup]?.accessory}
+                          style={styles.layerAccessory}
+                        />
+                      )}
+                    </View>
+                  </View>
+
+                  <Pressable style={styles.arrowCircle} onPress={() => gotoPlayer(1)}>
+                    <Text style={styles.arrowText}>›</Text>
+                  </Pressable>
+                </View>
+              </View>
+
+              <View style={styles.tabCard}>
+                <View style={styles.tabRow}>
+                  {(['skin', 'hair', 'clothes', 'accessory'] as SetupTab[]).map((tab) => (
+                    <Pressable
+                      key={tab}
+                      onPress={() => setSetupTab(tab)}
+                      style={[styles.tabButton, setupTab === tab && styles.tabButtonActive]}
+                    >
+                      <Text style={[styles.tabText, setupTab === tab && styles.tabTextActive]}>
+                        {tab === 'skin'
+                          ? 'Skin'
+                          : tab === 'hair'
+                          ? 'Rambut'
+                          : tab === 'clothes'
+                          ? 'Pakaian'
+                          : 'Aksesoris'}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+                <View style={styles.tabContent}>{renderTabContent()}</View>
+              </View>
+            </View>
+
+            <Pressable
+              onPress={startGame}
+              style={[styles.startFloating, !canStart && styles.startFloatingDisabled]}
+              disabled={!canStart}
             >
-              <View style={{ width: boardSize, height: boardSize }}>
-                {Array.from({ length: TOTAL_SQUARES }).map((_, i) => {
-                  const n = i + 1
-                  const { x, y } = squareToXY(n)
-                  return (
-                    <View
-                      key={`sq-${n}`}
-                      style={{
-                        position: 'absolute',
-                        left: x * cell,
-                        top: y * cell,
-                        width: cell,
-                        height: cell,
-                        borderWidth: 0.5,
-                        borderColor: '#111827',
-                        backgroundColor: (x + y) % 2 === 0 ? themeColors[theme].square1 : themeColors[theme].square2,
-                      }}
-                    >
-                      <Text style={{ fontSize: 10, color: themeColors[theme].text, padding: 2 }}>{n}</Text>
-                      {n === 1 && (
-                        <Text style={{ position: 'absolute', left: 4, bottom: 4, fontSize: 8, fontWeight: '700', color: themeColors[theme].text }}>START</Text>
-                      )}
-                      {n === TOTAL_SQUARES && (
-                        <Text style={{ position: 'absolute', right: 4, bottom: 4, fontSize: 8, fontWeight: '700', color: themeColors[theme].text }}>FINISH</Text>
-                      )}
-                    </View>
-                  )
-                })}
+              <Text style={styles.startFloatingText}>Mulai Main</Text>
+            </Pressable>
+          </ScrollView>
+        )}
+        {phase === 'play' && players.length > 0 && (
+          <ScrollView
+            style={styles.setupScrollView}
+            contentContainerStyle={styles.setupScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={[styles.boardWrap, { width: boardSize, height: boardSize }]}>
+              <ImageBackground
+                source={assets.ular_tangga?.background}
+                style={{ width: boardSize, height: boardSize }}
+                imageStyle={{ resizeMode: 'cover', opacity: 0.95 }}
+              >
+                <View style={{ width: boardSize, height: boardSize }}>
+                  {Array.from({ length: TOTAL_SQUARES }).map((_, i) => {
+                    const n = i + 1
+                    const { x, y } = getSquareXY(n)
+                    return (
+                      <View
+                        key={`sq-${n}`}
+                        style={{
+                          position: 'absolute',
+                          left: x * cell,
+                          top: y * cell,
+                          width: cell,
+                          height: cell,
+                          borderWidth: 0.5,
+                          borderColor: '#111827',
+                          backgroundColor:
+                            (x + y) % 2 === 0
+                              ? themeColors[theme].square1
+                              : themeColors[theme].square2,
+                        }}
+                      >
+                        <Text style={{ fontSize: 10, color: themeColors[theme].text, padding: 2 }}>
+                          {n}
+                        </Text>
+                        {n === 1 && (
+                          <Text
+                            style={{
+                              position: 'absolute',
+                              left: 4,
+                              bottom: 4,
+                              fontSize: 8,
+                              fontWeight: '700',
+                              color: themeColors[theme].text,
+                            }}
+                          >
+                            START
+                          </Text>
+                        )}
+                        {n === TOTAL_SQUARES && (
+                          <Text
+                            style={{
+                              position: 'absolute',
+                              right: 4,
+                              bottom: 4,
+                              fontSize: 8,
+                              fontWeight: '700',
+                              color: themeColors[theme].text,
+                            }}
+                          >
+                            FINISH
+                          </Text>
+                        )}
+                      </View>
+                    )
+                  })}
 
-                {Object.entries(ladders.current).map(([from, to]) => {
-                  const f = Number(from)
-                  const p1 = squareToXY(f)
-                  return (
-                    <View
-                      key={`lad-${from}`}
-                      style={{ position: 'absolute', left: (p1.x + 0.15) * cell, top: (p1.y + 0.15) * cell }}
-                    >
-                      <Text style={{ color: themeColors[theme].ladder, fontWeight: '700' }}>🔼</Text>
-                      <Text style={{ fontSize: 9, color: themeColors[theme].ladder }}>{from}→{to}</Text>
-                    </View>
-                  )
-                })}
+                  {Object.entries(ladders.current).map(([from, to]) => {
+                    const f = Number(from)
+                    const p1 = getSquareXY(f)
+                    return (
+                      <View
+                        key={`lad-${from}`}
+                        style={{
+                          position: 'absolute',
+                          left: (p1.x + 0.15) * cell,
+                          top: (p1.y + 0.15) * cell,
+                        }}
+                      >
+                        <Text style={{ color: themeColors[theme].ladder, fontWeight: '700' }}>
+                          🔼
+                        </Text>
+                        <Text style={{ fontSize: 9, color: themeColors[theme].ladder }}>
+                          {from}→{to}
+                        </Text>
+                      </View>
+                    )
+                  })}
 
-                {Object.entries(snakes.current).map(([from, to]) => {
-                  const f = Number(from)
-                  const p1 = squareToXY(f)
-                  return (
-                    <View
-                      key={`sna-${from}`}
-                      style={{ position: 'absolute', left: (p1.x + 0.15) * cell, top: (p1.y + 0.15) * cell }}
-                    >
-                      <Text style={{ color: themeColors[theme].snake, fontWeight: '700' }}>🔽</Text>
-                      <Text style={{ fontSize: 9, color: themeColors[theme].snake }}>{from}→{to}</Text>
-                    </View>
-                  )
-                })}
+                  {Object.entries(snakes.current).map(([from, to]) => {
+                    const f = Number(from)
+                    const p1 = getSquareXY(f)
+                    return (
+                      <View
+                        key={`sna-${from}`}
+                        style={{
+                          position: 'absolute',
+                          left: (p1.x + 0.15) * cell,
+                          top: (p1.y + 0.15) * cell,
+                        }}
+                      >
+                        <Text style={{ color: themeColors[theme].snake, fontWeight: '700' }}>
+                          🔽
+                        </Text>
+                        <Text style={{ fontSize: 9, color: themeColors[theme].snake }}>
+                          {from}→{to}
+                        </Text>
+                      </View>
+                    )
+                  })}
 
-                {players.map((pl) => {
-                  const a = animPos.current[pl.id]
-                  const s = animScale.current[pl.id] ?? new Animated.Value(1)
-                  const transform = a ? a.getTranslateTransform() : [{ translateX: 0 }, { translateY: 0 }]
-                  return (
-                    <Animated.View
-                      key={`pl-${pl.id}`}
-                      style={{ position: 'absolute', width: cell * 0.36, height: cell * 0.36, transform: [...transform, { scale: s }] }}
-                    >
-                      <View style={styles.tokenContainer}>
-                        <View style={[styles.tokenOuter, { backgroundColor: pl.avatar.color || '#6b7280' }]}>
-                          <View style={[styles.tokenInner, { backgroundColor: pl.avatar.skinColor || SKIN_TONES[0] }]}> 
-                            {pl.avatar.clothes && <Image source={pl.avatar.clothes} style={styles.tokenClothes} />}
-                            {pl.avatar.hair && <Image source={pl.avatar.hair} style={styles.tokenHair} />}
-                            {pl.avatar.accessory && <Image source={pl.avatar.accessory} style={styles.tokenAccessory} />}
+                  {players.map((pl) => {
+                    const a = animPos.current[pl.id]
+                    const s = animScale.current[pl.id] ?? new Animated.Value(1)
+                    const transform = a
+                      ? a.getTranslateTransform()
+                      : [{ translateX: 0 }, { translateY: 0 }]
+                    return (
+                      <Animated.View
+                        key={`pl-${pl.id}`}
+                        style={{
+                          position: 'absolute',
+                          width: cell * 0.36,
+                          height: cell * 0.36,
+                          transform: [...transform, { scale: s }],
+                        }}
+                      >
+                        <View style={styles.tokenContainer}>
+                          <View
+                            style={[
+                              styles.tokenOuter,
+                              { backgroundColor: pl.avatar.color || '#6b7280' },
+                            ]}
+                          >
+                            <View
+                              style={[
+                                styles.tokenInner,
+                                { backgroundColor: pl.avatar.skinColor || SKIN_TONES[0] },
+                              ]}
+                            >
+                              {pl.avatar.clothes && (
+                                <Image source={pl.avatar.clothes} style={styles.tokenClothes} />
+                              )}
+                              {pl.avatar.hair && (
+                                <Image source={pl.avatar.hair} style={styles.tokenHair} />
+                              )}
+                              {pl.avatar.accessory && (
+                                <Image source={pl.avatar.accessory} style={styles.tokenAccessory} />
+                              )}
+                            </View>
                           </View>
                         </View>
-                      </View>
-                    </Animated.View>
-                  )
-                })}
+                      </Animated.View>
+                    )
+                  })}
+                </View>
+              </ImageBackground>
+            </View>
+
+            <View style={styles.gameControls}>
+              <View style={styles.gameInfo}>
+                <Text style={[styles.turnInfo, { color: themeColors[theme].text }]}>
+                  Giliran: {players[turnIdx]?.name}
+                </Text>
+                <Text style={[styles.gameStatus, { color: themeColors[theme].text }]}>{info}</Text>
               </View>
-            </ImageBackground>
-          </View>
 
-          <View style={styles.gameControls}>
-            <View style={styles.gameInfo}>
-              <Text style={[styles.turnInfo, { color: themeColors[theme].text }]}>Giliran: {players[turnIdx]?.name}</Text>
-              <Text style={[styles.gameStatus, { color: themeColors[theme].text }]}>{info}</Text>
-            </View>
+              <View style={styles.diceSection}>
+                <Text style={[styles.diceLabel, { color: themeColors[theme].text }]}>
+                  Dadu: {dice}
+                </Text>
+                <Pressable
+                  onPress={roll}
+                  disabled={isAnimating}
+                  style={[styles.rollButton, isAnimating && styles.rollButtonDisabled]}
+                >
+                  <Text style={styles.rollButtonText}>
+                    {isAnimating ? 'BERGERAK...' : 'LEMPAR DADU'}
+                  </Text>
+                </Pressable>
+              </View>
 
-            <View style={styles.diceSection}>
-              <Text style={[styles.diceLabel, { color: themeColors[theme].text }]}>Dadu: {dice}</Text>
-              <Pressable onPress={roll} disabled={isAnimating} style={[styles.rollButton, isAnimating && styles.rollButtonDisabled]}>
-                <Text style={styles.rollButtonText}>{isAnimating ? 'BERGERAK...' : 'LEMPAR DADU'}</Text>
-              </Pressable>
+              <View style={styles.bottomControls}>
+                <Pressable onPress={resetGame} style={styles.resetButton}>
+                  <Text style={styles.resetButtonText}>GAME BARU</Text>
+                </Pressable>
+              </View>
             </View>
-
-            <View style={styles.bottomControls}>
-              <Pressable onPress={resetGame} style={styles.resetButton}>
-                <Text style={styles.resetButtonText}>GAME BARU</Text>
-              </Pressable>
-            </View>
-          </View>
-        </>
-      )}
+          </ScrollView>
+        )}
       </ImageBackground>
     </View>
   )
@@ -1209,5 +1473,12 @@ const styles = StyleSheet.create({
     color: '#1f2937',
     fontSize: 16,
     fontWeight: '700',
+  },
+  setupScrollView: {
+    width: '100%',
+  },
+  setupScrollContent: {
+    paddingBottom: 100,
+    alignItems: 'center',
   },
 })
