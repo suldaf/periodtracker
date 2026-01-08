@@ -45,13 +45,35 @@ export interface AppAssets {
       hair: Record<string, ImageSourcePropType>
       clothes: Record<string, ImageSourcePropType>
       accessories: Record<string, ImageSourcePropType>
-      sets: Record<string, any>
+      sets: Record<string, {
+        IDLE: any
+        JL: any
+        JR: any
+        SL: any
+        SR: any
+        STL: any
+        STR: any
+        UL: any
+        UR: any
+        BACK: any
+      }>
     }
     male: {
       hair: Record<string, ImageSourcePropType>
       clothes: Record<string, ImageSourcePropType>
       accessories: Record<string, ImageSourcePropType>
-      sets: Record<string, any>
+      sets: Record<string, {
+        IDLE: any
+        JL: any
+        JR: any
+        SL: any
+        SR: any
+        STL: any
+        STR: any
+        UL: any
+        UR: any
+        BACK: any
+      }>
     }
   }
 }
