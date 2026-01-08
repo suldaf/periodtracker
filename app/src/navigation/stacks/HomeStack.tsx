@@ -6,7 +6,7 @@ import CalendarScreen from '../../screens/CalendarScreen'
 import moment from 'moment'
 import { Tutorial } from '../../screens/MainScreen/TutorialContext'
 import LudoScreen from '../../screens/LudoScreen'
-import UlarTangga from '../../screens/UlarTangga'
+import UlarTangga from '../../screens/UlarTangga/index bot'
 import LudoScreenL5 from '../../screens/LudoScreen/index copy'
 
 export type HomeStackParamList = {

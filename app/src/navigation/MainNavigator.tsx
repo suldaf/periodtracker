@@ -12,7 +12,7 @@ import { UserIcon } from '../components/icons/UserIcon'
 import { IS_IOS } from '../services/device'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useColor } from '../hooks/useColor'
-import UlarTangga from '../screens/UlarTangga'
+import UlarTangga from '../screens/UlarTangga/index bot'
 
 export type MainStackParamList = {
   profile: NavigatorScreenParams<ProfileStackParamList>
