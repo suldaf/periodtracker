@@ -23,7 +23,7 @@ import F_DARK_BRAID_BASIC_NONE_UR from '../../resources/assets/images/ular_tangg
 import F_DARK_BRAID_BASIC_NONE_BACK from '../../resources/assets/images/ular_tangga/Female/set/F-DARK-BRAID-BASIC-NONE/BACK.svg'
 
 import F_DARK_PONYTAIL_BASIC_FLOWER_IDLE from '../../resources/assets/images/ular_tangga/Female/set/F-DARK-PONYTAIL-BASIC-FLOWER/IDLE.svg'
-import F_DARK_PONYTAIL_BASIC_FLOWER_JL from '../../resources/assets/images/ular_tangga/Female/set/F-DARK-PONYTAIL-BASIC-FLOWER/JL.svg'
+// import F_DARK_PONYTAIL_BASIC_FLOWER_JL from '../../resources/assets/images/ular_tangga/Female/set/F-DARK-PONYTAIL-BASIC-FLOWER/JL.svg'
 import F_DARK_PONYTAIL_BASIC_FLOWER_JR from '../../resources/assets/images/ular_tangga/Female/set/F-DARK-PONYTAIL-BASIC-FLOWER/JR.svg'
 import F_DARK_PONYTAIL_BASIC_FLOWER_SR from '../../resources/assets/images/ular_tangga/Female/set/F-DARK-PONYTAIL-BASIC-FLOWER/SR.svg'
 import F_DARK_PONYTAIL_BASIC_FLOWER_STL from '../../resources/assets/images/ular_tangga/Female/set/F-DARK-PONYTAIL-BASIC-FLOWER/STL.svg'

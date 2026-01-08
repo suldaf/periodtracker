@@ -1207,7 +1207,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                   return (
                     <Animated.View
                       key={`pl-${pl.id}`}
-                      style={{ position: 'absolute', width: cell * 0.65, height: cell * 0.65, transform: [...transform, { scale: s }] }}
+                      style={{ position: 'absolute', width: cell * 0.65, height: cell * 0.65, transform: [...transform, { scale: s }], zIndex: 10 }}
                     >
                       {AvatarSvgComponent ? (
                         <AvatarSvgComponent width="100%" height="100%" />
