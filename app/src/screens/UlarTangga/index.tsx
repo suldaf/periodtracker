@@ -12,6 +12,7 @@ import {
   ScrollView,
   // ImageSourcePropType,
 } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
 import { Audio } from 'expo-av'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { assets } from '../../resources/assets'
@@ -262,7 +263,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
 
   const themeColors = useMemo(() => ({
     light: {
-      bg: '#FDFCF0', 
+      bg: '#ACECF9', 
       primary: '#E07A5F', 
       secondary: '#81B29A', 
       text: '#3D405B', 
@@ -800,7 +801,11 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
   const canStart = tempNames.every((n) => n && n.trim())
 
   return (
-    <View style={[styles.screen, { paddingTop: 24 + insets.top, paddingBottom: 16 + insets.bottom, backgroundColor: themeColors[theme].bg }]}>
+    <View style={styles.screen}>
+      <LinearGradient
+        colors={['#ACECF9', '#FFFFFF']}
+        style={[styles.gradientBg, { paddingTop: 24 + insets.top, paddingBottom: 16 + insets.bottom }]}
+      >
       <ImageBackground
         source={assets.ular_tangga?.background}
         style={styles.inner}
@@ -1274,7 +1279,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
 
       </ImageBackground>
       
-
+      </LinearGradient>
     </View>
     
   )
@@ -1285,8 +1290,11 @@ export default UlarTangga
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    
     alignItems: 'center',
+  },
+  gradientBg: {
+    flex: 1,
+    width: '100%',
   },
   inner: {
     flex: 1,
