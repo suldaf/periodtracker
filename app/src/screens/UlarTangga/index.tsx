@@ -12,6 +12,7 @@ import {
   ScrollView,
   // ImageSourcePropType,
 } from 'react-native'
+import { SvgUri } from 'react-native-svg'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Audio } from 'expo-av'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -29,48 +30,6 @@ import Tangga3Svg from '../../resources/assets/images/ular_tangga/tangga_3.svg'
 import Tangga4Svg from '../../resources/assets/images/ular_tangga/tangga_4.svg'
 import FooterSvg from '../../resources/assets/images/ular_tangga/bottom_page_ular_tangga.svg'
 import LogoSvg from '../../resources/assets/images/ular_tangga/EduFun_ular_tangga.svg'
-
-// Import Female avatar sets (11 sets yang benar-benar ada)
-import FDarkBraidBasicFlowerSvg from '../../resources/assets/images/ular_tangga/Female/set/F-DARK-BRAID-BASIC-FLOWER/IDLE.svg'
-import FDarkBraidBasicNoneSvg from '../../resources/assets/images/ular_tangga/Female/set/F-DARK-BRAID-BASIC-NONE/IDLE.svg'
-import FDarkPonytailBasicFlowerSvg from '../../resources/assets/images/ular_tangga/Female/set/F-DARK-PONYTAIL-BASIC-FLOWER/IDLE.svg'
-import FLightBraidBasicFlowerSvg from '../../resources/assets/images/ular_tangga/Female/set/F-LIGHT-BRAID-BASIC-FLOWER/IDLE.svg'
-import FLightBraidBasicNoneSvg from '../../resources/assets/images/ular_tangga/Female/set/F-LIGHT-BRAID-BASIC-NONE/IDLE.svg'
-import FLightPonytailBasicFlowerSvg from '../../resources/assets/images/ular_tangga/Female/set/F-LIGHT-PONYTAIL-BASIC-FLOWER/IDLE.svg'
-import FMediumBobBasicFlowerSvg from '../../resources/assets/images/ular_tangga/Female/set/F-MEDIUM-BOB-BASIC-FLOWER/IDLE.svg'
-import FMediumBraidBasicFlowerSvg from '../../resources/assets/images/ular_tangga/Female/set/F-MEDIUM-BRAID-BASIC-FLOWER/IDLE.svg'
-import FMediumBraidBasicNoneSvg from '../../resources/assets/images/ular_tangga/Female/set/F-MEDIUM-BRAID-BASIC-NONE/IDLE.svg'
-import FMediumBunBasicFlowerSvg from '../../resources/assets/images/ular_tangga/Female/set/F-MEDIUM-BUN-BASIC-FLOWER/IDLE.svg'
-import FMediumPonytailBasicFlowerSvg from '../../resources/assets/images/ular_tangga/Female/set/F-MEDIUM-PONYTAIL-BASIC-FLOWER/IDLE.svg'
-
-// Import Male avatar sets (5 sets yang benar-benar ada)
-import MDarkHair1BasicNoneSvg from '../../resources/assets/images/ular_tangga/Male/set/M-DARK-HAIR1-BASIC-NONE/IDLE.svg'
-import MLightHair1BasicNoneSvg from '../../resources/assets/images/ular_tangga/Male/set/M-LIGHT-HAIR1-BASIC-NONE/IDLE.svg'
-import MLightHair2BasicNoneSvg from '../../resources/assets/images/ular_tangga/Male/set/M-LIGHT-HAIR2-BASIC-NONE/IDLE.svg'
-import MLightHair3BasicNoneSvg from '../../resources/assets/images/ular_tangga/Male/set/M-LIGHT-HAIR3-BASIC-NONE/IDLE.svg'
-import MMediumHair1BasicNoneSvg from '../../resources/assets/images/ular_tangga/Male/set/M-MEDIUM-HAIR1-BASIC-NONE/IDLE.svg'
-
-// SVG Component Registry - map set keys to imported SVG components
-const SVG_AVATAR_REGISTRY: Record<string, React.FC<{ width?: number | string; height?: number | string }>> = {
-  // Female sets (11 total)
-  'F-DARK-BRAID-BASIC-FLOWER': FDarkBraidBasicFlowerSvg,
-  'F-DARK-BRAID-BASIC-NONE': FDarkBraidBasicNoneSvg,
-  'F-DARK-PONYTAIL-BASIC-FLOWER': FDarkPonytailBasicFlowerSvg,
-  'F-LIGHT-BRAID-BASIC-FLOWER': FLightBraidBasicFlowerSvg,
-  'F-LIGHT-BRAID-BASIC-NONE': FLightBraidBasicNoneSvg,
-  'F-LIGHT-PONYTAIL-BASIC-FLOWER': FLightPonytailBasicFlowerSvg,
-  'F-MEDIUM-BOB-BASIC-FLOWER': FMediumBobBasicFlowerSvg,
-  'F-MEDIUM-BRAID-BASIC-FLOWER': FMediumBraidBasicFlowerSvg,
-  'F-MEDIUM-BRAID-BASIC-NONE': FMediumBraidBasicNoneSvg,
-  'F-MEDIUM-BUN-BASIC-FLOWER': FMediumBunBasicFlowerSvg,
-  'F-MEDIUM-PONYTAIL-BASIC-FLOWER': FMediumPonytailBasicFlowerSvg,
-  // Male sets (5 total)
-  'M-DARK-HAIR1-BASIC-NONE': MDarkHair1BasicNoneSvg,
-  'M-LIGHT-HAIR1-BASIC-NONE': MLightHair1BasicNoneSvg,
-  'M-LIGHT-HAIR2-BASIC-NONE': MLightHair2BasicNoneSvg,
-  'M-LIGHT-HAIR3-BASIC-NONE': MLightHair3BasicNoneSvg,
-  'M-MEDIUM-HAIR1-BASIC-NONE': MMediumHair1BasicNoneSvg,
-}
 
 type Gender = 'Female' | 'Male'
 type SkinTone = 'LIGHT' | 'MEDIUM' | 'DARK'
@@ -201,22 +160,6 @@ const isSetAvailable = (avatar: AvatarSpec): boolean => {
   return AVAILABLE_SETS[gender].includes(setName)
 }
 
-// Helper function to build avatar set key for asset lookup
-const buildAvatarPath = (avatar: AvatarSpec): string | null => {
-  const { gender, skinTone, hair, clothes, accessory } = avatar
-  if (!hair || !clothes) return null // Minimum required
-  
-  // Check if combination is available
-  if (!isSetAvailable(avatar)) return null
-  
-  // Use 'NONE' if no accessory is selected
-  const accessoryPart = accessory || 'NONE'
-  const prefix = gender === 'Female' ? 'F' : 'M'
-  
-  // Return the set key that matches the asset registration
-  return `${prefix}-${skinTone}-${hair}-${clothes}-${accessoryPart}`
-}
-
 const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
   const { width: w, height: h } = Dimensions.get('window')
   const insets = useSafeAreaInsets()
@@ -245,6 +188,9 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
   const [setupTab, setSetupTab] = useState<SetupTab>('skin')
   const [tempAvatars, setTempAvatars] = useState<AvatarSpec[]>([])
   const [tempNames, setTempNames] = useState<string[]>([])
+
+  // Animation state tracking for each player
+  const [playerAnimStates, setPlayerAnimStates] = useState<Record<number, string>>({})
 
   const snakes = useRef(DEFAULT_SNAKES)
   const ladders = useRef(DEFAULT_LADDERS)
@@ -426,6 +372,13 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
     setInfo(`Game dimulai! Giliran ${newPlayers[0].name}`)
     setPhase('play')
     
+    // Initialize all players with IDLE animation state
+    const initialAnimStates: Record<number, string> = {}
+    newPlayers.forEach(p => {
+      initialAnimStates[p.id] = 'IDLE'
+    })
+    setPlayerAnimStates(initialAnimStates)
+    
     // Start background music
     try {
       await bgMusic.current?.replayAsync()
@@ -530,86 +483,100 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
     setInfo(`${current.name} rolled ${d} → moving...`)
 
     let step = current.pos
+    
     const hop = () => {
       if (step >= target) {
+        // Reached target, check for ladder/snake
         let final = step
-        let special = false
+        let hasLadder = false
+        let hasSnake = false
 
         if (ladders.current[final]) {
           const to = ladders.current[final]
           setInfo((s) => `${s} | TANGGA ${final} → ${to}`)
+          hasLadder = true
+          
+          // Animate ladder climb: UL/UR alternating
+          const climbSteps = Math.abs(to - final)
+          let climbCount = 0
+          const climbInterval = setInterval(() => {
+            if (climbCount >= climbSteps) {
+              clearInterval(climbInterval)
+              // After climbing, show BACK animation then IDLE
+              setPlayerAnimStates(prev => ({ ...prev, [current.id]: 'BACK' }))
+              setTimeout(() => {
+                setPlayerAnimStates(prev => ({ ...prev, [current.id]: 'IDLE' }))
+              }, 400)
+              return
+            }
+            
+            // Alternate between UL and UR for climbing effect
+            const climbAnim = climbCount % 2 === 0 ? 'UL' : 'UR'
+            setPlayerAnimStates(prev => ({ ...prev, [current.id]: climbAnim }))
+            climbCount++
+          }, 200)
+          
           final = to
-          special = true
         }
+        
         if (snakes.current[final]) {
           const to = snakes.current[final]
           setInfo((s) => `${s} | ULAR ${final} → ${to}`)
+          hasSnake = true
+          
+          // Animate snake slide: SL/SR based on direction
+          const slideDir = to < final ? 'SL' : 'SR'
+          setPlayerAnimStates(prev => ({ ...prev, [current.id]: slideDir }))
+          
+          setTimeout(() => {
+            // After sliding, show STL/STR (steady) then IDLE
+            const steadyAnim = slideDir === 'SL' ? 'STL' : 'STR'
+            setPlayerAnimStates(prev => ({ ...prev, [current.id]: steadyAnim }))
+            setTimeout(() => {
+              setPlayerAnimStates(prev => ({ ...prev, [current.id]: 'IDLE' }))
+            }, 300)
+          }, 600)
+          
           final = to
-          special = true
         }
 
-        setPlayers((ps) => {
-          const updatedPlayers = ps.map((pl) => (pl.id === current.id ? { ...pl, pos: final } : pl))
+        setPlayers((ps) => ps.map((pl) => (pl.id === current.id ? { ...pl, pos: final } : pl)))
+        setIsAnimating(false)
+
+        if (hasLadder || hasSnake) triggerBounce(current.id)
+
+        if (final === PLAYABLE_SQUARES) {
+          setInfo(`${current.name} MENANG! 🎉`)
+          triggerBounce(current.id)
           
-          // Check game end conditions with updated player data
-          setIsAnimating(false)
-          
-          if (special) triggerBounce(current.id)
-          
-          if (final === PLAYABLE_SQUARES) {
-            triggerBounce(current.id)
-            
-            const finishedPlayers = updatedPlayers.filter(p => p.pos >= PLAYABLE_SQUARES)
-            const activePlayers = updatedPlayers.filter(p => p.pos < PLAYABLE_SQUARES)
-            
-            // Game ends if only 1 active player remains
-            if (activePlayers.length === 1) {
-              const loser = activePlayers[0]
-              setInfo(`${current.name} MENANG! 🎉 | ${loser.name} kalah (terakhir yang tersisa)`)
-              setGameEnded(true)
-              
-              // Play victory sound
-              finishGameSound.current?.replayAsync().catch(() => {})
-              
-              return updatedPlayers
-            }
-            
-            // Game ends if 3+ total players AND 3 have finished
-            if (updatedPlayers.length >= 3 && finishedPlayers.length >= 3) {
-              const losers = activePlayers.map(p => p.name).join(', ')
-              setInfo(`${current.name} MENANG! 🎉 | Game berakhir! Yang kalah: ${losers}`)
-              setGameEnded(true)
-              
-              // Play victory sound
-              finishGameSound.current?.replayAsync().catch(() => {})
-              
-              return updatedPlayers
-            }
-            
-            // Continue game - advance turn
-            setInfo(`${current.name} MENANG! 🎉, tersisa ${activePlayers.length} pemain yang tersisa`)
-            
-            // Play victory sound for this player
-            finishGameSound.current?.replayAsync().catch(() => {})
-            
-            if (activePlayers.length > 0) {
-              setTimeout(() => setTurnIdx((s) => getNextActiveTurnIdx(s)), 100)
-            }
-          }
-          
-          return updatedPlayers
-        })
-        
-        if (final !== PLAYABLE_SQUARES) {
-          setIsAnimating(false)
-          if (special) triggerBounce(current.id)
+          // Victory animation - jump!
+          setPlayerAnimStates(prev => ({ ...prev, [current.id]: 'JR' }))
+          setTimeout(() => {
+            setPlayerAnimStates(prev => ({ ...prev, [current.id]: 'IDLE' }))
+          }, 500)
+          return
         }
 
-        if (d !== 6) setTurnIdx((s) => getNextActiveTurnIdx(s))
+        if (d !== 6) setTurnIdx((s) => (s + 1) % players.length)
         return
       }
 
+      // Moving animation
       step += 1
+      const prevPos = squareToXY(step - 1)
+      const currPos = squareToXY(step)
+      
+      // Determine jump direction based on movement
+      let jumpAnim = 'JR' // default jump right
+      if (currPos.x < prevPos.x) {
+        jumpAnim = 'JL' // jump left
+      } else if (currPos.y > prevPos.y) {
+        jumpAnim = 'JR' // jump right when going up
+      } else if (currPos.y < prevPos.y) {
+        jumpAnim = 'JL' // jump left when going down
+      }
+      
+      setPlayerAnimStates(prev => ({ ...prev, [current.id]: jumpAnim }))
       setPlayers((ps) => ps.map((pl) => (pl.id === current.id ? { ...pl, pos: step } : pl)))
       moveTimer.current = setTimeout(hop, 140)
     }
@@ -931,17 +898,19 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                         )
                       }
 
-                      // Get SVG component from registry
-                      const AvatarSvgComponent = SVG_AVATAR_REGISTRY[setKey]
-                      if (!AvatarSvgComponent) {
+                      const genderAssets = gender === 'Female' ? assets.ular_tangga?.female : assets.ular_tangga?.male
+                      const avatarSet = genderAssets?.sets?.[setKey]
+                      if (!avatarSet) {
                         return (
                           <Text style={{ color: '#ef4444', fontSize: 11, textAlign: 'center' }}>
                             Asset tidak ditemukan
                           </Text>
                         )
                       }
-                      
-                      return <AvatarSvgComponent width={160} height={180} />
+
+                      const idleSource = avatarSet.IDLE
+                      const uri = idleSource ? Image.resolveAssetSource(idleSource).uri : null
+                      return uri ? <SvgUri uri={uri} width={160} height={180} /> : null
                     })()}
                   </View>
                 </View>
@@ -1222,30 +1191,32 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                   const a = animPos.current[pl.id]
                   const s = animScale.current[pl.id] ?? new Animated.Value(1)
                   const transform = a ? a.getTranslateTransform() : [{ translateX: 0 }, { translateY: 0 }]
+
+                  // Get avatar set asset from registry
+                  const { gender, skinTone, hair, clothes, accessory } = pl.avatar
+                  const accessoryPart = accessory || 'NONE'
+                  const prefix = gender === 'Female' ? 'F' : 'M'
+                  const setKey = `${prefix}-${skinTone}-${hair}-${clothes}-${accessoryPart}`
+                  const genderAssets = gender === 'Female' ? assets.ular_tangga?.female : assets.ular_tangga?.male
+                  const avatarSet = genderAssets?.sets?.[setKey]
                   
-                  // Get avatar set key and SVG component from registry
-                  const setKey = buildAvatarPath(pl.avatar)
-                  const AvatarSvgComponent = setKey ? SVG_AVATAR_REGISTRY[setKey] : null
-                  
+                  // Get current animation state or default to IDLE
+                  const currentAnimState = playerAnimStates[pl.id] || 'IDLE'
+                  const validStates = ['IDLE', 'JL', 'JR', 'SL', 'SR', 'STL', 'STR', 'UL', 'UR', 'BACK']
+                  const safeAnimState = validStates.includes(currentAnimState) ? currentAnimState as keyof typeof avatarSet : 'IDLE'
+                  const animSource = avatarSet?.[safeAnimState] || avatarSet?.IDLE
+                  const resolvedUri = animSource ? Image.resolveAssetSource(animSource).uri : null
+
                   return (
                     <Animated.View
                       key={`pl-${pl.id}`}
-                      style={{ position: 'absolute', width: cell * 0.36, height: cell * 0.36, transform: [...transform, { scale: s }] }}
+                      style={{ position: 'absolute', width: cell * 0.65, height: cell * 0.65, transform: [...transform, { scale: s }] }}
                     >
-                      <View style={styles.tokenContainer}>
-                        <View style={[styles.tokenOuter, { backgroundColor: pl.avatar.color || '#6b7280' }]}>
-                          <View style={styles.tokenInner}>
-                            {AvatarSvgComponent ? (
-                              <AvatarSvgComponent 
-                                width="100%" 
-                                height="100%" 
-                              />
-                            ) : (
-                              <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: '#fff' }} />
-                            )}
-                          </View>
-                        </View>
-                      </View>
+                      {resolvedUri ? (
+                        <SvgUri uri={resolvedUri} width="100%" height="100%" />
+                      ) : (
+                        <View style={{ width: '100%', height: '100%', borderRadius: 10, backgroundColor: pl.avatar.color || '#6b7280' }} />
+                      )}
                     </Animated.View>
                   )
                 })}
