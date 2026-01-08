@@ -12,7 +12,6 @@ import {
   ScrollView,
   // ImageSourcePropType,
 } from 'react-native'
-import { SvgUri } from 'react-native-svg'
 import { Audio } from 'expo-av'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { assets } from '../../resources/assets'
@@ -29,6 +28,48 @@ import Tangga3Svg from '../../resources/assets/images/ular_tangga/tangga_3.svg'
 import Tangga4Svg from '../../resources/assets/images/ular_tangga/tangga_4.svg'
 import FooterSvg from '../../resources/assets/images/ular_tangga/bottom_page_ular_tangga.svg'
 import LogoSvg from '../../resources/assets/images/ular_tangga/EduFun_ular_tangga.svg'
+
+// Import Female avatar sets (11 sets yang benar-benar ada)
+import FDarkBraidBasicFlowerSvg from '../../resources/assets/images/ular_tangga/Female/set/F-DARK-BRAID-BASIC-FLOWER/IDLE.svg'
+import FDarkBraidBasicNoneSvg from '../../resources/assets/images/ular_tangga/Female/set/F-DARK-BRAID-BASIC-NONE/IDLE.svg'
+import FDarkPonytailBasicFlowerSvg from '../../resources/assets/images/ular_tangga/Female/set/F-DARK-PONYTAIL-BASIC-FLOWER/IDLE.svg'
+import FLightBraidBasicFlowerSvg from '../../resources/assets/images/ular_tangga/Female/set/F-LIGHT-BRAID-BASIC-FLOWER/IDLE.svg'
+import FLightBraidBasicNoneSvg from '../../resources/assets/images/ular_tangga/Female/set/F-LIGHT-BRAID-BASIC-NONE/IDLE.svg'
+import FLightPonytailBasicFlowerSvg from '../../resources/assets/images/ular_tangga/Female/set/F-LIGHT-PONYTAIL-BASIC-FLOWER/IDLE.svg'
+import FMediumBobBasicFlowerSvg from '../../resources/assets/images/ular_tangga/Female/set/F-MEDIUM-BOB-BASIC-FLOWER/IDLE.svg'
+import FMediumBraidBasicFlowerSvg from '../../resources/assets/images/ular_tangga/Female/set/F-MEDIUM-BRAID-BASIC-FLOWER/IDLE.svg'
+import FMediumBraidBasicNoneSvg from '../../resources/assets/images/ular_tangga/Female/set/F-MEDIUM-BRAID-BASIC-NONE/IDLE.svg'
+import FMediumBunBasicFlowerSvg from '../../resources/assets/images/ular_tangga/Female/set/F-MEDIUM-BUN-BASIC-FLOWER/IDLE.svg'
+import FMediumPonytailBasicFlowerSvg from '../../resources/assets/images/ular_tangga/Female/set/F-MEDIUM-PONYTAIL-BASIC-FLOWER/IDLE.svg'
+
+// Import Male avatar sets (5 sets yang benar-benar ada)
+import MDarkHair1BasicNoneSvg from '../../resources/assets/images/ular_tangga/Male/set/M-DARK-HAIR1-BASIC-NONE/IDLE.svg'
+import MLightHair1BasicNoneSvg from '../../resources/assets/images/ular_tangga/Male/set/M-LIGHT-HAIR1-BASIC-NONE/IDLE.svg'
+import MLightHair2BasicNoneSvg from '../../resources/assets/images/ular_tangga/Male/set/M-LIGHT-HAIR2-BASIC-NONE/IDLE.svg'
+import MLightHair3BasicNoneSvg from '../../resources/assets/images/ular_tangga/Male/set/M-LIGHT-HAIR3-BASIC-NONE/IDLE.svg'
+import MMediumHair1BasicNoneSvg from '../../resources/assets/images/ular_tangga/Male/set/M-MEDIUM-HAIR1-BASIC-NONE/IDLE.svg'
+
+// SVG Component Registry - map set keys to imported SVG components
+const SVG_AVATAR_REGISTRY: Record<string, React.FC<{ width?: number | string; height?: number | string }>> = {
+  // Female sets (11 total)
+  'F-DARK-BRAID-BASIC-FLOWER': FDarkBraidBasicFlowerSvg,
+  'F-DARK-BRAID-BASIC-NONE': FDarkBraidBasicNoneSvg,
+  'F-DARK-PONYTAIL-BASIC-FLOWER': FDarkPonytailBasicFlowerSvg,
+  'F-LIGHT-BRAID-BASIC-FLOWER': FLightBraidBasicFlowerSvg,
+  'F-LIGHT-BRAID-BASIC-NONE': FLightBraidBasicNoneSvg,
+  'F-LIGHT-PONYTAIL-BASIC-FLOWER': FLightPonytailBasicFlowerSvg,
+  'F-MEDIUM-BOB-BASIC-FLOWER': FMediumBobBasicFlowerSvg,
+  'F-MEDIUM-BRAID-BASIC-FLOWER': FMediumBraidBasicFlowerSvg,
+  'F-MEDIUM-BRAID-BASIC-NONE': FMediumBraidBasicNoneSvg,
+  'F-MEDIUM-BUN-BASIC-FLOWER': FMediumBunBasicFlowerSvg,
+  'F-MEDIUM-PONYTAIL-BASIC-FLOWER': FMediumPonytailBasicFlowerSvg,
+  // Male sets (5 total)
+  'M-DARK-HAIR1-BASIC-NONE': MDarkHair1BasicNoneSvg,
+  'M-LIGHT-HAIR1-BASIC-NONE': MLightHair1BasicNoneSvg,
+  'M-LIGHT-HAIR2-BASIC-NONE': MLightHair2BasicNoneSvg,
+  'M-LIGHT-HAIR3-BASIC-NONE': MLightHair3BasicNoneSvg,
+  'M-MEDIUM-HAIR1-BASIC-NONE': MMediumHair1BasicNoneSvg,
+}
 
 type Gender = 'Female' | 'Male'
 type SkinTone = 'LIGHT' | 'MEDIUM' | 'DARK'
@@ -885,18 +926,17 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                         )
                       }
 
-                      const genderAssets = gender === 'Female' ? avatarAssets?.female : avatarAssets?.male
-                      const setSource = genderAssets?.sets?.[setKey]
-                      if (!setSource) {
+                      // Get SVG component from registry
+                      const AvatarSvgComponent = SVG_AVATAR_REGISTRY[setKey]
+                      if (!AvatarSvgComponent) {
                         return (
                           <Text style={{ color: '#ef4444', fontSize: 11, textAlign: 'center' }}>
                             Asset tidak ditemukan
                           </Text>
                         )
                       }
-
-                      const uri = Image.resolveAssetSource(setSource).uri
-                      return <SvgUri uri={uri} width={160} height={180} />
+                      
+                      return <AvatarSvgComponent width={160} height={180} />
                     })()}
                   </View>
                 </View>
@@ -1178,10 +1218,9 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                   const s = animScale.current[pl.id] ?? new Animated.Value(1)
                   const transform = a ? a.getTranslateTransform() : [{ translateX: 0 }, { translateY: 0 }]
                   
-                  // Get avatar set key
+                  // Get avatar set key and SVG component from registry
                   const setKey = buildAvatarPath(pl.avatar)
-                  const genderAssets = pl.avatar.gender === 'Female' ? avatarAssets?.female : avatarAssets?.male
-                  const avatarSetSource = setKey ? genderAssets?.sets?.[setKey] : null
+                  const AvatarSvgComponent = setKey ? SVG_AVATAR_REGISTRY[setKey] : null
                   
                   return (
                     <Animated.View
@@ -1191,9 +1230,8 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                       <View style={styles.tokenContainer}>
                         <View style={[styles.tokenOuter, { backgroundColor: pl.avatar.color || '#6b7280' }]}>
                           <View style={styles.tokenInner}>
-                            {avatarSetSource ? (
-                              <SvgUri 
-                                uri={Image.resolveAssetSource(avatarSetSource).uri}
+                            {AvatarSvgComponent ? (
+                              <AvatarSvgComponent 
                                 width="100%" 
                                 height="100%" 
                               />
