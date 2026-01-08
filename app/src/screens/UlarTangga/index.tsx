@@ -540,24 +540,70 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
           final = to
         }
 
-        setPlayers((ps) => ps.map((pl) => (pl.id === current.id ? { ...pl, pos: final } : pl)))
-        setIsAnimating(false)
-
-        if (hasLadder || hasSnake) triggerBounce(current.id)
-
-        if (final === PLAYABLE_SQUARES) {
-          setInfo(`${current.name} MENANG! 🎉`)
-          triggerBounce(current.id)
+        setPlayers((ps) => {
+          const updatedPlayers = ps.map((pl) => (pl.id === current.id ? { ...pl, pos: final } : pl))
           
-          // Victory animation - jump!
-          setPlayerAnimStates(prev => ({ ...prev, [current.id]: 'JR' }))
-          setTimeout(() => {
-            setPlayerAnimStates(prev => ({ ...prev, [current.id]: 'IDLE' }))
-          }, 500)
-          return
+          // Check game end conditions with updated player data
+          setIsAnimating(false)
+          
+          if (hasLadder || hasSnake) triggerBounce(current.id)
+          
+          if (final === PLAYABLE_SQUARES) {
+            triggerBounce(current.id)
+            
+            // Victory animation - jump!
+            setPlayerAnimStates(prev => ({ ...prev, [current.id]: 'JR' }))
+            setTimeout(() => {
+              setPlayerAnimStates(prev => ({ ...prev, [current.id]: 'IDLE' }))
+            }, 500)
+            
+            const finishedPlayers = updatedPlayers.filter(p => p.pos >= PLAYABLE_SQUARES)
+            const activePlayers = updatedPlayers.filter(p => p.pos < PLAYABLE_SQUARES)
+            
+            // Game ends if only 1 active player remains
+            if (activePlayers.length === 1) {
+              const loser = activePlayers[0]
+              setInfo(`${current.name} MENANG! 🎉 | ${loser.name} kalah (terakhir yang tersisa)`)
+              setGameEnded(true)
+              
+              // Play victory sound
+              finishGameSound.current?.replayAsync().catch(() => {})
+              
+              return updatedPlayers
+            }
+            
+            // Game ends if 3+ total players AND 3 have finished
+            if (updatedPlayers.length >= 3 && finishedPlayers.length >= 3) {
+              const losers = activePlayers.map(p => p.name).join(', ')
+              setInfo(`${current.name} MENANG! 🎉 | Game berakhir! Yang kalah: ${losers}`)
+              setGameEnded(true)
+              
+              // Play victory sound
+              finishGameSound.current?.replayAsync().catch(() => {})
+              
+              return updatedPlayers
+            }
+            
+            // Continue game - advance turn
+            setInfo(`${current.name} MENANG! 🎉, tersisa ${activePlayers.length} pemain yang tersisa`)
+            
+            // Play victory sound for this player
+            finishGameSound.current?.replayAsync().catch(() => {})
+            
+            if (activePlayers.length > 0) {
+              setTimeout(() => setTurnIdx((s) => getNextActiveTurnIdx(s)), 100)
+            }
+          }
+          
+          return updatedPlayers
+        })
+        
+        if (final !== PLAYABLE_SQUARES) {
+          setIsAnimating(false)
+          if (hasLadder || hasSnake) triggerBounce(current.id)
         }
 
-        if (d !== 6) setTurnIdx((s) => (s + 1) % players.length)
+        if (d !== 6) setTurnIdx((s) => getNextActiveTurnIdx(s))
         return
       }
 
