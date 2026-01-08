@@ -12,12 +12,12 @@ import {
   ScrollView,
   // ImageSourcePropType,
 } from 'react-native'
-import { SvgUri } from 'react-native-svg'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Audio } from 'expo-av'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { assets } from '../../resources/assets'
 import { ScreenComponent } from '../../navigation/RootNavigator'
+import { AVATAR_SVG_REGISTRY } from './avatarRegistry'
 
 // Import SVG files directly
 import Ular2Svg from '../../resources/assets/images/ular_tangga/ular_2.svg'
@@ -898,9 +898,9 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                         )
                       }
 
-                      const genderAssets = gender === 'Female' ? assets.ular_tangga?.female : assets.ular_tangga?.male
-                      const avatarSet = genderAssets?.sets?.[setKey]
-                      if (!avatarSet) {
+                      // Get SVG component from registry
+                      const avatarSvgSet = AVATAR_SVG_REGISTRY[setKey]
+                      if (!avatarSvgSet) {
                         return (
                           <Text style={{ color: '#ef4444', fontSize: 11, textAlign: 'center' }}>
                             Asset tidak ditemukan
@@ -908,9 +908,8 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                         )
                       }
 
-                      const idleSource = avatarSet.IDLE
-                      const uri = idleSource ? Image.resolveAssetSource(idleSource).uri : null
-                      return uri ? <SvgUri uri={uri} width={160} height={180} /> : null
+                      const IdleSvgComponent = avatarSvgSet.IDLE
+                      return <IdleSvgComponent width={160} height={180} />
                     })()}
                   </View>
                 </View>
@@ -1192,28 +1191,26 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                   const s = animScale.current[pl.id] ?? new Animated.Value(1)
                   const transform = a ? a.getTranslateTransform() : [{ translateX: 0 }, { translateY: 0 }]
 
-                  // Get avatar set asset from registry
+                  // Get avatar SVG component from registry
                   const { gender, skinTone, hair, clothes, accessory } = pl.avatar
                   const accessoryPart = accessory || 'NONE'
                   const prefix = gender === 'Female' ? 'F' : 'M'
                   const setKey = `${prefix}-${skinTone}-${hair}-${clothes}-${accessoryPart}`
-                  const genderAssets = gender === 'Female' ? assets.ular_tangga?.female : assets.ular_tangga?.male
-                  const avatarSet = genderAssets?.sets?.[setKey]
+                  const avatarSvgSet = AVATAR_SVG_REGISTRY[setKey]
                   
                   // Get current animation state or default to IDLE
                   const currentAnimState = playerAnimStates[pl.id] || 'IDLE'
                   const validStates = ['IDLE', 'JL', 'JR', 'SL', 'SR', 'STL', 'STR', 'UL', 'UR', 'BACK']
-                  const safeAnimState = validStates.includes(currentAnimState) ? currentAnimState as keyof typeof avatarSet : 'IDLE'
-                  const animSource = avatarSet?.[safeAnimState] || avatarSet?.IDLE
-                  const resolvedUri = animSource ? Image.resolveAssetSource(animSource).uri : null
+                  const safeAnimState = validStates.includes(currentAnimState) ? currentAnimState : 'IDLE'
+                  const AvatarSvgComponent = avatarSvgSet?.[safeAnimState] || avatarSvgSet?.IDLE
 
                   return (
                     <Animated.View
                       key={`pl-${pl.id}`}
                       style={{ position: 'absolute', width: cell * 0.65, height: cell * 0.65, transform: [...transform, { scale: s }] }}
                     >
-                      {resolvedUri ? (
-                        <SvgUri uri={resolvedUri} width="100%" height="100%" />
+                      {AvatarSvgComponent ? (
+                        <AvatarSvgComponent width="100%" height="100%" />
                       ) : (
                         <View style={{ width: '100%', height: '100%', borderRadius: 10, backgroundColor: pl.avatar.color || '#6b7280' }} />
                       )}
