@@ -36,20 +36,59 @@ export interface AppAssets {
   videos?: Record<string, any> // TODO: VideoSourcePropType ?
 
   ular_tangga?: {
-    logo: ImageSourcePropType
-    icon: ImageSourcePropType
     background: ImageSourcePropType
-    background_footer: ImageSourcePropType
+    logo: any // SVG
+    icon: any // SVG
+    background_footer: any // SVG
     female: {
       hair: Record<string, ImageSourcePropType>
       clothes: Record<string, ImageSourcePropType>
       accessories: Record<string, ImageSourcePropType>
+      sets: Record<
+        string,
+        {
+          IDLE: any
+          JL: any
+          JR: any
+          SL: any
+          SR: any
+          STL: any
+          STR: any
+          UL: any
+          UR: any
+          BACK: any
+        }
+      >
     }
     male: {
       hair: Record<string, ImageSourcePropType>
       clothes: Record<string, ImageSourcePropType>
       accessories: Record<string, ImageSourcePropType>
+      sets: Record<
+        string,
+        {
+          IDLE: any
+          JL: any
+          JR: any
+          SL: any
+          SR: any
+          STL: any
+          STR: any
+          UL: any
+          UR: any
+          BACK: any
+        }
+      >
     }
     snakes: ImageSourcePropType[]
+    ladders: ImageSourcePropType[]
+    audio?: {
+      main_bg: number
+      dice: number
+      bonus_dice: number
+      movement_bounces: number
+      finish_game: number
+      fail_game: number
+    }
   }
 }
