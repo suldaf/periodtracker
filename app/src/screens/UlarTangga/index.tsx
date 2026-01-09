@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef, useEffect } from 'react'
+import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react'
 import {
   Dimensions,
   Pressable,
@@ -18,6 +18,23 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { assets } from '../../resources/assets'
 import { ScreenComponent } from '../../navigation/RootNavigator'
 import { AVATAR_SVG_REGISTRY } from './avatarRegistry'
+
+// Import GameModeSelector component and bot logic from engine
+import {
+  GameModeSelector,
+  GameModeSelection,
+} from '../../features/edufun-snakes-ladders/components/GameModeSelector'
+import {
+  GameMode,
+  Difficulty,
+  BotConfig,
+  Emoticon,
+  rollDice,
+  executeBotTurn,
+  determineBotReaction,
+  calculateBotActionDelays,
+  getBotMessage,
+} from '../../features/edufun-snakes-ladders/engine'
 
 // Import SVG files directly
 import Ular2Svg from '../../resources/assets/images/ular_tangga/ular_2.svg'
@@ -48,11 +65,15 @@ type Player = {
   name: string
   avatar: AvatarSpec
   pos: number
+  isBot?: boolean
 }
 
 type SetupTab = 'skin' | 'hair' | 'clothes' | 'accessory'
 
 type Phase = 'choose' | 'setup' | 'play'
+
+// Extended phase type to include mode selection
+type GamePhase = 'select_mode' | Phase
 
 const TOTAL_SQUARES = 42
 const COLS = 6
@@ -175,7 +196,8 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
   const cell = boardSize / COLS
   const boardHeight = cell * rows
 
-  const [phase, setPhase] = useState<Phase>('choose')
+  // Start with mode selection phase
+  const [phase, setPhase] = useState<GamePhase>('select_mode')
   const [playerCount, setPlayerCount] = useState(2)
   const [players, setPlayers] = useState<Player[]>([])
   const [turnIdx, setTurnIdx] = useState(0)
@@ -192,9 +214,19 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
   // Animation state tracking for each player
   const [playerAnimStates, setPlayerAnimStates] = useState<Record<number, string>>({})
 
+  // Game mode and bot states
+  const [gameMode, setGameMode] = useState<GameMode>('multiplayer')
+  const [difficulty, setDifficulty] = useState<Difficulty>('santai')
+  const [bots, setBots] = useState<BotConfig[]>([])
+  const [botReaction, setBotReaction] = useState<{ message: string; emoticon: Emoticon } | null>(
+    null,
+  )
+  const [consecutiveSnakeHits, setConsecutiveSnakeHits] = useState<Record<number, number>>({})
+
   const snakes = useRef(DEFAULT_SNAKES)
   const ladders = useRef(DEFAULT_LADDERS)
   const moveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const botTurnTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const animPos = useRef<Record<number, Animated.ValueXY>>({})
   const animScale = useRef<Record<number, Animated.Value>>({})
 
@@ -301,6 +333,7 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
 
     return () => {
       if (moveTimer.current) clearTimeout(moveTimer.current)
+      if (botTurnTimer.current) clearTimeout(botTurnTimer.current)
 
       // Stop background music when leaving screen
       bgMusic.current?.stopAsync().catch(() => {})
@@ -316,8 +349,10 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
 
   useEffect(() => {
     if (phase === 'setup') {
+      // In solo mode, only create avatars for the human player
+      const humanCount = gameMode === 'solo' ? 1 : playerCount
       setTempAvatars(
-        Array(playerCount)
+        Array(humanCount)
           .fill(null)
           .map((_, i) => {
             // Alternate between Female and Male for variety, or all Female by default
@@ -334,19 +369,21 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
           }),
       )
       setTempNames(
-        Array(playerCount)
+        Array(humanCount)
           .fill(null)
-          .map((_, i) => `Pemain ${i + 1}`),
+          .map((_, i) => (gameMode === 'solo' ? 'Kamu' : `Pemain ${i + 1}`)),
       )
       setCurrentPlayerSetup(0)
       setSetupTab('skin')
     }
-  }, [phase, playerCount])
+  }, [phase, playerCount, gameMode])
 
   const startGame = async () => {
     if (phase !== 'setup') return
 
-    const newPlayers = tempAvatars.map((avatar, i) => {
+    // Create human players from tempAvatars
+    const humanPlayerCount = gameMode === 'solo' ? 1 : playerCount
+    const humanPlayers: Player[] = tempAvatars.slice(0, humanPlayerCount).map((avatar, i) => {
       const genderAssets = avatar.gender === 'Female' ? avatarAssets?.female : avatarAssets?.male
       const hairOptions = Object.keys(genderAssets?.hair || {})
       const clothesOptions = Object.keys(genderAssets?.clothes || {})
@@ -376,17 +413,52 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
           color: TOKEN_COLORS[i % TOKEN_COLORS.length] || '#6b7280',
         },
         pos: 0,
+        isBot: false,
       }
     })
 
-    setPlayers(newPlayers)
+    // Add bot players in solo mode
+    let allPlayers: Player[] = [...humanPlayers]
+    if (gameMode === 'solo' && bots.length > 0) {
+      // Different avatar configurations for bots
+      const botAvatarConfigs: Array<{
+        gender: Gender
+        skinTone: SkinTone
+        hair: string
+        clothes: string
+      }> = [
+        { gender: 'Male', skinTone: 'MEDIUM', hair: 'HAIR1', clothes: 'BASIC' },
+        { gender: 'Female', skinTone: 'DARK', hair: 'PONYTAIL', clothes: 'BASIC' },
+        { gender: 'Male', skinTone: 'LIGHT', hair: 'HAIR2', clothes: 'BASIC' },
+      ]
+
+      const botPlayers: Player[] = bots.map((bot, i) => {
+        const avatarConfig = botAvatarConfigs[i % botAvatarConfigs.length]
+        return {
+          id: humanPlayerCount + i,
+          name: bot.name,
+          avatar: {
+            gender: avatarConfig.gender,
+            skinTone: avatarConfig.skinTone,
+            hair: avatarConfig.hair,
+            clothes: avatarConfig.clothes,
+            color: TOKEN_COLORS[(humanPlayerCount + i) % TOKEN_COLORS.length] || '#6b7280',
+          },
+          pos: 0,
+          isBot: true,
+        }
+      })
+      allPlayers = [...humanPlayers, ...botPlayers]
+    }
+
+    setPlayers(allPlayers)
     setTurnIdx(0)
-    setInfo(`Game dimulai! Giliran ${newPlayers[0].name}`)
+    setInfo(`Game dimulai! Giliran ${allPlayers[0].name}`)
     setPhase('play')
 
     // Initialize all players with IDLE animation state
     const initialAnimStates: Record<number, string> = {}
-    newPlayers.forEach((p) => {
+    allPlayers.forEach((p) => {
       initialAnimStates[p.id] = 'IDLE'
     })
     setPlayerAnimStates(initialAnimStates)
@@ -401,10 +473,14 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
 
   const resetGame = async () => {
     setPlayers([])
-    setPhase('choose')
+    setPhase('select_mode')
     setInfo('Pilih jumlah pemain (2-5)')
     setTurnIdx(0)
     setGameEnded(false)
+    setGameMode('multiplayer')
+    setBots([])
+    setBotReaction(null)
+    setConsecutiveSnakeHits({})
 
     // Stop background music
     try {
@@ -413,6 +489,80 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
       // Silently handle audio stop errors
     }
   }
+
+  // Handle game mode selection from GameModeSelector
+  const handleModeSelected = (selection: GameModeSelection) => {
+    setGameMode(selection.mode)
+    setDifficulty(selection.difficulty)
+    setBots(selection.bots)
+    setPlayerCount(selection.playerCount)
+
+    if (selection.mode === 'solo') {
+      // Solo mode: 1 human player + bots
+      setPhase('setup')
+    } else {
+      // Multiplayer mode: go to player count selection
+      setPhase('choose')
+    }
+  }
+
+  // Helper function to trigger bot turn
+  const triggerBotTurnIfNeeded = useCallback(
+    (playerIdx: number) => {
+      // Clear any existing bot turn timer
+      if (botTurnTimer.current) {
+        clearTimeout(botTurnTimer.current)
+        botTurnTimer.current = null
+      }
+
+      if (gameMode === 'solo' && players.length > 0) {
+        const nextPlayer = players[playerIdx]
+        if (nextPlayer?.isBot) {
+          const bot = bots.find((b) => b.name === nextPlayer.name)
+          if (bot) {
+            const delays = calculateBotActionDelays(bot.personality)
+            setInfo(getBotMessage(bot.name, bot.personality, 'thinking'))
+            botTurnTimer.current = setTimeout(() => {
+              botTurnTimer.current = null
+              // Trigger roll for bot - we need to call this indirectly
+              // by setting a flag or using a ref
+            }, delays.beforeRoll)
+          }
+        }
+      }
+    },
+    [gameMode, players, bots],
+  )
+
+  // Helper function to show bot reaction
+  const showBotReaction = useCallback(
+    (
+      event:
+        | 'player_snake'
+        | 'player_ladder'
+        | 'bot_snake'
+        | 'bot_ladder'
+        | 'bot_win'
+        | 'player_win',
+    ) => {
+      if (bots.length > 0) {
+        const bot = bots[0]
+        const { reaction, emoticon } = determineBotReaction(bot.personality, event)
+        if (reaction !== 'none') {
+          setBotReaction({
+            message: getBotMessage(
+              bot.name,
+              bot.personality,
+              event === 'player_snake' ? 'snake' : 'landed',
+            ),
+            emoticon,
+          })
+          setTimeout(() => setBotReaction(null), 2500)
+        }
+      }
+    },
+    [bots],
+  )
 
   const updateTempAvatar = (updates: Partial<AvatarSpec>) => {
     setTempAvatars((prev) => {
@@ -468,7 +618,35 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
       return
     }
 
-    const d = Math.floor(Math.random() * 6) + 1
+    const current = players[turnIdx]
+    if (!current) return // Safety check
+
+    const currentId = current.id // Store the ID to ensure we always update the correct player
+    const isCurrentBot = current.isBot
+
+    // Use bot dice logic for bot players, regular dice for human players
+    let d: number
+    if (isCurrentBot && gameMode === 'solo') {
+      const bot = bots.find((b) => b.name === current.name)
+      if (bot) {
+        const gameContext = {
+          humanPosition: players.find((p) => !p.isBot)?.pos || 0,
+          botPositions: players.filter((p) => p.isBot).map((p) => p.pos),
+          consecutiveSnakeHits,
+          snakes: snakes.current,
+          ladders: ladders.current,
+          totalSquares: TOTAL_SQUARES,
+        }
+        const botAction = executeBotTurn(bot, current.pos, gameContext)
+        d = botAction.diceValue
+        setInfo(getBotMessage(bot.name, bot.personality, 'rolling'))
+      } else {
+        d = Math.floor(Math.random() * 6) + 1
+      }
+    } else {
+      d = Math.floor(Math.random() * 6) + 1
+    }
+
     setDice(d)
 
     // Play dice sound effect
@@ -482,7 +660,6 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
       // Silently handle audio playback errors
     }
 
-    const current = players[turnIdx]
     const target = current.pos + d
 
     if (target > PLAYABLE_SQUARES) {
@@ -512,6 +689,11 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
           setInfo((s) => `${s} | TANGGA ${final} → ${to}`)
           hasLadder = true
 
+          // Bot reaction to player ladder
+          if (!isCurrentBot && gameMode === 'solo') {
+            showBotReaction('player_ladder')
+          }
+
           // Animate ladder climb: UL/UR alternating
           const climbSteps = Math.abs(to - final)
           let climbCount = 0
@@ -539,6 +721,11 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
           const to = snakes.current[final]
           setInfo((s) => `${s} | ULAR ${final} → ${to}`)
           hasSnake = true
+
+          // Bot reaction to player snake
+          if (!isCurrentBot && gameMode === 'solo') {
+            showBotReaction('player_snake')
+          }
 
           // Animate snake slide: SL/SR based on direction
           const slideDir = to < final ? 'SL' : 'SR'
@@ -572,6 +759,11 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
             setTimeout(() => {
               setPlayerAnimStates((prev) => ({ ...prev, [current.id]: 'IDLE' }))
             }, 500)
+
+            // Bot reaction to win/lose
+            if (gameMode === 'solo') {
+              showBotReaction(isCurrentBot ? 'bot_win' : 'player_win')
+            }
 
             const finishedPlayers = updatedPlayers.filter((p) => p.pos >= PLAYABLE_SQUARES)
             const activePlayers = updatedPlayers.filter((p) => p.pos < PLAYABLE_SQUARES)
@@ -735,6 +927,30 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
     })
   }, [players, cell])
 
+  // Trigger bot turn when turnIdx changes and it's a bot's turn
+  useEffect(() => {
+    if (phase === 'play' && !isAnimating && players.length > 0 && !gameEnded) {
+      const currentPlayer = players[turnIdx]
+      if (currentPlayer?.isBot && gameMode === 'solo') {
+        const bot = bots.find((b) => b.name === currentPlayer.name)
+        if (bot) {
+          // Clear any existing bot turn timer
+          if (botTurnTimer.current) {
+            clearTimeout(botTurnTimer.current)
+            botTurnTimer.current = null
+          }
+
+          const delays = calculateBotActionDelays(bot.personality)
+          setInfo(getBotMessage(bot.name, bot.personality, 'thinking'))
+          botTurnTimer.current = setTimeout(() => {
+            botTurnTimer.current = null
+            roll()
+          }, delays.beforeRoll)
+        }
+      }
+    }
+  }, [turnIdx, phase, isAnimating, players.length, gameEnded, gameMode])
+
   const renderTabContent = () => {
     const currentAvatar = tempAvatars[currentPlayerSetup] || {
       gender: 'Female',
@@ -835,6 +1051,11 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
   }
 
   const canStart = tempNames.every((n) => n && n.trim())
+
+  // Render game mode selector first
+  if (phase === 'select_mode') {
+    return <GameModeSelector onModeSelected={handleModeSelected} />
+  }
 
   return (
     <View style={styles.screen}>
@@ -1391,12 +1612,21 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                 <View style={styles.gameInfo}>
                   {getActivePlayers().length > 0 && (
                     <Text style={[styles.turnInfo, { color: themeColors[theme].text }]}>
-                      Giliran: {players[turnIdx]?.name}
+                      Giliran: {players[turnIdx]?.name} {players[turnIdx]?.isBot ? '🤖' : ''}
                     </Text>
                   )}
                   <Text style={[styles.gameStatus, { color: themeColors[theme].text }]}>
                     {info}
                   </Text>
+
+                  {/* Bot reaction display */}
+                  {botReaction && (
+                    <View style={styles.botReactionContainer}>
+                      <Text style={styles.botReactionText}>
+                        {botReaction.emoticon} {botReaction.message}
+                      </Text>
+                    </View>
+                  )}
                 </View>
 
                 <View style={styles.diceSection}>
@@ -1405,14 +1635,21 @@ const UlarTangga: ScreenComponent<'Ludo' | 'game'> = () => {
                   </Text>
                   <Pressable
                     onPress={roll}
-                    disabled={isAnimating || gameEnded}
+                    disabled={isAnimating || gameEnded || players[turnIdx]?.isBot}
                     style={[
                       styles.rollButton,
-                      (isAnimating || gameEnded) && styles.rollButtonDisabled,
+                      (isAnimating || gameEnded || players[turnIdx]?.isBot) &&
+                        styles.rollButtonDisabled,
                     ]}
                   >
                     <Text style={styles.rollButtonText}>
-                      {isAnimating ? 'BERGERAK...' : gameEnded ? 'GAME BERAKHIR' : 'LEMPAR DADU'}
+                      {isAnimating
+                        ? 'BERGERAK...'
+                        : gameEnded
+                        ? 'GAME BERAKHIR'
+                        : players[turnIdx]?.isBot
+                        ? 'GILIRAN BOT...'
+                        : 'LEMPAR DADU'}
                     </Text>
                   </Pressable>
                 </View>
@@ -1972,6 +2209,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     opacity: 0.9,
+  },
+  botReactionContainer: {
+    marginTop: 8,
+    padding: 10,
+    backgroundColor: 'rgba(154, 191, 68, 0.15)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#9abf44',
+  },
+  botReactionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+    color: '#3D405B',
   },
   diceSection: {
     alignItems: 'center',

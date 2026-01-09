@@ -4,7 +4,16 @@
  */
 
 import React, { useState } from 'react'
-import { View, Text, Pressable, StyleSheet, Image, Dimensions, ImageBackground } from 'react-native'
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  Image,
+  Dimensions,
+  ImageBackground,
+  ScrollView,
+} from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { assets } from '../../../resources/assets'
 import {
@@ -85,90 +94,113 @@ export const GameModeSelector: React.FC<GameModeSelectorProps> = ({ onModeSelect
   }
 
   const renderModeSelection = () => (
-    <View style={styles.container}>
-      <Text style={styles.title}>Mau main dengan{'\n'}siapa hari ini?</Text>
+    <ScrollView
+      style={styles.scrollView}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.container}>
+        <Text style={styles.title}>Mau main dengan{'\n'}siapa hari ini?</Text>
 
-      <View style={styles.modeGrid}>
-        <Pressable
-          style={[styles.modeCard, selectedMode === 'solo' && styles.modeCardSelected]}
-          onPress={() => handleModeSelect('solo')}
-        >
-          <View style={styles.modeIconContainer}>
-            <Text style={styles.modeIcon}>🤖</Text>
-          </View>
-          <Text style={styles.modeLabel}>Komputer</Text>
-        </Pressable>
+        <View style={styles.modeGrid}>
+          <Pressable
+            style={[styles.modeCard, selectedMode === 'solo' && styles.modeCardSelected]}
+            onPress={() => handleModeSelect('solo')}
+          >
+            <View style={styles.modeIconContainer}>
+              <Text style={styles.modeIcon}>🤖</Text>
+            </View>
+            <Text style={styles.modeLabel}>Komputer</Text>
+          </Pressable>
 
-        <Pressable
-          style={[styles.modeCard, selectedMode === 'multiplayer' && styles.modeCardSelected]}
-          onPress={() => handleModeSelect('multiplayer')}
-        >
-          <View style={styles.modeIconContainer}>
-            <Text style={styles.modeIcon}>👥</Text>
-          </View>
-          <Text style={styles.modeLabel}>Teman</Text>
-        </Pressable>
+          <Pressable
+            style={[styles.modeCard, selectedMode === 'multiplayer' && styles.modeCardSelected]}
+            onPress={() => handleModeSelect('multiplayer')}
+          >
+            <View style={styles.modeIconContainer}>
+              <Text style={styles.modeIcon}>👥</Text>
+            </View>
+            <Text style={styles.modeLabel}>Teman</Text>
+          </Pressable>
+        </View>
       </View>
-    </View>
+    </ScrollView>
   )
 
   const renderBotCountSelection = () => (
-    <View style={styles.container}>
-      <Pressable style={styles.backButton} onPress={handleBack}>
-        <Text style={styles.backButtonText}>← Kembali</Text>
-      </Pressable>
+    <ScrollView
+      style={styles.scrollView}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.container}>
+        <Pressable style={styles.backButton} onPress={handleBack}>
+          <Text style={styles.backButtonText}>← Kembali</Text>
+        </Pressable>
 
-      <Text style={styles.title}>Mau main sama{'\n'}berapa komputer?</Text>
-      <Text style={styles.subtitle}>Pilih jumlah lawan</Text>
+        <Text style={styles.title}>Mau main sama{'\n'}berapa komputer?</Text>
+        <Text style={styles.subtitle}>Pilih jumlah lawan</Text>
 
-      <View style={styles.countGrid}>
-        {[1, 2, 3].map((count) => (
-          <Pressable
-            key={count}
-            style={[styles.countCard, botCount === count && styles.countCardSelected]}
-            onPress={() => handleBotCountSelect(count)}
-          >
-            <Text style={styles.countNumber}>{count}</Text>
-            <Text style={styles.countLabel}>Bot{count > 1 ? 's' : ''}</Text>
-          </Pressable>
-        ))}
+        <View style={styles.countGrid}>
+          {[1, 2, 3].map((count) => (
+            <Pressable
+              key={count}
+              style={[styles.countCard, botCount === count && styles.countCardSelected]}
+              onPress={() => handleBotCountSelect(count)}
+            >
+              <Text style={styles.countNumber}>{count}</Text>
+              <Text style={styles.countLabel}>Bot{count > 1 ? 's' : ''}</Text>
+            </Pressable>
+          ))}
+        </View>
       </View>
-    </View>
+    </ScrollView>
   )
 
   const renderDifficultySelection = () => (
-    <View style={styles.container}>
-      <Pressable style={styles.backButton} onPress={handleBack}>
-        <Text style={styles.backButtonText}>← Kembali</Text>
-      </Pressable>
-
-      <Text style={styles.title}>Pilih tingkat{'\n'}kesulitan</Text>
-
-      <View style={styles.difficultyGrid}>
-        <Pressable
-          style={[styles.difficultyCard, difficulty === 'santai' && styles.difficultyCardSelected]}
-          onPress={() => handleDifficultySelect('santai')}
-        >
-          <Text style={styles.difficultyEmoji}>😊</Text>
-          <Text style={styles.difficultyTitle}>Santai</Text>
-          <Text style={styles.difficultyDesc}>
-            Bot bermain dengan santai,{'\n'}cocok untuk pemula
-          </Text>
+    <ScrollView
+      style={styles.scrollView}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.container}>
+        <Pressable style={styles.backButton} onPress={handleBack}>
+          <Text style={styles.backButtonText}>← Kembali</Text>
         </Pressable>
 
-        <Pressable
-          style={[
-            styles.difficultyCard,
-            difficulty === 'tantangan' && styles.difficultyCardSelected,
-          ]}
-          onPress={() => handleDifficultySelect('tantangan')}
-        >
-          <Text style={styles.difficultyEmoji}>🔥</Text>
-          <Text style={styles.difficultyTitle}>Tantangan</Text>
-          <Text style={styles.difficultyDesc}>Bot bermain lebih pintar,{'\n'}lebih menantang!</Text>
-        </Pressable>
+        <Text style={styles.title}>Pilih tingkat{'\n'}kesulitan</Text>
+
+        <View style={styles.difficultyGrid}>
+          <Pressable
+            style={[
+              styles.difficultyCard,
+              difficulty === 'santai' && styles.difficultyCardSelected,
+            ]}
+            onPress={() => handleDifficultySelect('santai')}
+          >
+            <Text style={styles.difficultyEmoji}>😊</Text>
+            <Text style={styles.difficultyTitle}>Santai</Text>
+            <Text style={styles.difficultyDesc}>
+              Bot bermain dengan santai,{'\n'}cocok untuk pemula
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={[
+              styles.difficultyCard,
+              difficulty === 'tantangan' && styles.difficultyCardSelected,
+            ]}
+            onPress={() => handleDifficultySelect('tantangan')}
+          >
+            <Text style={styles.difficultyEmoji}>🔥</Text>
+            <Text style={styles.difficultyTitle}>Tantangan</Text>
+            <Text style={styles.difficultyDesc}>
+              Bot bermain lebih pintar,{'\n'}lebih menantang!
+            </Text>
+          </Pressable>
+        </View>
       </View>
-    </View>
+    </ScrollView>
   )
 
   return (
@@ -230,6 +262,15 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 150,
     zIndex: -1,
+  },
+  scrollView: {
+    flex: 1,
+    width: '100%',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    alignItems: 'center',
+    paddingBottom: 20,
   },
   container: {
     width: '100%',
