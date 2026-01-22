@@ -14,6 +14,7 @@ import {
   ImageBackground,
   ScrollView,
 } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { assets } from '../../../resources/assets'
 import {
@@ -24,6 +25,9 @@ import {
   BotConfig,
   createBotConfigs,
 } from '../engine'
+
+import FooterSvg from '../../../resources/assets/images/ular_tangga/bottom_page_ular_tangga.svg'
+import LogoSvg from '../../../resources/assets/images/ular_tangga/EduFun_ular_tangga.svg'
 
 const { width: screenWidth } = Dimensions.get('window')
 
@@ -94,145 +98,133 @@ export const GameModeSelector: React.FC<GameModeSelectorProps> = ({ onModeSelect
   }
 
   const renderModeSelection = () => (
-    <ScrollView
-      style={styles.scrollView}
-      contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.container}>
-        <Text style={styles.title}>Mau main dengan{'\n'}siapa hari ini?</Text>
+    <View style={styles.phaseContainer}>
+      <Text style={styles.title}>Mau main dengan{'\n'}siapa hari ini?</Text>
 
-        <View style={styles.modeGrid}>
-          <Pressable
-            style={[styles.modeCard, selectedMode === 'solo' && styles.modeCardSelected]}
-            onPress={() => handleModeSelect('solo')}
-          >
-            <View style={styles.modeIconContainer}>
-              <Text style={styles.modeIcon}>🤖</Text>
-            </View>
-            <Text style={styles.modeLabel}>Komputer</Text>
-          </Pressable>
+      <View style={styles.modeGrid}>
+        <Pressable
+          style={[styles.modeCard, selectedMode === 'solo' && styles.modeCardSelected]}
+          onPress={() => handleModeSelect('solo')}
+        >
+          <View style={styles.modeIconContainer}>
+            <Text style={styles.modeIcon}>🤖</Text>
+          </View>
+          <Text style={styles.modeLabel}>Komputer</Text>
+        </Pressable>
 
-          <Pressable
-            style={[styles.modeCard, selectedMode === 'multiplayer' && styles.modeCardSelected]}
-            onPress={() => handleModeSelect('multiplayer')}
-          >
-            <View style={styles.modeIconContainer}>
-              <Text style={styles.modeIcon}>👥</Text>
-            </View>
-            <Text style={styles.modeLabel}>Teman</Text>
-          </Pressable>
-        </View>
+        <Pressable
+          style={[styles.modeCard, selectedMode === 'multiplayer' && styles.modeCardSelected]}
+          onPress={() => handleModeSelect('multiplayer')}
+        >
+          <View style={styles.modeIconContainer}>
+            <Text style={styles.modeIcon}>👥</Text>
+          </View>
+          <Text style={styles.modeLabel}>Teman</Text>
+        </Pressable>
       </View>
-    </ScrollView>
+    </View>
   )
 
   const renderBotCountSelection = () => (
-    <ScrollView
-      style={styles.scrollView}
-      contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.container}>
-        <Pressable style={styles.backButton} onPress={handleBack}>
-          <Text style={styles.backButtonText}>← Kembali</Text>
-        </Pressable>
+    <View style={styles.phaseContainer}>
+      <Pressable style={styles.backButton} onPress={handleBack}>
+        <Text style={styles.backButtonText}>← Kembali</Text>
+      </Pressable>
 
-        <Text style={styles.title}>Mau main sama{'\n'}berapa komputer?</Text>
-        <Text style={styles.subtitle}>Pilih jumlah lawan</Text>
+      <Text style={styles.title}>Mau main sama{'\n'}berapa komputer?</Text>
+      <Text style={styles.subtitle}>Pilih jumlah lawan</Text>
 
-        <View style={styles.countGrid}>
-          {[1, 2, 3].map((count) => (
-            <Pressable
-              key={count}
-              style={[styles.countCard, botCount === count && styles.countCardSelected]}
-              onPress={() => handleBotCountSelect(count)}
-            >
-              <Text style={styles.countNumber}>{count}</Text>
-              <Text style={styles.countLabel}>Bot{count > 1 ? 's' : ''}</Text>
-            </Pressable>
-          ))}
-        </View>
+      <View style={styles.countGrid}>
+        {[1, 2, 3].map((count) => (
+          <Pressable
+            key={count}
+            style={[styles.countCard, botCount === count && styles.countCardSelected]}
+            onPress={() => handleBotCountSelect(count)}
+          >
+            <Text style={styles.countNumber}>{count}</Text>
+            <Text style={styles.countLabel}>Bot{count > 1 ? 's' : ''}</Text>
+          </Pressable>
+        ))}
       </View>
-    </ScrollView>
+    </View>
   )
 
   const renderDifficultySelection = () => (
-    <ScrollView
-      style={styles.scrollView}
-      contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.container}>
-        <Pressable style={styles.backButton} onPress={handleBack}>
-          <Text style={styles.backButtonText}>← Kembali</Text>
+    <View style={styles.phaseContainer}>
+      <Pressable style={styles.backButton} onPress={handleBack}>
+        <Text style={styles.backButtonText}>← Kembali</Text>
+      </Pressable>
+
+      <Text style={styles.title}>Pilih tingkat{'\n'}kesulitan</Text>
+
+      <View style={styles.difficultyGrid}>
+        <Pressable
+          style={[
+            styles.difficultyCard,
+            difficulty === 'santai' && styles.difficultyCardSelected,
+          ]}
+          onPress={() => handleDifficultySelect('santai')}
+        >
+          <Text style={styles.difficultyEmoji}>😊</Text>
+          <Text style={styles.difficultyTitle}>Santai</Text>
+          <Text style={styles.difficultyDesc}>
+            Bot bermain dengan santai,{'\n'}cocok untuk pemula
+          </Text>
         </Pressable>
 
-        <Text style={styles.title}>Pilih tingkat{'\n'}kesulitan</Text>
-
-        <View style={styles.difficultyGrid}>
-          <Pressable
-            style={[
-              styles.difficultyCard,
-              difficulty === 'santai' && styles.difficultyCardSelected,
-            ]}
-            onPress={() => handleDifficultySelect('santai')}
-          >
-            <Text style={styles.difficultyEmoji}>😊</Text>
-            <Text style={styles.difficultyTitle}>Santai</Text>
-            <Text style={styles.difficultyDesc}>
-              Bot bermain dengan santai,{'\n'}cocok untuk pemula
-            </Text>
-          </Pressable>
-
-          <Pressable
-            style={[
-              styles.difficultyCard,
-              difficulty === 'tantangan' && styles.difficultyCardSelected,
-            ]}
-            onPress={() => handleDifficultySelect('tantangan')}
-          >
-            <Text style={styles.difficultyEmoji}>🔥</Text>
-            <Text style={styles.difficultyTitle}>Tantangan</Text>
-            <Text style={styles.difficultyDesc}>
-              Bot bermain lebih pintar,{'\n'}lebih menantang!
-            </Text>
-          </Pressable>
-        </View>
+        <Pressable
+          style={[
+            styles.difficultyCard,
+            difficulty === 'tantangan' && styles.difficultyCardSelected,
+          ]}
+          onPress={() => handleDifficultySelect('tantangan')}
+        >
+          <Text style={styles.difficultyEmoji}>🔥</Text>
+          <Text style={styles.difficultyTitle}>Tantangan</Text>
+          <Text style={styles.difficultyDesc}>
+            Bot bermain lebih pintar,{'\n'}lebih menantang!
+          </Text>
+        </Pressable>
       </View>
-    </ScrollView>
+    </View>
   )
 
   return (
-    <View
-      style={[
-        styles.screen,
-        {
+    <View style={styles.screen}>
+      <LinearGradient
+        colors={['#ACECF9', '#FFFFFF']}
+        style={{
+          flex: 1,
+          width: '100%',
           paddingTop: 24 + insets.top,
-          paddingBottom: 16 + insets.bottom,
-        },
-      ]}
-    >
-      <ImageBackground
-        source={assets.ular_tangga?.background}
-        style={styles.inner}
-        imageStyle={{ resizeMode: 'cover', opacity: 0.08 }}
+          paddingBottom: 0, // Ensure no padding at bottom
+        }}
       >
-        <Image source={assets.ular_tangga?.logo} style={styles.logoImage} resizeMode="contain" />
+        <ImageBackground
+          source={assets.ular_tangga?.background}
+          style={styles.inner}
+          imageStyle={{ resizeMode: 'cover', opacity: 0.08 }}
+        >
+          {/* --- FOOTER --- */}
+          <View style={styles.footerContainer} pointerEvents="none">
+            <FooterSvg width="100%" height={120} preserveAspectRatio="none" />
+          </View>
 
-        {phase === 'mode' && renderModeSelection()}
-        {phase === 'bot_count' && renderBotCountSelection()}
-        {phase === 'difficulty' && renderDifficultySelection()}
+          <View style={styles.contentWrapper}>
+            {/* --- LOGO --- */}
+            <LogoSvg
+              width={400}
+              height={120}
+              style={styles.logoImage}
+              preserveAspectRatio="xMidYMid meet"
+            />
 
-        {/* Background Footer Image */}
-        {assets.ular_tangga?.background_footer && (
-          <Image
-            source={assets.ular_tangga.background_footer}
-            style={styles.backgroundFooter}
-            resizeMode="cover"
-          />
-        )}
-      </ImageBackground>
+            {phase === 'mode' && renderModeSelection()}
+            {phase === 'bot_count' && renderBotCountSelection()}
+            {phase === 'difficulty' && renderDifficultySelection()}
+          </View>
+        </ImageBackground>
+      </LinearGradient>
     </View>
   )
 }
@@ -240,7 +232,6 @@ export const GameModeSelector: React.FC<GameModeSelectorProps> = ({ onModeSelect
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    paddingHorizontal: 16,
     alignItems: 'center',
     backgroundColor: themeColors.light.bg,
   },
@@ -419,11 +410,42 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   difficultyDesc: {
-    fontSize: 13,
-    color: themeColors.light.text,
-    opacity: 0.7,
     textAlign: 'center',
     lineHeight: 18,
+  },
+  contentWrapper: {
+    flex: 1,
+    width: '100%',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  footerContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    width: '100%',
+    height: 120,
+    zIndex: 0,
+  },
+  phaseContainer: {
+    width: '100%',
+    maxWidth: 440,
+    padding: 22,
+    borderRadius: 18,
+    marginTop: 12,
+    marginBottom: 150,
+    shadowColor: '#8ea8c2',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.24,
+    shadowRadius: 24,
+    elevation: 6,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: '#e2ecf5',
+    zIndex: 10,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
   },
 })
 

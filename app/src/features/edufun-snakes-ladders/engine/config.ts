@@ -45,12 +45,14 @@ export const DEFAULT_SNAKES_42: Record<number, number> = {
 
 /**
  * Default ladders for 42 squares board
+ * All ladders are vertical (same column) to appear straight on board
+ * Note: n=1 is START, n=2 displays "1", n=3 displays "2", etc.
  */
 export const DEFAULT_LADDERS_42: Record<number, number> = {
-  2: 11,
-  10: 16,
-  23: 38,
-  30: 32,
+  2: 14,  // Display 1 -> 13 (row 0 ke row 2, sama-sama arah kanan, lurus vertikal)
+  4: 16,  // Display 3 -> 15 (row 0 ke row 2, sama-sama arah kanan, lurus vertikal)
+  19: 31, // Display 18 -> 30 (row 3 ke row 5, sama-sama arah kiri, lurus vertikal)
+  25: 37, // Display 24 -> 36 (row 4 ke row 6, sama-sama arah kanan, lurus vertikal)
 }
 
 /**

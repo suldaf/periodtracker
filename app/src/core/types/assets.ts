@@ -37,6 +37,17 @@ export interface AppAssets {
 
   ular_tangga?: {
     background: ImageSourcePropType
+    'background-2': ImageSourcePropType
+    menang: ImageSourcePropType
+    kalah: ImageSourcePropType
+    ulang: ImageSourcePropType
+    home: ImageSourcePropType
+    maleIcon: ImageSourcePropType
+    femaleIcon: ImageSourcePropType
+    infoIcon: ImageSourcePropType
+    gearIcon: ImageSourcePropType
+    starIcon: ImageSourcePropType
+    bgFinishPng: ImageSourcePropType
     logo: any // SVG
     icon: any // SVG
     background_footer: any // SVG
@@ -82,6 +93,7 @@ export interface AppAssets {
     }
     snakes: ImageSourcePropType[]
     ladders: ImageSourcePropType[]
+    ladderLeaves?: ImageSourcePropType[]
     audio?: {
       main_bg: number
       dice: number
@@ -89,6 +101,8 @@ export interface AppAssets {
       movement_bounces: number
       finish_game: number
       fail_game: number
+      drop: number
+      up: number
     }
   }
 }
