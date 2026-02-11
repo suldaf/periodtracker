@@ -10,6 +10,7 @@ import FindHelpScreen from '../../screens/FindHelpScreen'
 import TermsScreen from '../../screens/TermsScreen'
 import AboutScreen from '../../screens/AboutScreen'
 import PrivacyScreen from '../../screens/PrivacyScreen'
+import CustomAvatarScreen from '../../screens/CustomAvatarScreen'
 
 export type AuthStackParamList = {
   Auth: undefined
@@ -22,6 +23,7 @@ export type AuthStackParamList = {
     subcategoryId: string
   }
   Help: undefined
+  CustomAvatar: undefined
 }
 
 const config: StackConfig<keyof AuthStackParamList> = {
@@ -58,6 +60,10 @@ const config: StackConfig<keyof AuthStackParamList> = {
     Help: {
       title: 'find help',
       component: FindHelpScreen,
+    },
+    CustomAvatar: {
+      title: 'custom_avatar',
+      component: CustomAvatarScreen,
     },
   },
 }

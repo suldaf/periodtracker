@@ -2,17 +2,19 @@ import * as React from 'react'
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { Screen } from '../../components/Screen'
 import { Button } from '../../components/Button'
-import { avatarNames, themeNames } from '../../resources/translations'
+import { avatarNames, themeNames, AvatarName } from '../../resources/translations'
 import { getAsset } from '../../services/asset'
 import { CheckButton } from '../../components/CheckButton'
 import { useSelector } from '../../redux/useSelector'
-import { currentAvatarSelector, currentThemeSelector } from '../../redux/selectors'
+import { currentAvatarSelector, currentThemeSelector, customAvatarConfigSelector } from '../../redux/selectors'
 import { useDispatch } from 'react-redux'
 import { setAvatar, setTheme } from '../../redux/actions'
 import { globalStyles } from '../../config/theme'
 import { Text } from '../../components/Text'
 import { analytics } from '../../services/firebase'
 import { PaletteStatus, useColor } from '../../hooks/useColor'
+import { useNavigation } from '@react-navigation/native'
+import { getCustomAvatarImage } from '../../resources/assets/customAvatarAssets'
 
 const AvatarAndThemeScreen = () => {
   return <AvatarAndThemeSelect />
@@ -27,11 +29,18 @@ interface AvatarAndThemeSelectProps {
 export const AvatarAndThemeSelect = ({ onConfirm }: AvatarAndThemeSelectProps) => {
   const currentAvatar = useSelector(currentAvatarSelector)
   const currentTheme = useSelector(currentThemeSelector)
+  const customAvatarConfig = useSelector(customAvatarConfigSelector)
   const dispatch = useDispatch()
   const { backgroundColor, palette } = useColor()
+  const navigation = useNavigation<any>()
 
   const [selectedAvatar, setSelectedAvatar] = React.useState(currentAvatar)
   const [selectedTheme, setSelectedTheme] = React.useState(currentTheme)
+
+  // Sync local selection with Redux state (needed when returning from CustomAvatarScreen)
+  React.useEffect(() => {
+    setSelectedAvatar(currentAvatar)
+  }, [currentAvatar])
 
   const confirm = () => {
     dispatch(setAvatar(selectedAvatar))
@@ -58,6 +67,18 @@ export const AvatarAndThemeSelect = ({ onConfirm }: AvatarAndThemeSelectProps) =
   const isInitialSelection = !!onConfirm
   const confirmStatus = hasChanged || isInitialSelection ? 'primary' : 'basic'
 
+  // All avatars including custom
+  const allAvatars: AvatarName[] = [...avatarNames, 'custom']
+
+  // Get the image source for an avatar (handles custom avatar specially)
+  const getAvatarImage = (avatar: AvatarName) => {
+    if (avatar === 'custom') {
+      // Always show the default custom avatar icon (pink silhouette) in selection screen
+      return getAsset('avatars.custom.theme')
+    }
+    return getAsset(`avatars.${avatar}.theme`)
+  }
+
   return (
     <Screen style={styles.screen}>
       {isInitialSelection && (
@@ -66,7 +87,7 @@ export const AvatarAndThemeSelect = ({ onConfirm }: AvatarAndThemeSelectProps) =
         </Text>
       )}
       <View style={styles.avatars}>
-        {avatarNames.map((avatar) => {
+        {allAvatars.map((avatar) => {
           const { showCheck, checkStatus } = getCheckStatus({
             isSelected: avatar === selectedAvatar,
             isCurrent: avatar === currentAvatar,
@@ -75,7 +96,14 @@ export const AvatarAndThemeSelect = ({ onConfirm }: AvatarAndThemeSelectProps) =
           })
 
           const onPress = () => {
-            setSelectedAvatar(avatar)
+            if (avatar === 'custom') {
+              // Set selected avatar to custom before navigating
+              setSelectedAvatar('custom')
+              // Navigate to CustomAvatarScreen for customization
+              navigation.navigate('CustomAvatar')
+            } else {
+              setSelectedAvatar(avatar)
+            }
           }
 
           return (
@@ -91,7 +119,7 @@ export const AvatarAndThemeSelect = ({ onConfirm }: AvatarAndThemeSelectProps) =
                   globalStyles.elevation,
                 ]}
               >
-                <Image source={getAsset(`avatars.${avatar}.theme`)} style={styles.avatarImage} />
+                <Image source={getAvatarImage(avatar)} style={styles.avatarImage} />
                 <Text style={[styles.name, { color: palette.secondary.text }]}>{avatar}</Text>
                 {showCheck && <CheckButton style={styles.check} status={checkStatus} />}
               </View>

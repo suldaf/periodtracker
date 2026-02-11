@@ -11,6 +11,7 @@ import {
   currentAvatarSelector,
   currentThemeSelector,
   currentUserSelector,
+  customAvatarConfigSelector,
 } from '../../../redux/selectors'
 import { useTodayPrediction } from '../../../contexts/PredictionProvider'
 import { getAsset } from '../../../services/asset'
@@ -20,10 +21,12 @@ import { useFormatDate } from '../../../hooks/useFormatDate'
 import { globalStyles } from '../../../config/theme'
 import { InfoButton } from '../../../components/InfoButton'
 import { useColor } from '../../../hooks/useColor'
+import { getCustomAvatarImage } from '../../../resources/assets/customAvatarAssets'
 
 export const ProfileDetails = ({ navigation }: ScreenProps<'Profile'>) => {
   const currentUser = useSelector(currentUserSelector)
   const avatar = useSelector(currentAvatarSelector)
+  const customAvatarConfig = useSelector(customAvatarConfigSelector)
   const theme = useSelector(currentThemeSelector)
   const todayInfo = useTodayPrediction()
   const translate = useTranslate()
@@ -120,7 +123,14 @@ export const ProfileDetails = ({ navigation }: ScreenProps<'Profile'>) => {
       {/* ===== Bottom Section ===== */}
       <TouchableOpacity style={styles.row} onPress={goToAvatarAndTheme}>
         <View style={styles.column}>
-          <Image source={getAsset(`avatars.${avatar}.theme`)} style={styles.avatarImage} />
+          <Image
+            source={
+              avatar === 'custom' && customAvatarConfig
+                ? getCustomAvatarImage(customAvatarConfig, 'theme')
+                : getAsset(`avatars.${avatar}.theme`)
+            }
+            style={styles.avatarImage}
+          />
         </View>
         <View style={styles.column}>
           <View style={styles.themeWrapper}>

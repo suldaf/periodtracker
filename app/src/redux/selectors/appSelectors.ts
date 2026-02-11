@@ -49,3 +49,5 @@ export const isSoundActiveSelector = (state: ReduxState) => s(state).isSoundActi
 export const lastPressedCardSelector = (state: ReduxState) => s(state).lastPressedCardDate
 
 export const lastPressedEmojiSelector = (state: ReduxState) => s(state).lastPressedEmojiDate
+
+export const customAvatarConfigSelector = (state: ReduxState) => s(state).customAvatarConfig

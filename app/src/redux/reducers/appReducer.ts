@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { RehydrateAction, REHYDRATE } from 'redux-persist'
 import { AvatarName, ThemeName, defaultAvatar, defaultTheme } from '../../resources/translations'
 import { initialLocale } from '../../hooks/useTranslate'
+import { CustomAvatarConfig, defaultCustomAvatarConfig } from '../../core/types/customAvatar'
 
 export interface AppState {
   locale: string
@@ -37,6 +38,7 @@ export interface AppState {
   isSoundActive?: boolean
   lastPressedCardDate: null | string
   lastPressedEmojiDate: null | string
+  customAvatarConfig?: CustomAvatarConfig
 }
 
 const initialState: AppState = {
@@ -59,6 +61,7 @@ const initialState: AppState = {
   isSoundActive: true,
   lastPressedCardDate: null,
   lastPressedEmojiDate: null,
+  customAvatarConfig: defaultCustomAvatarConfig,
 }
 
 export function appReducer(state = initialState, action: Actions | RehydrateAction): AppState {
@@ -88,6 +91,11 @@ export function appReducer(state = initialState, action: Actions | RehydrateActi
       return {
         ...state,
         avatar: action.payload.avatar,
+      }
+    case 'SET_CUSTOM_AVATAR_CONFIG':
+      return {
+        ...state,
+        customAvatarConfig: action.payload.config,
       }
     case 'SET_UPDATED_VERSION':
       return {

@@ -5,7 +5,7 @@ import { useDayScroll } from '../../screens/MainScreen/DayScrollContext'
 import { StyleProp, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native'
 import { ProgressSection } from './ProgressSection'
 import { useSelector } from 'react-redux'
-import { currentAvatarSelector } from '../../redux/selectors'
+import { currentAvatarSelector, customAvatarConfigSelector } from '../../redux/selectors'
 import Animated, {
   runOnJS,
   useAnimatedProps,
@@ -17,6 +17,7 @@ import Animated, {
 } from 'react-native-reanimated'
 import { AvatarMessage } from './AvatarMessage'
 import { getCustomAvatarStyles } from '../../optional/styles'
+import { getCustomAvatarLottie } from '../../resources/assets/customAvatarAssets'
 
 interface AnimationConfig {
   start: number
@@ -46,6 +47,7 @@ const defaultDance = animationSequences.danceFour
 
 export const Avatar = ({ style }: { style?: StyleProp<ViewStyle> }) => {
   const avatar = useSelector(currentAvatarSelector)
+  const customAvatarConfig = useSelector(customAvatarConfigSelector)
   const { diameter } = useDayScroll()
 
   const isJumpingToggled = useSharedValue(false)
@@ -139,7 +141,28 @@ export const Avatar = ({ style }: { style?: StyleProp<ViewStyle> }) => {
     progress: progress.value,
   }))
 
-  const source = assets.lottie.avatars[avatar]
+  // Get Lottie source - use custom avatar Lottie if available
+  const source = avatar === 'custom' && customAvatarConfig
+    ? getCustomAvatarLottie(customAvatarConfig)
+    : assets.lottie.avatars[avatar]
+
+  // Determine if this avatar uses simple loop animation (custom, nabire, gayatri)
+  // vs segmented animation (ari, julia, nur, oky)
+  const isSimpleLoopAvatar = avatar === 'custom' || avatar === 'nabire' || avatar === 'gayatri'
+
+  // Fallback for avatars without Lottie animation (e.g., Gayatri)
+  if (!source) {
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        style={[styles.container, style]}
+        activeOpacity={1}
+      >
+        <AvatarMessage />
+      </TouchableOpacity>
+    )
+  }
+
   const lottieAspectRatio = source.w / source.h
   const lottieWidth = diameter * 0.33 - 12
   const lottieHeight = lottieWidth / lottieAspectRatio
@@ -166,14 +189,26 @@ export const Avatar = ({ style }: { style?: StyleProp<ViewStyle> }) => {
       activeOpacity={1}
     >
       <AvatarMessage style={customStyle?.avatarMessage} />
-      <AnimatedLottieView
-        resizeMode="contain"
-        style={{ width: lottieWidth, height: lottieHeight }}
-        source={source}
-        animatedProps={animatedProps}
-        autoPlay={false}
-        loop={false}
-      />
+      {isSimpleLoopAvatar ? (
+        // Simple loop animation for custom/nabire/gayatri
+        <AnimatedLottieView
+          resizeMode="contain"
+          style={{ width: lottieWidth, height: lottieHeight }}
+          source={source}
+          autoPlay={true}
+          loop={true}
+        />
+      ) : (
+        // Segmented animation for classic avatars (ari, julia, nur, oky)
+        <AnimatedLottieView
+          resizeMode="contain"
+          style={{ width: lottieWidth, height: lottieHeight }}
+          source={source}
+          animatedProps={animatedProps}
+          autoPlay={false}
+          loop={false}
+        />
+      )}
       <ProgressSection
         heartProgress={animatedHearts}
         lottieHeight={lottieHeight}

@@ -6,9 +6,10 @@ import { journeyConfig } from '../journeyConfig'
 import { Vr } from '../../../../../components/Vr'
 import { Text } from '../../../../../components/Text'
 import { useSelector } from '../../../../../redux/useSelector'
-import { currentAvatarSelector } from '../../../../../redux/selectors'
+import { currentAvatarSelector, customAvatarConfigSelector } from '../../../../../redux/selectors'
 import { getAsset } from '../../../../../services/asset'
 import { useColor } from '../../../../../hooks/useColor'
+import { getCustomAvatarImage } from '../../../../../resources/assets/customAvatarAssets'
 
 type Status = 'unknown' | 'no' | 'yes'
 
@@ -19,6 +20,7 @@ export const JourneyCard = ({ step }: { step: JourneyStep }) => {
   const [status, setStatus] = React.useState<Status>('unknown')
 
   const selectedAvatar = useSelector(currentAvatarSelector)
+  const customAvatarConfig = useSelector(customAvatarConfigSelector)
 
   const { questionText, noText, yesText } = journeyConfig[step]
 
@@ -65,7 +67,11 @@ export const JourneyCard = ({ step }: { step: JourneyStep }) => {
             <View style={styles.imageWrapper}>
               <Image
                 resizeMode="contain"
-                source={getAsset(`avatars.${selectedAvatar}.bubbles`)}
+                source={
+                  selectedAvatar === 'custom' && customAvatarConfig
+                    ? getCustomAvatarImage(customAvatarConfig, 'theme')
+                    : getAsset(`avatars.${selectedAvatar}.bubbles`)
+                }
                 style={styles.image}
               />
             </View>
@@ -83,7 +89,11 @@ export const JourneyCard = ({ step }: { step: JourneyStep }) => {
           <View style={styles.no}>
             <Image
               resizeMode="contain"
-              source={getAsset(`avatars.${selectedAvatar}.stationary_colour`)}
+              source={
+                selectedAvatar === 'custom' && customAvatarConfig
+                  ? getCustomAvatarImage(customAvatarConfig, 'colour')
+                  : getAsset(`avatars.${selectedAvatar}.stationary_colour`)
+              }
               style={styles.image}
             />
             <Text style={styles.response}>{noText}</Text>

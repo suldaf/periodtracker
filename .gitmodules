@@ -7,3 +7,9 @@
 [submodule "packages/delete-account"]
 	path = packages/delete-account
 	url = git@github.com:Oky-period-tracker/periodtracker_delete_account-whitelabelled.git
+[submodule "packages/core/src/common"]
+	path = packages/core/src/common
+	url = git@github.com:shulthan-dev/okyindonesia-common.git
+[submodule "app/src/screens/UlarTangga/optional"]
+	path = app/src/screens/UlarTangga/optional
+	url = https://gitlab.com/digitala-oky/periodtracker_ular-tangga-indonesia.git

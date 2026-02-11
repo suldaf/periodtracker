@@ -16,6 +16,9 @@ import {
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { gameAssets } from '../../../screens/UlarTangga/optional/assets'
+import { useSelector } from 'react-redux'
+import { currentThemeSelector } from '../../../redux/selectors'
 import { assets } from '../../../resources/assets'
 import {
   THEME_COLORS,
@@ -26,8 +29,8 @@ import {
   createBotConfigs,
 } from '../engine'
 
-import FooterSvg from '../../../resources/assets/images/ular_tangga/bottom_page_ular_tangga.svg'
-import LogoSvg from '../../../resources/assets/images/ular_tangga/EduFun_ular_tangga.svg'
+import FooterSvg from '../../../screens/UlarTangga/optional/assets/images/bottom_page_ular_tangga.svg'
+import LogoSvg from '../../../screens/UlarTangga/optional/assets/images/EduFun_ular_tangga.svg'
 
 const { width: screenWidth } = Dimensions.get('window')
 
@@ -53,6 +56,7 @@ export const GameModeSelector: React.FC<GameModeSelectorProps> = ({ onModeSelect
   const [selectedMode, setSelectedMode] = useState<GameMode>('multiplayer')
   const [botCount, setBotCount] = useState(1)
   const [difficulty, setDifficulty] = useState<Difficulty>('santai')
+  const currentTheme = useSelector(currentThemeSelector) || 'desert'
 
   const handleModeSelect = (mode: GameMode) => {
     setSelectedMode(mode)
@@ -107,7 +111,11 @@ export const GameModeSelector: React.FC<GameModeSelectorProps> = ({ onModeSelect
           onPress={() => handleModeSelect('solo')}
         >
           <View style={styles.modeIconContainer}>
-            <Text style={styles.modeIcon}>🤖</Text>
+            <Image
+              source={gameAssets.komputer}
+              style={{ width: 40, height: 40 }}
+              resizeMode="contain"
+            />
           </View>
           <Text style={styles.modeLabel}>Komputer</Text>
         </Pressable>
@@ -117,7 +125,11 @@ export const GameModeSelector: React.FC<GameModeSelectorProps> = ({ onModeSelect
           onPress={() => handleModeSelect('multiplayer')}
         >
           <View style={styles.modeIconContainer}>
-            <Text style={styles.modeIcon}>👥</Text>
+            <Image
+              source={gameAssets.friends}
+              style={{ width: 40, height: 40 }}
+              resizeMode="contain"
+            />
           </View>
           <Text style={styles.modeLabel}>Teman</Text>
         </Pressable>
@@ -191,40 +203,42 @@ export const GameModeSelector: React.FC<GameModeSelectorProps> = ({ onModeSelect
 
   return (
     <View style={styles.screen}>
-      <LinearGradient
-        colors={['#ACECF9', '#FFFFFF']}
+      <View
         style={{
           flex: 1,
           width: '100%',
-          paddingTop: 24 + insets.top,
-          paddingBottom: 0, // Ensure no padding at bottom
+          backgroundColor: '#FFFFFF',
         }}
       >
         <ImageBackground
-          source={assets.ular_tangga?.background}
+          source={assets.backgrounds[currentTheme]?.default ?? gameAssets?.background}
           style={styles.inner}
-          imageStyle={{ resizeMode: 'cover', opacity: 0.08 }}
+          imageStyle={{ resizeMode: 'cover', opacity: 1 }}
         >
-          {/* --- FOOTER --- */}
-          <View style={styles.footerContainer} pointerEvents="none">
+          {/* Content Container - Handles Safe Area Padding */}
+          <View style={{ flex: 1, width: '100%', paddingTop: 24 + insets.top }}>
+            {/* --- FOOTER REMOVED --- */}
+            {/* <View style={styles.footerContainer} pointerEvents="none">
             <FooterSvg width="100%" height={120} preserveAspectRatio="none" />
-          </View>
+          </View> */}
 
-          <View style={styles.contentWrapper}>
-            {/* --- LOGO --- */}
-            <LogoSvg
-              width={400}
-              height={120}
-              style={styles.logoImage}
-              preserveAspectRatio="xMidYMid meet"
-            />
+            <View style={styles.contentWrapper}>
+              {/* --- LOGO --- */}
+              <LogoSvg
+                width={400}
+                height={120}
+                style={styles.logoImage}
+                preserveAspectRatio="xMidYMid meet"
+              />
 
-            {phase === 'mode' && renderModeSelection()}
-            {phase === 'bot_count' && renderBotCountSelection()}
-            {phase === 'difficulty' && renderDifficultySelection()}
+              {phase === 'mode' && renderModeSelection()}
+              {phase === 'bot_count' && renderBotCountSelection()}
+              {phase === 'difficulty' && renderDifficultySelection()}
+            </View>
+
           </View>
         </ImageBackground>
-      </LinearGradient>
+      </View>
     </View>
   )
 }

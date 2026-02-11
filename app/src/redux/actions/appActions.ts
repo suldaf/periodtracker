@@ -1,5 +1,6 @@
 // import { AvatarName, ThemeName } from "@oky/core";
 import { AvatarName, ThemeName } from '../../resources/translations'
+import { CustomAvatarConfig } from '../../core/types/customAvatar'
 import { createAction } from '../helpers'
 import { PartialStateSnapshot } from '../types/partialStore'
 
@@ -9,6 +10,10 @@ export function setTheme(theme: ThemeName) {
 
 export function setAvatar(avatar: AvatarName) {
   return createAction('SET_AVATAR', { avatar })
+}
+
+export function setCustomAvatarConfig(config: CustomAvatarConfig) {
+  return createAction('SET_CUSTOM_AVATAR_CONFIG', { config })
 }
 
 export function setLocale(locale: string) {

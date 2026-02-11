@@ -6,9 +6,9 @@ export interface AppAssets {
   avatars: Record<
     AvatarName,
     {
-      default: ImageSourcePropType
+      default?: ImageSourcePropType // Not used, legacy
       stationary_colour: ImageSourcePropType
-      bubbles: ImageSourcePropType
+      bubbles?: ImageSourcePropType // Not used, legacy
       theme: ImageSourcePropType
     }
   >
@@ -29,7 +29,7 @@ export interface AppAssets {
     aboutBanner: Record<Locale, ImageSourcePropType>
   }
   lottie: {
-    avatars: Record<AvatarName, AnimationObject>
+    avatars: Partial<Record<AvatarName, AnimationObject>>
   }
   // TODO:
   // eslint-disable-next-line
@@ -45,9 +45,12 @@ export interface AppAssets {
     maleIcon: ImageSourcePropType
     femaleIcon: ImageSourcePropType
     infoIcon: ImageSourcePropType
+    editIcon: ImageSourcePropType
     gearIcon: ImageSourcePropType
     starIcon: ImageSourcePropType
     bgFinishPng: ImageSourcePropType
+    komputer: ImageSourcePropType
+    friends: ImageSourcePropType
     logo: any // SVG
     icon: any // SVG
     background_footer: any // SVG

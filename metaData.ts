@@ -3,7 +3,7 @@ export const metaData = {
     default: { width: 123, height: 137, size: 10000 },
     small: { width: 67, height: 75, size: 5000 },
     stationary: { width: 123, height: 137, size: 12000 },
-    stationary_colour: { width: 123, height: 137, size: 12000 },
+    // stationary_colour: { width: 123, height: 137, size: 12000 },
     bubbles: { width: 210, height: 113, size: 15000 },
     theme: { width: 80, height: 80, size: 5000 },
   },

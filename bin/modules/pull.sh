@@ -16,6 +16,7 @@ git submodule add $delete_account_url $delete_account_path
 
 # Optional modules
 [ -n "$flower_url" ] && git submodule add $flower_url $flower_path
+[ -n "$ular_tangga_url" ] && git submodule add $ular_tangga_url $ular_tangga_path
 
 
 # Use the latest commits

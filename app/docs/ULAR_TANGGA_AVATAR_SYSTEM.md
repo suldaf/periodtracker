@@ -4,6 +4,60 @@
 
 Sistem kustomisasi avatar untuk game Ular Tangga menggunakan **pre-built avatar sets** yang di-export sebagai folder lengkap dengan berbagai pose animasi. Setiap kombinasi avatar (gender, skin tone, hair, clothes, accessories) memiliki folder sendiri yang berisi file SVG untuk berbagai state (IDLE, walk, jump, dll).
 
+## Code Architecture (Refactored)
+
+### Module Structure
+
+```
+src/screens/UlarTangga/optional/
+├── index.tsx              # Main game component
+├── characterSets.ts       # Character set definitions
+├── avatarRegistry.ts      # Avatar SVG registry
+├── assets/                # Game assets
+├── utils/                 # Extracted utilities
+│   ├── index.ts          # Barrel export
+│   ├── types.ts          # Type definitions
+│   ├── constants.ts      # Game constants
+│   └── helpers.ts        # Helper functions
+└── hooks/                 # Custom React hooks
+    ├── index.ts          # Barrel export
+    ├── useGameState.ts   # All game state management
+    ├── useAnimations.ts  # Animation logic & refs
+    └── useBotLogic.ts    # Bot AI and reactions
+```
+
+### Custom Hooks
+
+#### useGameState
+
+Manages all ~40 useState declarations:
+
+- Core game state (phase, players, turnIdx, dice, etc.)
+- Victory state (winner, showVictoryModal)
+- Quiz state (starTiles, currentQuiz, quizFeedback)
+- UI modals (settings, info, mute)
+- Player setup (tempAvatars, tempNames, usedSets)
+- Bot states (gameMode, difficulty, bots, botReaction)
+
+#### useAnimations
+
+Handles all animation logic:
+
+- Animation refs (animPos, animScale, animJumpOffset)
+- `triggerBounce()` - Token bounce effect
+- `animateHop()` - Step-by-step movement
+- `animateLadderClimb()` - Ladder climbing animation
+- `animateSnakeSlide()` - Snake sliding animation
+- `centerAndScale()` / `resetScale()` - Avatar focus effects
+
+#### useBotLogic
+
+Bot AI and reactions:
+
+- `triggerBotTurnIfNeeded()` - Trigger bot's turn
+- `showBotReaction()` - Display bot emotions
+- `getBotDiceValue()` - Calculate bot dice based on AI
+
 ## System Architecture
 
 ### 1. Asset Structure
