@@ -6,6 +6,9 @@ export interface Article {
   subCategory: string
   isAgeRestricted: boolean
   ageRestrictionLevel: number
+  age_category_name?: string
+  age_category_min_age?: number
+  age_category_max_age?: number
   contentFilter?: number
   voiceOverKey?: string
   live?: boolean
@@ -23,6 +26,9 @@ export interface VideoData {
   title: string
   youtubeId?: string // Part of the youtube url after v=
   assetName?: string // Key for video in the assets.ts file
+  age_category_name?: string
+  age_category_min_age?: number
+  age_category_max_age?: number
   live?: boolean
 }
 
@@ -193,6 +199,7 @@ export interface HelpCenter extends LegacyHelpCenter {
   //
   region?: string | null // Country code
   subRegion?: string | null // Province uid
+  serviceKind?: string | null
   // TODO: ?
   isAvailableNationwide?: boolean
   // isAvailableEverywhere?: boolean;

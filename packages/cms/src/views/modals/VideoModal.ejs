@@ -19,9 +19,10 @@
         <table class="table table-borderless modal-table">
           <thead>
             <tr>
-            <th style="width: 10%"><%= __('Title')%></th>
+              <th style="width: 10%"><%= __('Title')%></th>
               <th style="width: 10%"><%= __('Youtube Id')%></th>
               <th style="width: 10%"><%= __('Asset name')%></th>
+              <th style="width: 10%"><%= __('Age Category')%></th>
               <th style="width: 10%"><%= __('Live')%></th>
             </tr>
           </thead>
@@ -43,7 +44,15 @@
               <p style="color:grey;">/assets/index.ts</p>
               <p style="color:grey;">videos: { <strong style="color:green;">name</strong>: require('./video.mp4') }</p>
             </td>
-            <td >
+            <td style="width: 10%">
+              <select class="custom-select" id="colVideoAgeCategoryTableModal">
+                <option value=""><%= __('Select Age Category') %></option>
+                <% (typeof ageCategories !== 'undefined' ? ageCategories : []).forEach((item, index) =>{ %>
+                <option value="<%-item.id%>"><%= item.name %></option>
+                <% }) %>
+              </select>
+            </td>
+            <td>
               <label class="switch">
                 <input id="colVideo4TableModal" type="checkbox">
                 <span class="slider round"></span>

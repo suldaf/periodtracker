@@ -1,4 +1,5 @@
 import React from 'react'
+import moment from 'moment'
 import { useSearch } from '../../hooks/useSearch'
 import { useSelector } from '../../redux/useSelector'
 import {
@@ -55,6 +56,8 @@ export const EncyclopediaProvider = ({ children }: React.PropsWithChildren) => {
   const allVideos = useSelector(allVideosSelector)
   const locale = useSelector(currentLocaleSelector)
 
+  const userAgeYears = React.useMemo(() => getUserAgeYears(currentUser), [currentUser])
+
   const liveArticles: Article[] = React.useMemo(() => {
     return articles.filter((item) => item?.live !== false)
   }, [articles])
@@ -73,14 +76,22 @@ export const EncyclopediaProvider = ({ children }: React.PropsWithChildren) => {
     currentUser?.metadata?.contentSelection,
   ])
 
+  console.log('Age Filtered Articles Count:', moderatedArticles)
+  const ageFilteredArticles: ArticleWithParentIds[] = React.useMemo(() => {
+    return moderatedArticles.filter((item) => isContentAllowedForAge(item, userAgeYears))
+  }, [moderatedArticles, userAgeYears])
   const { query, setQuery, results } = useSearch<ArticleWithParentIds>({
-    options: moderatedArticles,
+    options: ageFilteredArticles,
     keys: searchKeys,
   })
 
+  const ageFilteredVideos: VideoData[] = React.useMemo(() => {
+    return allVideos.filter((item) => isContentAllowedForAge(item, userAgeYears))
+  }, [allVideos, userAgeYears])
+
   const { results: videos } = useSearch<VideoData>({
     externalQuery: query,
-    options: allVideos,
+    options: ageFilteredVideos,
     keys: videoSearchKeys,
   })
 
@@ -176,4 +187,64 @@ const getFilteredIds = (filteredArticles: ArticleWithParentIds[]) => {
   )
 
   return { categoryIds, subcategoryIds, articleIds }
+}
+
+type AgeRanged = {
+  age_category_min_age?: number | string | null
+  age_category_max_age?: number | string | null
+  ageCategoryMinAge?: number | string | null
+  ageCategoryMaxAge?: number | string | null
+  age_category_name?: string | null
+}
+
+const toNumberOrUndefined = (v: unknown): number | undefined => {
+  if (v === null || v === undefined) return undefined
+  if (typeof v === 'number') return Number.isFinite(v) ? v : undefined
+  if (typeof v === 'string') {
+    const n = Number(v)
+    return Number.isFinite(n) ? n : undefined
+  }
+  return undefined
+}
+
+const isContentAllowedForAge = (content: unknown, userAgeYears?: number) => {
+  const c = content as AgeRanged
+
+  const min =
+    toNumberOrUndefined(c.age_category_min_age) ?? toNumberOrUndefined(c.ageCategoryMinAge)
+  const max =
+    toNumberOrUndefined(c.age_category_max_age) ?? toNumberOrUndefined(c.ageCategoryMaxAge)
+
+  // If content has no age range metadata, always allow.
+  if (min === undefined && max === undefined) return true
+
+  // If user age is unknown, do not hide content (safer default for UX).
+  if (userAgeYears === undefined) return true
+
+  if (min !== undefined && userAgeYears < min) return false
+  if (max !== undefined && userAgeYears > max) return false
+  return true
+}
+
+const getUserAgeYears = (user: any): number | undefined => {
+  if (!user) return undefined
+
+  // Prefer explicit age if present.
+  const directAge =
+    toNumberOrUndefined(user.age) ??
+    toNumberOrUndefined(user.metadata?.age) ??
+    toNumberOrUndefined(user.profile?.age)
+
+  if (directAge !== undefined) return directAge
+
+  // Try common DOB fields.
+  const dobRaw = user?.dateOfBirth
+
+  if (!dobRaw) return undefined
+
+  const dob = moment(dobRaw)
+  if (!dob.isValid()) return undefined
+
+  const age = moment().diff(dob, 'years')
+  return age >= 0 ? age : undefined
 }

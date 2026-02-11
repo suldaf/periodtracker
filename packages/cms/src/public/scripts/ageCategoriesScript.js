@@ -30,8 +30,8 @@ $('#btnAgeCategoryConfirm').on('click', () => {
   const ageCategoryId = $('#itemID').text()
   const data = {
     name: $('#colAgeCategory0TableModal').val(),
-    minAge: $('#colAgeCategory1TableModal').val() || null,
-    maxAge: $('#colAgeCategory2TableModal').val() || null,
+    minAge: Number($('#colAgeCategory1TableModal').val()) || null,
+    maxAge: Number($('#colAgeCategory2TableModal').val()) || null,
   }
 
   if (data.name === '') {

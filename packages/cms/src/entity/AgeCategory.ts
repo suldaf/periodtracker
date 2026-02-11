@@ -1,4 +1,7 @@
-import { Entity, PrimaryColumn, Column } from 'typeorm'
+import { Entity, PrimaryColumn, Column, OneToMany } from 'typeorm'
+
+import { Article } from './Article'
+import { Video } from './Video'
 
 @Entity()
 export class AgeCategory {
@@ -9,13 +12,19 @@ export class AgeCategory {
   name: string
 
   @Column({ nullable: true })
-  minAge: number
+  minAge: number | null
 
   @Column({ nullable: true })
-  maxAge: number
+  maxAge: number | null
 
   @Column()
   lang: string
+
+  @OneToMany(() => Article, (article) => article.ageCategory)
+  articles?: Article[]
+
+  @OneToMany(() => Video, (video) => video.ageCategory)
+  videos?: Video[]
 
   @Column({ generated: 'increment' })
   sortingKey: number

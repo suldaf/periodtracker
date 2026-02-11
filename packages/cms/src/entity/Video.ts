@@ -1,4 +1,5 @@
-import { Entity, PrimaryColumn, Column, OneToOne, JoinColumn } from 'typeorm'
+import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn } from 'typeorm'
+import { AgeCategory } from './AgeCategory'
 
 @Entity()
 export class Video {
@@ -24,7 +25,11 @@ export class Video {
   lang: string
 
   @Column({ nullable: true })
-  ageCategoryId: string
+  ageCategoryId: string | null
+
+  @ManyToOne(() => AgeCategory, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'ageCategoryId' })
+  ageCategory?: AgeCategory
 
   @Column({ generated: 'increment' })
   sortingKey: number

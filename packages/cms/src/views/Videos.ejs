@@ -44,6 +44,7 @@
             <th style="width: 15%"><%= __('Title') %></th>
             <th style="width: 15%"><%= __('Youtube Id') %></th>
             <th style="width: 15%"><%= __('Asset name') %></th>
+            <th style="width: 15%"><%= __('Age') %></th>
             <th style="width: 2.5%"><%= __('Edit') %></th>
             <th style="width: 2.5%"><%= __('Delete') %></th>
             <th style="width: 2.5%"><%= __('Live') %></th>
@@ -53,6 +54,7 @@
     </div>
   </div>
   <span id="videosJSON" hidden><%= JSON.stringify(videos); %> </span>
+  <span id="ageCategoriesJSON" hidden><%= JSON.stringify(typeof ageCategories !== 'undefined' ? ageCategories : []); %> </span>
   <script type="application/javascript" src="/scripts/videosViewScript.js"></script>
 </div>
 <%- include('partials/Footer') %>

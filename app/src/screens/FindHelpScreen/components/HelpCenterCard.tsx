@@ -54,17 +54,42 @@ export const HelpCenterCard = ({
   const websites = helpCenter.website?.split(',')
 
   const emoji = React.useMemo(() => {
+    // console.log('helpCenter.primaryAttributeId', helpCenterAttributes)
     return (
       helpCenterAttributes.find((item) => item.id === helpCenter.primaryAttributeId)?.emoji ??
       defaultEmoji
     )
   }, [helpCenter])
+  const emojiOtherAttributes = React.useMemo(() => {
+    return (
+      helpCenterAttributes
+        .filter(
+          (item) =>
+            helpCenter.otherAttributes?.includes(String(item.id)) &&
+            item.id !== helpCenter.primaryAttributeId,
+        )
+        ?.map((item) => item.emoji) ?? []
+    )
+  }, [helpCenter])
+
+  const serviceKind = (helpCenter.serviceKind ?? '').toLowerCase()
+  const serviceKindLabel =
+    serviceKind === 'both' ? 'online-offline' : helpCenter.serviceKind || ''
+  const serviceKindBackground =
+    serviceKind === 'online' ? '#16a34a' : serviceKind === 'offline' ? '#dc2626' : '#2563eb'
 
   return (
     <TouchableOpacity
       onPress={onPress}
       style={[styles.helpCenterCard, globalStyles.shadow, { backgroundColor }]}
     >
+      {serviceKindLabel && (
+        <View style={[styles.serviceKindTag, { backgroundColor: serviceKindBackground }]}>
+          <Text style={styles.serviceKindText} enableTranslate={false}>
+            {serviceKindLabel}
+          </Text>
+        </View>
+      )}
       <View style={styles.topRow}>
         <View style={styles.topRowText}>
           <Text style={styles.title} enableTranslate={false}>
@@ -73,6 +98,15 @@ export const HelpCenterCard = ({
           <Text style={styles.caption} enableTranslate={false}>
             {helpCenter.caption}
           </Text>
+          {emojiOtherAttributes.length > 0 && (
+            <View style={styles.emojiRow}>
+              {emojiOtherAttributes.map((item, index) => (
+                <Text key={`${item}-${index}`} style={styles.emojiOther} enableTranslate={false}>
+                  {item}
+                </Text>
+              ))}
+            </View>
+          )}
         </View>
         <Text style={styles.emoji} enableTranslate={false}>
           {emoji}
@@ -129,6 +163,21 @@ const styles = StyleSheet.create({
     marginVertical: 4,
     padding: 24,
   },
+  serviceKindTag: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    backgroundColor: '#1f2937',
+  },
+  serviceKindText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: 'bold',
+    textTransform: 'capitalize',
+  },
   saveButton: {
     width: 40,
     height: 40,
@@ -159,6 +208,15 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
     width: 24,
     textAlign: 'center',
+  },
+  emojiOther: {
+    marginHorizontal: 2,
+    width: 24,
+    textAlign: 'center',
+  },
+  emojiRow: {
+    marginVertical: 8,
+    flexDirection: 'row',
   },
   website: {
     marginBottom: 8,

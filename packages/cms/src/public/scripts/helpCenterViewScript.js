@@ -2,6 +2,26 @@ var locale = JSON.parse($('#localeJSON').text()).locale
 var regions = JSON.parse($('#regionsJSON').text())
 var subRegions = JSON.parse($('#subRegionsJSON').text())
 
+const applyFormValidation = (forms) => {
+  if (typeof $.fn.applyFormValidation === 'function') {
+    $.fn.applyFormValidation(forms)
+  } else {
+    console.warn('applyFormValidation is not available')
+  }
+}
+
+const saveFilter = (colIdx, value, key) => {
+  if (typeof window.saveFilter === 'function') {
+    window.saveFilter(colIdx, value, key)
+  }
+}
+
+const loadFilters = (key) => {
+  if (typeof window.loadFilters === 'function') {
+    window.loadFilters(key)
+  }
+}
+
 $(document).ready(() => {
   'use strict'
   // GET help centers
@@ -19,19 +39,17 @@ $(document).ready(() => {
   // GET help center attributes
   prepareAttributes()
 
-  $.each(Object.entries(regions), function (i, [key, region]) {
-    $('#regionDropdown').append($('<option />').val(key).text(region[locale]))
-    if (!$('#regionDropdown').find(':selected').val()) {
-      $('#subRegionDropdown').attr('disabled', true)
-    }
-  })
+  const fixedRegionCode = 'ID'
+  const fixedRegionLabel = regions?.ind?.[locale] || 'Indonesia'
+  $('#regionDropdown').empty().append($('<option />').val(fixedRegionCode).text(fixedRegionLabel))
+  $('#regionDropdown').val(fixedRegionCode).trigger('change')
 
   // prepare form validator
   window.addEventListener(
     'load',
     function prepareFormValidation() {
       const forms = document.getElementsByClassName('help-center-needs-validation')
-      $.fn.applyFormValidation(forms)
+      applyFormValidation(forms)
     },
     false,
   )
@@ -260,6 +278,9 @@ const initializeDataTable = (result) => {
     {
       data: 'region',
       render: (meta) => {
+        if (meta === 'ID') {
+          return regions?.ind?.[locale] || 'Indonesia'
+        }
         if (regions?.[meta]?.[locale]) {
           return regions[meta][locale]
         }
@@ -277,6 +298,7 @@ const initializeDataTable = (result) => {
         return meta
       },
     },
+    { data: 'serviceKind' },
     { data: 'website' },
   ]
   $('#helpCenterTable thead tr').clone(true).addClass('filters').appendTo('#helpCenterTable thead')
@@ -342,7 +364,7 @@ const initializeDataTable = (result) => {
         targets: 0,
       },
       {
-        targets: 9, //column number in array
+        targets: 10, //column number in array
         searchable: false,
         render: (data, type, row) => {
           return `
@@ -362,7 +384,7 @@ const initializeDataTable = (result) => {
         },
       },
       {
-        targets: 10, //column number in array
+        targets: 11, //column number in array
         searchable: false,
         render: (data, type, row) => {
           return `
@@ -458,7 +480,10 @@ const prepareEdit = (id) => {
       $('#subRegionDropdown').attr('disabled', false)
       $('#helpCenterModal').modal({ show: true })
       for (key in result) {
-        if (key !== 'website' && key !== 'otherAttributes' && key !== 'primaryAttributeId') {
+        if (key === 'region') {
+          const regionValue = result[key] === 'ind' ? 'ID' : result[key]
+          $(`[name='${key}']`).val(regionValue)
+        } else if (key !== 'website' && key !== 'otherAttributes' && key !== 'primaryAttributeId') {
           $(`[name='${key}']`).val(result[key])
         }
 
@@ -517,31 +542,34 @@ const prepareEdit = (id) => {
 
 // store original modal form values
 $('#helpCenterModal').on('hidden.bs.modal', function () {
+  const selectedSubRegions = $('#subRegionDropdown').val()
   $('#formhelpCenterId').val('0')
   const keys = [
     'address',
     'caption',
-    'subRegion',
     'contactOne',
     'contactTwo',
     'id',
     'isAvailableNationwide',
+    'serviceKind',
     'title',
-    'region',
     'otherAttributes',
   ]
 
   keys.forEach((key) => {
     $(`[name='${key}']`).val('')
-    if (key === 'subRegion') {
-      $(`#subRegionDropdown`).empty()
-      $(`#subRegionDropdown`).append('<option selected disabled>N/A</option>')
-    }
     if (key === 'otherAttributes') {
       $('#other-attributes-container').html('')
       prepareAttributes()
     }
   })
+  const fixedRegionCode = 'ID'
+  $('#regionDropdown').val(fixedRegionCode)
+  if (selectedSubRegions && selectedSubRegions.length > 0) {
+    $('#regionDropdown').trigger('change', { placeCode: selectedSubRegions.join(',') })
+  } else {
+    $('#regionDropdown').trigger('change')
+  }
   $(`[name='primaryAttrubute']`).val(0)
   $('.website-root').html(`
     <div id="website-section">

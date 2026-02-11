@@ -8,6 +8,7 @@ interface HelpCenterResponseItem {
   caption: string
   contactOne: string
   contactTwo: string
+  serviceKind?: string
   address: string
   website: string
   lang: string

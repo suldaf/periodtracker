@@ -30,6 +30,8 @@ export class AgeCategoryController {
       return { ageCategory, isExist: true }
     }
     const ageCategoryToSave = request.body
+    ageCategoryToSave.minAge = request.body.minAge ? Number(request.body.minAge) : null
+    ageCategoryToSave.maxAge = request.body.maxAge ? Number(request.body.maxAge) : null
     ageCategoryToSave.lang = request.user.lang
     ageCategoryToSave.id = uuid()
     await this.ageCategoryRepository.save(ageCategoryToSave)

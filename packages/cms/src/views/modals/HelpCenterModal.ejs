@@ -48,6 +48,22 @@
             </div>
           </div>
 
+          <div class="mb-3">
+            <div class="row">
+              <div class="col-md-6">
+                <label for="serviceKind" class="form-label">
+                  <%= __('Service Kind')%>
+                </label>
+                <select class="form-control" aria-label="<%= __('Select service kind')%>" id="serviceKind" name="serviceKind">
+                  <option value="" selected><%= __('Select service kind')%></option>
+                  <option value="offline"><%= __('Offline')%></option>
+                  <option value="online"><%= __('Online')%></option>
+                  <option value="both"><%= __('Both')%></option>
+                </select>
+              </div>
+            </div>
+          </div>
+
           <div class="row">
             <div class="col-md-12">
               <div class="mb-3 form-check">
@@ -83,7 +99,7 @@
                   Region
                 </label>
                 <select class="form-control" aria-label="Select region" required id="regionDropdown" name="region" required>
-                  <option value="">Select Region</option>
+                  <option value="ID">Indonesia</option>
                 </select>
                 <div class="invalid-feedback">
                   This field is required

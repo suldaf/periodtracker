@@ -18,6 +18,7 @@ export const getFormContents = (req: Request, helpCenterPayload?: HelpCenter) =>
     isActive,
     region,
     subRegion,
+    serviceKind,
   } = req.body
 
   if (helpCenterPayload) {
@@ -40,6 +41,7 @@ export const getFormContents = (req: Request, helpCenterPayload?: HelpCenter) =>
     helpCenterPayload.otherAttributes = otherAttributes
     helpCenterPayload.isActive = isActive === 'true' ? true : false
     helpCenterPayload.website = website
+    helpCenterPayload.serviceKind = serviceKind
 
     return helpCenterPayload
   }
@@ -58,6 +60,7 @@ export const getFormContents = (req: Request, helpCenterPayload?: HelpCenter) =>
     lang: req.user.lang,
     region,
     subRegion,
+    serviceKind,
   }
 }
 

@@ -31,12 +31,18 @@ export class ArticleController {
       ar."isAgeRestricted",
       ar."ageRestrictionLevel",
       ar."contentFilter",
+      ar."ageCategoryId",
+      ag.name as age_category_name,
+      ag."minAge" as age_category_min_age,
+      ag."maxAge" as age_category_max_age,
       ar.lang 
       FROM ${env.db.schema}.article ar 
       INNER JOIN ${env.db.schema}.category ca 
       ON ar.category = ca.id::varchar
       INNER JOIN ${env.db.schema}.subcategory sc  
       ON ar.subcategory = sc.id::varchar
+      LEFT JOIN ${env.db.schema}.age_category ag
+      ON ar."ageCategoryId" = ag.id::uuid AND ag.lang = ar.lang
       WHERE ar.lang = $1
       AND ar.live = true
       ORDER BY ca."sortingKey" ASC, sc."sortingKey" ASC, ar."sortingKey" ASC
