@@ -16,11 +16,13 @@ import {
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import FontAwesome from '@expo/vector-icons/FontAwesome'
 import { gameAssets } from '../../../screens/UlarTangga/optional/assets'
 import { useSelector } from 'react-redux'
 import { currentThemeSelector } from '../../../redux/selectors'
 import { assets } from '../../../resources/assets'
 import {
+  THEME_COLORS,
   THEME_COLORS,
   BOARD_CONFIG_42,
   GameMode,
@@ -44,13 +46,14 @@ export interface GameModeSelection {
 
 interface GameModeSelectorProps {
   onModeSelected: (selection: GameModeSelection) => void
+  onBack?: () => void
 }
 
 type SelectorPhase = 'mode' | 'bot_count' | 'difficulty'
 
 const themeColors = THEME_COLORS
 
-export const GameModeSelector: React.FC<GameModeSelectorProps> = ({ onModeSelected }) => {
+export const GameModeSelector: React.FC<GameModeSelectorProps> = ({ onModeSelected, onBack }) => {
   const insets = useSafeAreaInsets()
   const [phase, setPhase] = useState<SelectorPhase>('mode')
   const [selectedMode, setSelectedMode] = useState<GameMode>('multiplayer')
@@ -102,12 +105,16 @@ export const GameModeSelector: React.FC<GameModeSelectorProps> = ({ onModeSelect
   }
 
   const renderModeSelection = () => (
-    <View style={styles.phaseContainer}>
+    <View style={styles.phaseContainerNoCard}>
       <Text style={styles.title}>Mau main dengan{'\n'}siapa hari ini?</Text>
 
-      <View style={styles.modeGrid}>
+      <View style={styles.modeGridLarge}>
         <Pressable
-          style={[styles.modeCard, selectedMode === 'solo' && styles.modeCardSelected]}
+          style={({ pressed }) => [
+            styles.modeCardLarge,
+            selectedMode === 'solo' && styles.modeCardSelected,
+            pressed && styles.modeCardPressed,
+          ]}
           onPress={() => handleModeSelect('solo')}
         >
           <View style={styles.modeIconContainer}>
@@ -121,12 +128,16 @@ export const GameModeSelector: React.FC<GameModeSelectorProps> = ({ onModeSelect
         </Pressable>
 
         <Pressable
-          style={[styles.modeCard, selectedMode === 'multiplayer' && styles.modeCardSelected]}
+          style={({ pressed }) => [
+            styles.modeCardLarge,
+            selectedMode === 'multiplayer' && styles.modeCardSelected,
+            pressed && styles.modeCardPressed,
+          ]}
           onPress={() => handleModeSelect('multiplayer')}
         >
           <View style={styles.modeIconContainer}>
             <Image
-              source={gameAssets.friends}
+              source={gameAssets.friendIcon}
               style={{ width: 40, height: 40 }}
               resizeMode="contain"
             />
@@ -138,23 +149,36 @@ export const GameModeSelector: React.FC<GameModeSelectorProps> = ({ onModeSelect
   )
 
   const renderBotCountSelection = () => (
-    <View style={styles.phaseContainer}>
-      <Pressable style={styles.backButton} onPress={handleBack}>
-        <Text style={styles.backButtonText}>← Kembali</Text>
-      </Pressable>
+    <View style={styles.phaseContainerNoCard}>
+      <Text style={styles.title}>Pilih Jumlah Pemain</Text>
 
-      <Text style={styles.title}>Mau main sama{'\n'}berapa komputer?</Text>
-      <Text style={styles.subtitle}>Pilih jumlah lawan</Text>
+      <Pressable style={styles.backButtonTop} onPress={handleBack}>
+        <View style={styles.backButtonCircle}>
+          <View style={styles.backButtonShadow} />
+          <View style={styles.backButtonHighlight} />
+          <View style={styles.backButtonBody}>
+            <FontAwesome size={12} name="arrow-left" color="#fff" />
+          </View>
+        </View>
+      </Pressable>
 
       <View style={styles.countGrid}>
         {[1, 2, 3].map((count) => (
           <Pressable
             key={count}
-            style={[styles.countCard, botCount === count && styles.countCardSelected]}
+            style={({ pressed }) => [
+              styles.countCard,
+              botCount === count && styles.countCardSelected,
+              pressed && styles.countCardPressed,
+            ]}
             onPress={() => handleBotCountSelect(count)}
           >
-            <Text style={styles.countNumber}>{count}</Text>
-            <Text style={styles.countLabel}>Bot{count > 1 ? 's' : ''}</Text>
+            <Image
+              source={count === 1 ? gameAssets.bot1 : count === 2 ? gameAssets.bot2 : gameAssets.bot4}
+              style={{ width: 40, height: 40 }}
+              resizeMode="contain"
+            />
+            <Text style={styles.modeLabel}>Bot{count > 1 ? 's' : ''}</Text>
           </Pressable>
         ))}
       </View>
@@ -163,17 +187,24 @@ export const GameModeSelector: React.FC<GameModeSelectorProps> = ({ onModeSelect
 
   const renderDifficultySelection = () => (
     <View style={styles.phaseContainer}>
-      <Pressable style={styles.backButton} onPress={handleBack}>
-        <Text style={styles.backButtonText}>← Kembali</Text>
-      </Pressable>
-
       <Text style={styles.title}>Pilih tingkat{'\n'}kesulitan</Text>
+
+      <Pressable style={styles.backButtonTop} onPress={handleBack}>
+        <View style={styles.backButtonCircle}>
+          <View style={styles.backButtonShadow} />
+          <View style={styles.backButtonHighlight} />
+          <View style={styles.backButtonBody}>
+            <FontAwesome size={12} name="arrow-left" color="#fff" />
+          </View>
+        </View>
+      </Pressable>
 
       <View style={styles.difficultyGrid}>
         <Pressable
-          style={[
+          style={({ pressed }) => [
             styles.difficultyCard,
             difficulty === 'santai' && styles.difficultyCardSelected,
+            pressed && styles.difficultyCardPressed,
           ]}
           onPress={() => handleDifficultySelect('santai')}
         >
@@ -185,9 +216,10 @@ export const GameModeSelector: React.FC<GameModeSelectorProps> = ({ onModeSelect
         </Pressable>
 
         <Pressable
-          style={[
+          style={({ pressed }) => [
             styles.difficultyCard,
             difficulty === 'tantangan' && styles.difficultyCardSelected,
+            pressed && styles.difficultyCardPressed,
           ]}
           onPress={() => handleDifficultySelect('tantangan')}
         >
@@ -226,7 +258,7 @@ export const GameModeSelector: React.FC<GameModeSelectorProps> = ({ onModeSelect
               {/* --- LOGO --- */}
               <LogoSvg
                 width={400}
-                height={120}
+                height={150}
                 style={styles.logoImage}
                 preserveAspectRatio="xMidYMid meet"
               />
@@ -255,9 +287,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoImage: {
-    width: 200,
-    height: 100,
-    marginBottom: 24,
+    width: 280,
+    height: 105,
+    marginBottom: 8,
   },
   backgroundFooter: {
     position: 'absolute',
@@ -286,13 +318,44 @@ const styles = StyleSheet.create({
   backButton: {
     alignSelf: 'flex-start',
     marginBottom: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
   },
-  backButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: themeColors.light.text,
+  backButtonTop: {
+    position: 'absolute',
+    top: 22,
+    left: 22,
+    zIndex: 20,
+  },
+  backButtonCircle: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backButtonHighlight: {
+    position: 'absolute',
+    top: -2,
+    left: -2,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#b8d575', // Lighter green for highlight
+  },
+  backButtonShadow: {
+    position: 'absolute',
+    bottom: -2,
+    left: -2,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#7a9f33', // Darker green for shadow
+  },
+  backButtonBody: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
+    backgroundColor: '#9abf44', // Main green color
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     fontSize: 22,
@@ -312,28 +375,61 @@ const styles = StyleSheet.create({
   modeGrid: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 20,
+    gap: 16,
     marginTop: 24,
   },
   modeCard: {
-    width: screenWidth * 0.35,
-    maxWidth: 140,
-    aspectRatio: 1,
+    width: 90,
+    height: 100,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#8ea8c2',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 4,
+    borderWidth: 2,
+    borderColor: '#e2ecf5',
+  },
+  modeCardLarge: {
+    width: 140,
+    height: 140,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#8ea8c2',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 4,
     borderWidth: 2,
     borderColor: '#e2ecf5',
   },
+  modeGridLarge: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 24,
+    marginTop: 32,
+  },
+  phaseContainerNoCard: {
+    width: '100%',
+    maxWidth: 440,
+    padding: 22,
+    marginTop: 12,
+    alignItems: 'center',
+  },
   modeCardSelected: {
     borderColor: '#9abf44',
-    backgroundColor: 'rgba(154, 191, 68, 0.08)',
+  },
+  modeCardPressed: {
+    transform: [{ scale: 0.96 }],
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    opacity: 0.9,
   },
   modeIconContainer: {
     width: 60,
@@ -375,19 +471,13 @@ const styles = StyleSheet.create({
   },
   countCardSelected: {
     borderColor: '#9abf44',
-    backgroundColor: 'rgba(154, 191, 68, 0.08)',
   },
-  countNumber: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: themeColors.light.text,
-  },
-  countLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: themeColors.light.text,
-    opacity: 0.7,
-    marginTop: 4,
+  countCardPressed: {
+    transform: [{ scale: 0.96 }],
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    opacity: 0.9,
   },
   difficultyGrid: {
     flexDirection: 'column',
@@ -411,7 +501,13 @@ const styles = StyleSheet.create({
   },
   difficultyCardSelected: {
     borderColor: '#9abf44',
-    backgroundColor: 'rgba(154, 191, 68, 0.08)',
+  },
+  difficultyCardPressed: {
+    transform: [{ scale: 0.98 }],
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    opacity: 0.9,
   },
   difficultyEmoji: {
     fontSize: 40,
@@ -448,7 +544,6 @@ const styles = StyleSheet.create({
     padding: 22,
     borderRadius: 18,
     marginTop: 12,
-    marginBottom: 150,
     shadowColor: '#8ea8c2',
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.24,

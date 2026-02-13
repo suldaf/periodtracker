@@ -36,7 +36,7 @@ const config: StackConfig<keyof HomeStackParamList> = {
       component: CalendarScreen,
     },
     Ludo: {
-      title: 'ludo',
+      title: 'Ular Tangga',
       component: UlarTangga,
     },
   },

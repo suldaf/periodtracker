@@ -22,6 +22,9 @@ export {
   calculateBoardDimensions,
 } from './config'
 
+// Re-export snakes with alias for backward compatibility
+export { DEFAULT_SNAKES_42 as DEFAULT_SNAKES } from './config'
+
 export type { ThemeColors, SkinTone, Gender, AvatarSpec, Player, SetupTab, Phase } from './config'
 
 // Grid Systems - Coordinate mapping and board layout
