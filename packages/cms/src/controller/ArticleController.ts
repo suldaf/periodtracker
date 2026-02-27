@@ -65,6 +65,11 @@ export class ArticleController {
     const articleToSave = request.body
     articleToSave.lang = request.user.lang
     articleToSave.id = uuid()
+    articleToSave.live = request.body.live === 'true'
+    articleToSave.ageCategoryId = request.body.ageCategoryId || null
+    articleToSave.contentFilter = request.body.contentFilter || 0
+    articleToSave.ageRestrictionLevel = Number(request.body.ageRestrictionLevel || 0)
+    articleToSave.isAgeRestricted = request.body.ageRestrictionLevel === '0' ? false : true
     await this.articleRepository.save(articleToSave)
     return articleToSave
   }

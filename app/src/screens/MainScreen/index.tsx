@@ -176,9 +176,9 @@ const MainScreenInner: ScreenComponent<'Home'> = ({ navigation, route }) => {
               <Text>calendar</Text>
             </TouchableOpacity>
             <Avatar style={avatarHidden && styles.hidden} />
-            <TouchableOpacity onPress={goToLudo} style={circleProgressHidden && styles.hidden}>
+            {/* <TouchableOpacity onPress={goToLudo} style={circleProgressHidden && styles.hidden}>
               <Text>Ludo</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
 
           <View

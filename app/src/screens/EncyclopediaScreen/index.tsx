@@ -25,7 +25,6 @@ const EncyclopediaScreen: ScreenComponent<'Encyclopedia'> = ({ navigation }) => 
 
     setRefreshing(true)
     lastRefreshAtRef.current = now
-    console.log('EncyclopediaScreen onRefresh, lastRefreshAt=', lastRefreshAtRef.current)
     dispatch({ type: 'FETCH_CONTENT_REQUEST', payload: { locale: locale ?? 'id' } })
 
     // Stop the spinner after a short delay. (If you later add a Redux loading selector,
@@ -38,7 +37,6 @@ const EncyclopediaScreen: ScreenComponent<'Encyclopedia'> = ({ navigation }) => 
       const now = Date.now()
 
       // Avoid spamming requests if focus fires multiple times quickly.
-      console.log('EncyclopediaScreen focused, lastRefreshAt=', lastRefreshAtRef.current)
       if (now - lastRefreshAtRef.current < 10_000) return
       lastRefreshAtRef.current = now
 

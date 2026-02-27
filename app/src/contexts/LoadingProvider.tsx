@@ -9,7 +9,7 @@ export type LoadingContext = {
 
 const defaultValue: LoadingContext = {
   loading: false,
-  setLoading: () => {},
+  setLoading: () => { },
 }
 
 const LoadingContext = React.createContext<LoadingContext>(defaultValue)
@@ -69,7 +69,7 @@ export const useStopLoadingEffect = (duration = 1500) => {
     return () => {
       clearTimeout(timeout)
     }
-  })
+  }, [loading, setLoading, duration])
 }
 
 const styles = StyleSheet.create({

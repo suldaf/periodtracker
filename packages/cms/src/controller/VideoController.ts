@@ -49,6 +49,8 @@ export class VideoController {
     const itemToSave = request.body
     itemToSave.lang = request.user.lang
     itemToSave.id = uuid()
+    itemToSave.live = request.body.live === 'true'
+    itemToSave.ageCategoryId = request.body.ageCategoryId || null
     await this.videoRepository.save(itemToSave)
     return itemToSave
   }

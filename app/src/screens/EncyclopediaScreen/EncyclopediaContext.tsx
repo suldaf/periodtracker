@@ -34,16 +34,16 @@ interface ArticleWithParentIds extends Article {
 
 const defaultValue: EncyclopediaContext = {
   query: '',
-  setQuery: () => {},
+  setQuery: () => { },
   categoryIds: [],
   subcategoryIds: [],
   articleIds: [],
   selectedCategoryIds: [],
-  setSelectedCategoryIds: () => {},
+  setSelectedCategoryIds: () => { },
   filteredCategoryIds: [],
   videos: [],
   selectedVideoId: undefined,
-  setSelectedVideoId: () => {},
+  setSelectedVideoId: () => { },
 }
 
 const EncyclopediaContext = React.createContext<EncyclopediaContext>(defaultValue)
@@ -76,7 +76,6 @@ export const EncyclopediaProvider = ({ children }: React.PropsWithChildren) => {
     currentUser?.metadata?.contentSelection,
   ])
 
-  console.log('Age Filtered Articles Count:', moderatedArticles)
   const ageFilteredArticles: ArticleWithParentIds[] = React.useMemo(() => {
     return moderatedArticles.filter((item) => isContentAllowedForAge(item, userAgeYears))
   }, [moderatedArticles, userAgeYears])
