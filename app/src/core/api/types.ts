@@ -20,6 +20,9 @@ export interface EncyclopediaResponseItem {
   contentFilter?: number
   isAgeRestricted?: boolean
   ageRestrictionLevel?: number
+  age_category_name?: string
+  age_category_min_age?: number
+  age_category_max_age?: number
   voiceOverKey?: string | null
   lang: string
   live: boolean
@@ -31,6 +34,9 @@ export interface VideosResponseItem {
   title: string
   youtubeId: string | null
   assetName: string | null
+  age_category_name?: string
+  age_category_min_age?: number
+  age_category_max_age?: number
   live: boolean
 }
 
@@ -89,6 +95,7 @@ interface HelpCenterResponseItem {
   caption: string
   contactOne: string
   contactTwo?: string
+  serviceKind?: string
   address: string
   website: string
   lang: string

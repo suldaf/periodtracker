@@ -21,19 +21,19 @@ type SurveyState = {
 
 type Action<T extends keyof SurveyState = keyof SurveyState> =
   | {
-      type: T
-      value: SurveyState[T]
-    }
+    type: T
+    value: SurveyState[T]
+  }
   | {
-      type: 'select_answer'
-      value: number
-    }
+    type: 'select_answer'
+    value: number
+  }
   | {
-      type: 'continue'
-    }
+    type: 'continue'
+  }
   | {
-      type: 'skip'
-    }
+    type: 'skip'
+  }
 
 const initialState: SurveyState = {
   survey: undefined,
@@ -54,18 +54,18 @@ function reducer(state: SurveyState, action: Action): SurveyState {
         return state
       }
 
+      if (state.hasAnsweredAll) {
+        return {
+          ...state,
+          finished: true,
+        }
+      }
+
       if (!state.consented && state.agree !== null) {
         return {
           ...state,
           consented: state.agree,
           hasAnsweredAll: !state.agree,
-        }
-      }
-
-      if (state.hasAnsweredAll) {
-        return {
-          ...state,
-          finished: true,
         }
       }
 
@@ -152,7 +152,13 @@ export const SurveyProvider = ({
   const reduxDispatch = useDispatch()
 
   React.useEffect(() => {
-    if (!state.hasAnsweredAll || !state.survey) {
+    // This effect previously dispatched answerSurvey when hasAnsweredAll was true.
+    // We moved it to the 'finished' effect to avoid a race condition where the
+    // survey data updates and unmounts the component before the user clicks 'Submit'.
+  }, [state.hasAnsweredAll])
+
+  React.useEffect(() => {
+    if (!state.finished || !state.survey) {
       return
     }
 
@@ -166,13 +172,6 @@ export const SurveyProvider = ({
     }
 
     reduxDispatch(answerSurvey(result))
-  }, [state.hasAnsweredAll])
-
-  React.useEffect(() => {
-    if (!state.finished) {
-      return
-    }
-
     onFinish()
   }, [state.finished])
 
@@ -205,9 +204,7 @@ const getNextSurveyQuestionIndex = (state: SurveyState) => {
   const currentQuestion = state.survey.questions[state.questionIndex]
 
   // Convert { option1: string, option2:string } to string[]
-  const nextQuestions = Object.values(currentQuestion.next_question).map(
-    (option) => Object.values(option)[0],
-  )
+  const nextQuestions = Object.values(currentQuestion.next_question)
 
   const currentAnswerIndex = state.answerIndex ?? 0
   const nextQuestion = nextQuestions[currentAnswerIndex]

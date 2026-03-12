@@ -40,17 +40,31 @@ export const HelpFiltersModal = ({
 }: HelpFiltersModalProps) => {
   const { palette, backgroundColor, borderColor, color } = useColor()
 
-  const [section, setSection] = React.useState<FilterSection>('region')
+  const [section, setSection] = React.useState<FilterSection>('subregion')
 
   const countryOptions = useCountryOptions()
+  // App requirement: only allow filtering within Indonesia
+  const indonesiaOnlyOptions = React.useMemo(() => {
+    const lowered = (v: unknown) => String(v ?? '').toLowerCase()
 
-  const initialCountry = useInitialWheelOption(filters.region, countryOptions)
+    const byValue = countryOptions.filter((o) => lowered(o.value) === 'id')
+    if (byValue.length) return byValue
+
+    const byLabel = countryOptions.filter((o) => lowered(o.label).includes('indonesia'))
+    if (byLabel.length) return byLabel
+
+    // Fallback: if the country list shape changes, keep at least the first option
+    return countryOptions.slice(0, 1)
+  }, [countryOptions])
+
+  const initialCountry =
+    useInitialWheelOption(filters.region, indonesiaOnlyOptions) ?? indonesiaOnlyOptions[0]
 
   const [countryWheelOption, setCountryWheelOption] = React.useState<WheelPickerOption | undefined>(
     initialCountry,
   )
 
-  const provinceOptions = useProvinceOptions(countryWheelOption?.value)
+  const provinceOptions = useProvinceOptions('ID')
 
   const initialProvince = useInitialWheelOption(filters.subRegion, provinceOptions)
 
@@ -69,7 +83,7 @@ export const HelpFiltersModal = ({
       attributes: [],
     })
 
-    setCountryWheelOption(countryOptions[0])
+    setCountryWheelOption(indonesiaOnlyOptions[0])
     setProvinceWheelOption(provinceOptions[0])
     setSelectedAttributes([])
     toggleVisible()
@@ -77,7 +91,7 @@ export const HelpFiltersModal = ({
 
   const confirm = () => {
     onConfirm({
-      region: countryWheelOption?.value,
+      region: undefined,
       subRegion: provinceWheelOption?.value,
       attributes: selectedAttributes,
     })
@@ -85,15 +99,8 @@ export const HelpFiltersModal = ({
   }
 
   React.useEffect(() => {
-    // Reset province when country changes
-    setProvinceWheelOption(undefined)
-  }, [countryWheelOption])
-
-  const countrySearch = useSearch<WheelPickerOption>({
-    options: countryOptions,
-    keys: countrySearchKeys,
-    type: 'startsWith',
-  })
+    setCountryWheelOption(indonesiaOnlyOptions[0])
+  }, [indonesiaOnlyOptions, visible])
 
   const provinceSearch = useSearch<WheelPickerOption>({
     options: provinceOptions,
@@ -138,24 +145,12 @@ export const HelpFiltersModal = ({
 
       <Text style={styles.title}>{title}</Text>
 
-      {section === 'region' && (
-        <View style={styles.modalBody}>
-          <SearchBar query={countrySearch.query} setQuery={countrySearch.setQuery} />
-          <WheelPicker
-            initialOption={countryWheelOption}
-            options={countrySearch.results}
-            onChange={setCountryWheelOption}
-            resetDeps={[visible]}
-          />
-        </View>
-      )}
-
       {section === 'subregion' && (
         <View style={styles.modalBody}>
           <SearchBar query={provinceSearch.query} setQuery={provinceSearch.setQuery} />
           <WheelPicker
             initialOption={provinceWheelOption}
-            options={countryWheelOption ? provinceSearch.results : []}
+            options={provinceSearch.results}
             onChange={setProvinceWheelOption}
             resetDeps={[visible]}
           />
@@ -203,11 +198,9 @@ export const HelpFiltersModal = ({
   )
 }
 
-const countrySearchKeys = ['label' as const]
-
 const provinceSearchKeys = ['label' as const]
 
-type FilterSection = 'region' | 'subregion' | 'attributes'
+type FilterSection = 'subregion' | 'attributes'
 
 interface FilterTab {
   section: FilterSection
@@ -216,11 +209,6 @@ interface FilterTab {
 }
 
 const tabs: FilterTab[] = [
-  {
-    section: 'region',
-    title: 'country',
-    icon: 'map',
-  },
   {
     section: 'subregion',
     title: 'province',

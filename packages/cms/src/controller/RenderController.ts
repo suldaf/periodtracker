@@ -350,8 +350,12 @@ export class RenderController {
       where: { lang: request.user.lang },
       order: { sortingKey: 'ASC' },
     })
+    const ageCategories = await this.ageCategoryRepository.find({
+      where: { lang: request.user.lang },
+      order: { sortingKey: 'ASC' },
+    })
 
-    this.render(response, 'Videos', { videos })
+    this.render(response, 'Videos', { videos, ageCategories })
   }
 
   async renderUserManagement(request: Request, response: Response, next: NextFunction) {

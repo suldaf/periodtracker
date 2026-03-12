@@ -11,10 +11,28 @@ export class VideoController {
     return this.videoRepository.find({ where: { lang: request.user.lang } })
   }
   async allLive(request: Request, response: Response, next: NextFunction) {
-    return this.videoRepository.find({
-      where: { lang: request.params.lang, live: true },
-      order: { sortingKey: 'ASC' },
-    })
+    const lang = request.params.lang
+
+    return this.videoRepository
+      .createQueryBuilder('v')
+      .leftJoin('v.ageCategory', 'ag', 'ag.lang = v.lang')
+      .select([
+        'v.id as id',
+        'v.title as title',
+        'v."youtubeId" as "youtubeId"',
+        'v."assetName" as "assetName"',
+        'v.live as live',
+        'v."sortingKey" as "sortingKey"',
+        'v.lang as lang',
+        'v."ageCategoryId" as "ageCategoryId"',
+        'ag.name as age_category_name',
+        'ag."minAge" as age_category_min_age',
+        'ag."maxAge" as age_category_max_age',
+      ])
+      .where('v.lang = :lang', { lang })
+      .andWhere('v.live = true')
+      .orderBy('v."sortingKey"', 'ASC')
+      .getRawMany()
   }
 
   async one(request: Request, response: Response, next: NextFunction) {
@@ -31,6 +49,8 @@ export class VideoController {
     const itemToSave = request.body
     itemToSave.lang = request.user.lang
     itemToSave.id = uuid()
+    itemToSave.live = request.body.live === 'true'
+    itemToSave.ageCategoryId = request.body.ageCategoryId || null
     await this.videoRepository.save(itemToSave)
     return itemToSave
   }
@@ -50,6 +70,7 @@ export class VideoController {
     videoToUpdate.assetName = request.body.assetName
     videoToUpdate.live = booleanFromString
     videoToUpdate.lang = request.user.lang
+    videoToUpdate.ageCategoryId = request.body.ageCategoryId || null
 
     await this.videoRepository.save(videoToUpdate)
     return videoToUpdate

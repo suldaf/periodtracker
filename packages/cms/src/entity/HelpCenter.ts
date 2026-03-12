@@ -41,6 +41,9 @@ export class HelpCenter {
   @Column({ nullable: true })
   otherAttributes: string
 
+  @Column({ nullable: true })
+  serviceKind: string
+
   @Column({ default: false })
   isActive: boolean
 

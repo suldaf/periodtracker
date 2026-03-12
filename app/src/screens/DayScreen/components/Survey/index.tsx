@@ -1,4 +1,4 @@
-import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
 import React from 'react'
 import { Text } from '../../../../components/Text'
 import { Hr } from '../../../../components/Hr'
@@ -36,7 +36,7 @@ export const Survey = () => {
 
   return (
     <View style={[styles.page, { backgroundColor }]}>
-      <View style={styles.body}>
+      <ScrollView style={styles.body} contentContainerStyle={{ padding: 24 }}>
         <View style={styles.header}>
           <Text style={[styles.title, { color: palette.secondary.text }]}>survey</Text>
           <InfoButton title={'survey'} content={'info_button_survey'} />
@@ -65,7 +65,7 @@ export const Survey = () => {
             <SurveyConsent />
           </>
         )}
-      </View>
+      </ScrollView>
 
       <Hr />
       <View style={styles.buttons}>
@@ -105,7 +105,6 @@ const styles = StyleSheet.create({
     width: '100%',
     // flex: 1,
     marginBottom: 'auto',
-    padding: 24,
   },
   header: {
     flexDirection: 'row',

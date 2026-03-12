@@ -36,7 +36,11 @@ const DayScreen: ScreenComponent<'Day'> = (props) => {
   return (
     <FullScreen>
       {hasSurvey ? (
-        <SurveyProvider survey={newSurvey} onFinish={onFinishSurvey}>
+        <SurveyProvider
+          key={newSurvey?.id}
+          survey={newSurvey}
+          onFinish={onFinishSurvey}
+        >
           <Survey />
         </SurveyProvider>
       ) : (

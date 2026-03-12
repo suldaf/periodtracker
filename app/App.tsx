@@ -30,7 +30,7 @@ function App() {
   return (
     <SafeAreaProvider>
       <ReducedMotionConfig mode={ReduceMotion.Never} />
-      <GestureHandlerRootView>
+      <GestureHandlerRootView style={{ flex: 1 }}>
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>
             <AuthProvider>

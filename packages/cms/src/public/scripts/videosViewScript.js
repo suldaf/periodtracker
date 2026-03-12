@@ -11,6 +11,7 @@ $('#videoModal').on('show.bs.modal', (event) => {
     $('#colVideo1TableModal').val('')
     $('#colVideo2TableModal').val('')
     $('#colVideo3TableModal').val('')
+    $('#colVideoAgeCategoryTableModal').val('')
     $('#colVideo4TableModal').prop('checked', false)
     $('#videoID').text(0)
     $('#countdown').text(40 + ' characters remaining.')
@@ -26,20 +27,22 @@ $('#videoModal').on('show.bs.modal', (event) => {
   $('#colVideo0TableModal').val(videoInfo.title)
   $('#colVideo2TableModal').val(videoInfo.youtubeId)
   $('#colVideo3TableModal').val(videoInfo.assetName)
+  $('#colVideoAgeCategoryTableModal').val(videoInfo.ageCategoryId || '')
   $('#colVideo4TableModal').prop('checked', videoInfo.live)
   $('#videoID').text(videoId)
   $('#countdown').text(40 - videoInfo.title.length + ' characters remaining.')
 })
 
-$('#btnVideoConfirm').on('click', () => {
+$('#btnVideoConfirm').on('click', (el) => {
   const videoID = $('#videoID').text()
   const data = {
     title: $('#colVideo0TableModal').val(),
     youtubeId: $('#colVideo2TableModal').val(),
     assetName: $('#colVideo3TableModal').val(),
+    ageCategoryId: $('#colVideoAgeCategoryTableModal').val() || null,
     live: $('#colVideo4TableModal').prop('checked'),
   }
-
+  console.log('*** DATA', data)
   if (
     data.title === '' ||
     data.title.length > 40 ||
@@ -106,7 +109,8 @@ $(document).on('click', '.liveCheckbox', () => {
   const data = {
     title: videoInfo.title,
     youtubeId: videoInfo.youtubeId,
-    assetName: videoInfo.title,
+    assetName: videoInfo.assetName,
+    ageCategoryId: videoInfo.ageCategoryId || null,
     live: button.prop('checked'),
   }
 
@@ -145,12 +149,18 @@ function deleteVideo(id) {
 
 $(document).ready(() => {
   const videos = JSON.parse($('#videosJSON').html())
-  initializeVideoDataTable(videos)
+  const ageCategories = JSON.parse($('#ageCategoriesJSON').html() || '[]')
+  initializeVideoDataTable(videos, ageCategories)
 })
 
 var rowReorderResult = null
 
-const initializeVideoDataTable = (data) => {
+const initializeVideoDataTable = (data, ageCategories = []) => {
+  const ageCategoryMap = (ageCategories || []).reduce((acc, ac) => {
+    if (ac && ac.id) acc[ac.id] = ac.name
+    return acc
+  }, {})
+  console.log('ageCategoryMap', ageCategoryMap)
   const columns = [
     {
       data: 'sortingKey',
@@ -178,7 +188,17 @@ const initializeVideoDataTable = (data) => {
     {
       data: 'assetName',
       render: (rowPayload) => {
-        return rowPayload?.assetName ? rowPayload.assetName : '-'
+        console.log('assetName', rowPayload)
+        return rowPayload ? rowPayload : '-'
+      },
+    },
+    {
+      data: 'ageCategoryId',
+      render: (_, __, rowPayload) => {
+        console.log('ageCategoryId', rowPayload)
+        return rowPayload.ageCategoryId && ageCategoryMap[rowPayload.ageCategoryId]
+          ? ageCategoryMap[rowPayload.ageCategoryId]
+          : '-'
       },
     },
   ]
