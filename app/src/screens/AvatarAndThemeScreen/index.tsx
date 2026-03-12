@@ -1,12 +1,12 @@
 import * as React from 'react'
-import { Image, StyleSheet, TouchableOpacity, View } from 'react-native'
-import { Screen } from '../../components/Screen'
+import { Image, StyleSheet, TouchableOpacity, View, ScrollView } from 'react-native'
+import { SafeScreen } from '../../components/Screen'
 import { Button } from '../../components/Button'
 import { avatarNames, themeNames, AvatarName } from '../../resources/translations'
 import { getAsset } from '../../services/asset'
 import { CheckButton } from '../../components/CheckButton'
 import { useSelector } from '../../redux/useSelector'
-import { currentAvatarSelector, currentThemeSelector, customAvatarConfigSelector } from '../../redux/selectors'
+import { currentAvatarSelector, currentThemeSelector } from '../../redux/selectors'
 import { useDispatch } from 'react-redux'
 import { setAvatar, setTheme } from '../../redux/actions'
 import { globalStyles } from '../../config/theme'
@@ -14,7 +14,6 @@ import { Text } from '../../components/Text'
 import { analytics } from '../../services/firebase'
 import { PaletteStatus, useColor } from '../../hooks/useColor'
 import { useNavigation } from '@react-navigation/native'
-import { getCustomAvatarImage } from '../../resources/assets/customAvatarAssets'
 
 const AvatarAndThemeScreen = () => {
   return <AvatarAndThemeSelect />
@@ -29,7 +28,6 @@ interface AvatarAndThemeSelectProps {
 export const AvatarAndThemeSelect = ({ onConfirm }: AvatarAndThemeSelectProps) => {
   const currentAvatar = useSelector(currentAvatarSelector)
   const currentTheme = useSelector(currentThemeSelector)
-  const customAvatarConfig = useSelector(customAvatarConfigSelector)
   const dispatch = useDispatch()
   const { backgroundColor, palette } = useColor()
   const navigation = useNavigation<any>()
@@ -80,90 +78,139 @@ export const AvatarAndThemeSelect = ({ onConfirm }: AvatarAndThemeSelectProps) =
   }
 
   return (
-    <Screen style={styles.screen}>
-      {isInitialSelection && (
-        <Text style={[styles.title, { color: palette.secondary.text }]}>
-          avatar_amp_themes_login
-        </Text>
-      )}
-      <View style={styles.avatars}>
-        {allAvatars.map((avatar) => {
-          const { showCheck, checkStatus } = getCheckStatus({
-            isSelected: avatar === selectedAvatar,
-            isCurrent: avatar === currentAvatar,
-            changed: avatarChanged,
-            isInitialSelection,
-          })
+    <SafeScreen style={styles.screen}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {isInitialSelection && (
+          <Text style={[styles.title, { color: palette.secondary.text }]}>
+            avatar_amp_themes_login
+          </Text>
+        )}
+        <View style={styles.avatarsContainer}>
+          {/* First row: 4 avatars */}
+          <View style={styles.avatarsRow}>
+            {allAvatars.slice(0, 4).map((avatar) => {
+              const { showCheck, checkStatus } = getCheckStatus({
+                isSelected: avatar === selectedAvatar,
+                isCurrent: avatar === currentAvatar,
+                changed: avatarChanged,
+                isInitialSelection,
+              })
 
-          const onPress = () => {
-            if (avatar === 'custom') {
-              // Set selected avatar to custom before navigating
-              setSelectedAvatar('custom')
-              // Navigate to CustomAvatarScreen for customization
-              navigation.navigate('CustomAvatar')
-            } else {
-              setSelectedAvatar(avatar)
+              const onPress = () => {
+                if (avatar === 'custom') {
+                  setSelectedAvatar('custom')
+                  navigation.navigate('CustomAvatar')
+                } else {
+                  setSelectedAvatar(avatar)
+                }
+              }
+
+              return (
+                <TouchableOpacity
+                  key={avatar}
+                  onPress={onPress}
+                  style={[styles.avatar, globalStyles.shadow]}
+                >
+                  <View
+                    style={[
+                      styles.avatarBody,
+                      { backgroundColor, borderColor: backgroundColor },
+                      globalStyles.elevation,
+                    ]}
+                  >
+                    <Image source={getAvatarImage(avatar)} style={styles.avatarImage} />
+                    <Text style={[styles.name, { color: palette.secondary.text }]}>{avatar}</Text>
+                    {showCheck && <CheckButton style={styles.check} status={checkStatus} />}
+                  </View>
+                </TouchableOpacity>
+              )
+            })}
+          </View>
+          {/* Second row: 3 avatars (centered) */}
+          <View style={styles.avatarsRow}>
+            {allAvatars.slice(4, 7).map((avatar) => {
+              const { showCheck, checkStatus } = getCheckStatus({
+                isSelected: avatar === selectedAvatar,
+                isCurrent: avatar === currentAvatar,
+                changed: avatarChanged,
+                isInitialSelection,
+              })
+
+              const onPress = () => {
+                if (avatar === 'custom') {
+                  setSelectedAvatar('custom')
+                  navigation.navigate('CustomAvatar')
+                } else {
+                  setSelectedAvatar(avatar)
+                }
+              }
+
+              return (
+                <TouchableOpacity
+                  key={avatar}
+                  onPress={onPress}
+                  style={[styles.avatar, globalStyles.shadow]}
+                >
+                  <View
+                    style={[
+                      styles.avatarBody,
+                      { backgroundColor, borderColor: backgroundColor },
+                      globalStyles.elevation,
+                    ]}
+                  >
+                    <Image source={getAvatarImage(avatar)} style={styles.avatarImage} />
+                    <Text style={[styles.name, { color: palette.secondary.text }]}>{avatar}</Text>
+                    {showCheck && <CheckButton style={styles.check} status={checkStatus} />}
+                  </View>
+                </TouchableOpacity>
+              )
+            })}
+          </View>
+        </View>
+
+        <View style={styles.themes}>
+          {themeNames.map((theme) => {
+            const { showCheck, checkStatus } = getCheckStatus({
+              isSelected: theme === selectedTheme,
+              isCurrent: theme === currentTheme,
+              changed: themeChanged,
+              isInitialSelection,
+            })
+
+            const onPress = () => {
+              setSelectedTheme(theme)
             }
-          }
 
-          return (
-            <TouchableOpacity
-              key={avatar}
-              onPress={onPress}
-              style={[styles.avatar, globalStyles.shadow]}
-            >
-              <View
-                style={[
-                  styles.avatarBody,
-                  { backgroundColor, borderColor: backgroundColor },
-                  globalStyles.elevation,
-                ]}
+            return (
+              <TouchableOpacity
+                key={theme}
+                onPress={onPress}
+                style={[styles.theme, globalStyles.shadow]}
               >
-                <Image source={getAvatarImage(avatar)} style={styles.avatarImage} />
-                <Text style={[styles.name, { color: palette.secondary.text }]}>{avatar}</Text>
-                {showCheck && <CheckButton style={styles.check} status={checkStatus} />}
-              </View>
-            </TouchableOpacity>
-          )
-        })}
-      </View>
+                <View style={[styles.themeBody, globalStyles.elevation]}>
+                  <Image
+                    source={getAsset(`backgrounds.${theme}.icon`)}
+                    style={[styles.themeImage, { backgroundColor, borderColor: backgroundColor }]}
+                  />
+                  <Text style={[styles.name, { color: palette.secondary.text }]}>{theme}</Text>
+                  {showCheck && <CheckButton style={styles.check} status={checkStatus} />}
+                </View>
+              </TouchableOpacity>
+            )
+          })}
+        </View>
 
-      <View style={styles.themes}>
-        {themeNames.map((theme) => {
-          const { showCheck, checkStatus } = getCheckStatus({
-            isSelected: theme === selectedTheme,
-            isCurrent: theme === currentTheme,
-            changed: themeChanged,
-            isInitialSelection,
-          })
-
-          const onPress = () => {
-            setSelectedTheme(theme)
-          }
-
-          return (
-            <TouchableOpacity
-              key={theme}
-              onPress={onPress}
-              style={[styles.theme, globalStyles.shadow]}
-            >
-              <View style={[styles.themeBody, globalStyles.elevation]}>
-                <Image
-                  source={getAsset(`backgrounds.${theme}.icon`)}
-                  style={[styles.themeImage, { backgroundColor, borderColor: backgroundColor }]}
-                />
-                <Text style={[styles.name, { color: palette.secondary.text }]}>{theme}</Text>
-                {showCheck && <CheckButton style={styles.check} status={checkStatus} />}
-              </View>
-            </TouchableOpacity>
-          )
-        })}
-      </View>
-
-      <Button onPress={confirm} status={confirmStatus}>
-        confirm
-      </Button>
-    </Screen>
+        <View style={styles.buttonSpacer}>
+          <Button onPress={confirm} status={confirmStatus} style={styles.confirmButton}>
+            confirm
+          </Button>
+        </View>
+      </ScrollView>
+    </SafeScreen>
   )
 }
 
@@ -204,18 +251,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignContent: 'center',
   },
+  scrollView: {
+    width: '100%',
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 24,
+  },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 12,
   },
-  avatars: {
+  avatarsContainer: {
+    marginBottom: 24,
+  },
+  avatarsRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    flexWrap: 'wrap',
-    marginBottom: 24,
+    marginBottom: 8,
   },
   avatar: {
     width: 80,
@@ -228,6 +287,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignContent: 'center',
     flexWrap: 'wrap',
+  },
+  buttonSpacer: {
+    marginTop: 24,
+    paddingBottom: 16,
+    alignItems: 'center',
+  },
+  confirmButton: {
+    marginTop: 0,
   },
   theme: {
     minWidth: 100,

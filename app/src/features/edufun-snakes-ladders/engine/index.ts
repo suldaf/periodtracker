@@ -71,6 +71,7 @@ export type {
 } from './rules'
 
 // Bot Logic - AI opponents with personality and RNG manipulation
+// Note: bot-logic.ts has been moved to screens/UlarTangga/optional/
 export {
   reactionToEmoticon,
   getBotPersonality,
@@ -85,7 +86,7 @@ export {
   calculateBotActionDelays,
   isBotTurn,
   getReactionMessage,
-} from './bot-logic'
+} from '../../../screens/UlarTangga/optional/bot-logic'
 
 export type {
   BotPersonality,
@@ -95,4 +96,4 @@ export type {
   BotState,
   BotActionResult,
   GameContext,
-} from './bot-logic'
+} from '../../../screens/UlarTangga/optional/bot-logic'

@@ -1,6 +1,7 @@
 import * as React from 'react'
-import { Image, StyleSheet, TouchableOpacity, View, Dimensions } from 'react-native'
-import { Screen } from '../../components/Screen'
+import { Image, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { useScreenDimensions } from '../../hooks/useScreenDimensions'
+import { SafeScreen } from '../../components/Screen'
 import { Button } from '../../components/Button'
 import { Text } from '../../components/Text'
 import { useSelector } from '../../redux/useSelector'
@@ -91,13 +92,12 @@ const skinIcons: Record<SkinTone, SvgComponent> = {
     medium: MediumSkin,
 }
 
-const { width: screenWidth } = Dimensions.get('window')
-
 const CustomAvatarScreen = () => {
     const navigation = useNavigation()
     const dispatch = useDispatch()
     const savedConfig = useSelector(customAvatarConfigSelector)
     const { backgroundColor, palette } = useColor()
+    const { width: screenWidth } = useScreenDimensions()
 
     const [config, setConfig] = React.useState<CustomAvatarConfig>(
         savedConfig || defaultCustomAvatarConfig
@@ -215,73 +215,71 @@ const CustomAvatarScreen = () => {
     )
 
     return (
-        <Screen style={styles.screen}>
-            <View style={styles.container}>
-                {/* Preview */}
-                <View style={styles.previewSection}>
-                    {previewImage ? (
-                        <Image source={previewImage} style={styles.previewImage} />
-                    ) : (
-                        <View style={styles.previewPlaceholder}>
-                            <Text>Loading...</Text>
-                        </View>
-                    )}
-                </View>
+        <SafeScreen style={styles.screen}>
+            {/* Preview */}
+            <View style={styles.previewSection}>
+                {previewImage ? (
+                    <Image source={previewImage} style={[styles.previewImage, { width: screenWidth * 0.55, height: screenWidth * 0.55 }]} />
+                ) : (
+                    <View style={styles.previewPlaceholder}>
+                        <Text>Loading...</Text>
+                    </View>
+                )}
+            </View>
 
-                {/* Card Besar */}
-                <View
-                    style={[
-                        styles.card,
-                        { backgroundColor },
-                        globalStyles.shadow,
-                        globalStyles.elevation,
-                    ]}
-                >
-                    {/* Tab Bar */}
-                    <View style={styles.tabBar}>
-                        {tabConfig.map((tab) => {
-                            const isActive = activeTab === tab.key
-                            return (
-                                <TouchableOpacity
-                                    key={tab.key}
-                                    onPress={() => setActiveTab(tab.key)}
+            {/* Card Besar */}
+            <View
+                style={[
+                    styles.card,
+                    { backgroundColor },
+                    globalStyles.shadow,
+                    globalStyles.elevation,
+                ]}
+            >
+                {/* Tab Bar */}
+                <View style={styles.tabBar}>
+                    {tabConfig.map((tab) => {
+                        const isActive = activeTab === tab.key
+                        return (
+                            <TouchableOpacity
+                                key={tab.key}
+                                onPress={() => setActiveTab(tab.key)}
+                                style={[
+                                    styles.tab,
+                                    isActive && {
+                                        borderBottomColor: palette.primary.base,
+                                    },
+                                ]}
+                            >
+                                <Text
                                     style={[
-                                        styles.tab,
-                                        isActive && {
-                                            borderBottomColor: palette.primary.base,
+                                        styles.tabLabel,
+                                        {
+                                            color: isActive
+                                                ? palette.primary.base
+                                                : palette.secondary.text,
+                                            fontWeight: isActive ? '700' : '500',
                                         },
                                     ]}
                                 >
-                                    <Text
-                                        style={[
-                                            styles.tabLabel,
-                                            {
-                                                color: isActive
-                                                    ? palette.primary.base
-                                                    : palette.secondary.text,
-                                                fontWeight: isActive ? '700' : '500',
-                                            },
-                                        ]}
-                                    >
-                                        {tab.label}
-                                    </Text>
-                                </TouchableOpacity>
-                            )
-                        })}
-                    </View>
-
-                    {/* Options Content */}
-                    <View style={styles.optionsContent}>{renderTabContent()}</View>
+                                    {tab.label}
+                                </Text>
+                            </TouchableOpacity>
+                        )
+                    })}
                 </View>
 
-                {/* Save Button */}
-                <View style={styles.buttonSection}>
-                    <Button onPress={handleSave} status="primary" style={styles.saveButton}>
-                        Simpan
-                    </Button>
-                </View>
+                {/* Options Content */}
+                <View style={styles.optionsContent}>{renderTabContent()}</View>
             </View>
-        </Screen>
+
+            {/* Save Button */}
+            <View style={styles.buttonSection}>
+                <Button onPress={handleSave} status="primary" style={styles.saveButton}>
+                    Simpan
+                </Button>
+            </View>
+        </SafeScreen>
     )
 }
 
@@ -290,22 +288,20 @@ export default CustomAvatarScreen
 const styles = StyleSheet.create({
     screen: {
         flex: 1,
-    },
-    container: {
-        flex: 1,
         paddingHorizontal: 16,
         paddingTop: 8,
+        paddingBottom: 16,
     },
     // ===== Preview =====
     previewSection: {
+        flex: 0.35,
         alignItems: 'center',
-        flex: 3,
         justifyContent: 'center',
+        marginBottom: 10,
     },
     previewImage: {
-        width: screenWidth * 0.5,
-        aspectRatio: 1,
-        maxWidth: 240,
+        maxWidth: 260,
+        maxHeight: 260,
         resizeMode: 'contain',
     },
     previewPlaceholder: {
@@ -314,11 +310,11 @@ const styles = StyleSheet.create({
     },
     // ===== Card Besar =====
     card: {
+        flex: 0.55,
         borderRadius: 20,
-        marginVertical: 10,
+        marginVertical: 8,
         overflow: 'hidden',
         width: '100%',
-        height: 280,
     },
     // ===== Tab Bar =====
     tabBar: {
@@ -327,57 +323,57 @@ const styles = StyleSheet.create({
     tab: {
         flex: 1,
         alignItems: 'center',
-        paddingVertical: 12,
+        paddingVertical: 10,
         borderBottomWidth: 3,
         borderBottomColor: 'transparent',
     },
     tabLabel: {
-        fontSize: 14,
+        fontSize: 13,
     },
     // ===== Options =====
     optionsContent: {
-        paddingHorizontal: 16,
-        paddingTop: 20,
-        paddingBottom: 50,
         flex: 1,
+        paddingHorizontal: 12,
+        paddingTop: 16,
+        paddingBottom: 16,
     },
     optionsRow: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'flex-start',
         alignItems: 'flex-start',
-        gap: 12,
-        width: screenWidth - 64,
+        gap: 10,
     },
     optionButton: {
-        width: 70,
-        paddingVertical: 8,
+        width: 64,
+        paddingVertical: 6,
         paddingHorizontal: 4,
-        borderRadius: 14,
+        borderRadius: 12,
         alignItems: 'center',
     },
     iconContainer: {
-        width: 48,
-        height: 48,
+        width: 40,
+        height: 40,
         justifyContent: 'center',
         alignItems: 'center',
     },
     noneIcon: {
         backgroundColor: '#f0f0f0',
-        borderRadius: 24,
+        borderRadius: 20,
     },
     noneText: {
-        fontSize: 22,
+        fontSize: 18,
         color: '#999',
     },
     optionLabel: {
-        fontSize: 11,
-        marginTop: 4,
+        fontSize: 10,
+        marginTop: 2,
         textAlign: 'center',
     },
     // ===== Button =====
     buttonSection: {
-        paddingBottom: 20,
+        flex: 0.1,
+        justifyContent: 'center',
         paddingTop: 8,
     },
     saveButton: {},

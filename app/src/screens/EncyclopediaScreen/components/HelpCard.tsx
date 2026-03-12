@@ -41,7 +41,6 @@ export const HelpCard = ({ ...props }: TouchableOpacityProps) => {
     </TouchableOpacity>
   )
 }
-
 const styles = StyleSheet.create({
   helpCard: {
     zIndex: 9999,
@@ -59,6 +58,7 @@ const styles = StyleSheet.create({
     bottom: 12,
   },
   image: {
+    width: 120,
     height: 140,
   },
   customImage: {

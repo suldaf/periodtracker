@@ -1,0 +1,16 @@
+diff --git a/node_modules/redux-persist-transform-encrypt/lib/sync.js b/node_modules/redux-persist-transform-encrypt/lib/sync.js
+index 0b3e543..2c74a4f 100644
+--- a/node_modules/redux-persist-transform-encrypt/lib/sync.js
++++ b/node_modules/redux-persist-transform-encrypt/lib/sync.js
+@@ -27,8 +27,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
+ };
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.encryptTransform = void 0;
+-var Aes = __importStar(require("crypto-js/aes"));
+-var CryptoJsCore = __importStar(require("crypto-js/core"));
++var _CryptoJS = require("crypto-js");
++var Aes = _CryptoJS.AES;
++var CryptoJsCore = _CryptoJS;
+ var json_stringify_safe_1 = __importDefault(require("json-stringify-safe"));
+ var redux_persist_1 = require("redux-persist");
+ var makeError = function (message) {
