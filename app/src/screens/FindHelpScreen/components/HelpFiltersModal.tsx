@@ -91,7 +91,7 @@ export const HelpFiltersModal = ({
 
   const confirm = () => {
     onConfirm({
-      region: undefined,
+      region: indonesiaOnlyOptions[0].value,
       subRegion: provinceWheelOption?.value,
       attributes: selectedAttributes,
     })

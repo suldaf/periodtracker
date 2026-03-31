@@ -34,13 +34,14 @@ const FindHelpScreen: ScreenComponent<'Help'> = () => {
         return false
       }
 
-      if (
-        filters.region &&
-        filters.subRegion &&
-        item.subRegion &&
-        !item.subRegion?.split(',').includes(filters.subRegion)
-      ) {
-        return false
+      if (filters.region && filters.subRegion) {
+        const itemSubRegions = item.subRegion
+          ? item.subRegion.split(',').map((s) => s.trim())
+          : []
+
+        if (!itemSubRegions.includes(filters.subRegion) && !item.isAvailableNationwide) {
+          return false
+        }
       }
 
       const hasAttributeFilter = filters.attributes.length > 0
