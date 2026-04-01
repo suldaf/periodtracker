@@ -342,4 +342,32 @@ export interface AppTranslations {
   password_change_fail_description: string
   info_button: string
   new_password: string
+
+  // ------------------------- Custom Avatar ----------------------------
+  custom_avatar_skin: string
+  custom_avatar_hair: string
+  custom_avatar_clothes: string
+  custom_avatar_accessory: string
+  custom_avatar_loading: string
+  custom_avatar_save: string
+  // Skin tones
+  custom_avatar_skin_light: string
+  custom_avatar_skin_medium: string
+  custom_avatar_skin_dark: string
+  // Hair styles
+  custom_avatar_hair_ari: string
+  custom_avatar_hair_dian: string
+  custom_avatar_hair_gayatri: string
+  custom_avatar_hair_nabire: string
+  custom_avatar_hair_nur: string
+  // Clothes
+  custom_avatar_clothes_black: string
+  custom_avatar_clothes_blue: string
+  custom_avatar_clothes_orange: string
+  custom_avatar_clothes_purple: string
+  custom_avatar_clothes_yellow: string
+  // Accessories
+  custom_avatar_accessory_none: string
+  custom_avatar_accessory_flower: string
+  custom_avatar_accessory_hairpin: string
 }

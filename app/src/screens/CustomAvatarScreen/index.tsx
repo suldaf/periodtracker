@@ -6,6 +6,7 @@ import { Button } from '../../components/Button'
 import { Text } from '../../components/Text'
 import { useSelector } from '../../redux/useSelector'
 import { customAvatarConfigSelector } from '../../redux/selectors'
+import { useTranslate } from '../../hooks/useTranslate'
 import { useDispatch } from 'react-redux'
 import { setAvatar, setCustomAvatarConfig } from '../../redux/actions'
 import { globalStyles } from '../../config/theme'
@@ -22,10 +23,6 @@ import {
     hairStyleOptions,
     clothesStyleOptions,
     accessoryStyleOptions,
-    skinToneDisplayNames,
-    hairStyleDisplayNames,
-    clothesStyleDisplayNames,
-    accessoryStyleDisplayNames,
     defaultCustomAvatarConfig,
 } from '../../core/types/customAvatar'
 import { getCustomAvatarImage } from '../../resources/assets/customAvatarAssets'
@@ -55,13 +52,6 @@ type SvgComponent = React.FC<SvgProps>
 
 // Tab definitions
 type TabKey = 'skin' | 'hair' | 'clothes' | 'accessory'
-
-const tabConfig: { key: TabKey; label: string }[] = [
-    { key: 'skin', label: 'Skin' },
-    { key: 'hair', label: 'Hair' },
-    { key: 'clothes', label: 'Clothes' },
-    { key: 'accessory', label: 'Accessory' },
-]
 
 // Mapping for SVG components
 const hairIcons: Record<HairStyle, SvgComponent> = {
@@ -98,6 +88,41 @@ const CustomAvatarScreen = () => {
     const savedConfig = useSelector(customAvatarConfigSelector)
     const { backgroundColor, palette } = useColor()
     const { width: screenWidth } = useScreenDimensions()
+    const t = useTranslate()
+
+    // Translated display names
+    const skinToneDisplayNames: Record<SkinTone, string> = {
+        light: t('custom_avatar_skin_light'),
+        medium: t('custom_avatar_skin_medium'),
+        dark: t('custom_avatar_skin_dark'),
+    }
+    const hairStyleDisplayNames: Record<HairStyle, string> = {
+        ari: t('custom_avatar_hair_ari'),
+        dian: t('custom_avatar_hair_dian'),
+        gayatri: t('custom_avatar_hair_gayatri'),
+        nabire: t('custom_avatar_hair_nabire'),
+        nur: t('custom_avatar_hair_nur'),
+    }
+    const clothesStyleDisplayNames: Record<ClothesStyle, string> = {
+        black: t('custom_avatar_clothes_black'),
+        blue: t('custom_avatar_clothes_blue'),
+        orange: t('custom_avatar_clothes_orange'),
+        purple: t('custom_avatar_clothes_purple'),
+        yellow: t('custom_avatar_clothes_yellow'),
+    }
+    const accessoryStyleDisplayNames: Record<AccessoryStyle, string> = {
+        none: t('custom_avatar_accessory_none'),
+        flower: t('custom_avatar_accessory_flower'),
+        hairpin: t('custom_avatar_accessory_hairpin'),
+    }
+
+    // Tab config with translations
+    const tabConfig: { key: TabKey; label: string }[] = [
+        { key: 'skin', label: t('custom_avatar_skin') },
+        { key: 'hair', label: t('custom_avatar_hair') },
+        { key: 'clothes', label: t('custom_avatar_clothes') },
+        { key: 'accessory', label: t('custom_avatar_accessory') },
+    ]
 
     const [config, setConfig] = React.useState<CustomAvatarConfig>(
         savedConfig || defaultCustomAvatarConfig
@@ -222,7 +247,7 @@ const CustomAvatarScreen = () => {
                     <Image source={previewImage} style={[styles.previewImage, { width: screenWidth * 0.55, height: screenWidth * 0.55 }]} />
                 ) : (
                     <View style={styles.previewPlaceholder}>
-                        <Text>Loading...</Text>
+                        <Text style={styles.loadingText}>{t('custom_avatar_loading')}</Text>
                     </View>
                 )}
             </View>
@@ -276,7 +301,7 @@ const CustomAvatarScreen = () => {
             {/* Save Button */}
             <View style={styles.buttonSection}>
                 <Button onPress={handleSave} status="primary" style={styles.saveButton}>
-                    Simpan
+                    {t('custom_avatar_save')}
                 </Button>
             </View>
         </SafeScreen>
@@ -307,6 +332,10 @@ const styles = StyleSheet.create({
     previewPlaceholder: {
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    loadingText: {
+        color: '#999',
+        fontSize: 14,
     },
     // ===== Card Besar =====
     card: {
