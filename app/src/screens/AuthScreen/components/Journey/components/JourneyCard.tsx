@@ -142,6 +142,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   image: {
+    width: '100%',
+    height: 150,
     marginBottom: 48,
   },
   disclaimer: {
