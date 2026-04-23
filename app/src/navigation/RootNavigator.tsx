@@ -11,6 +11,7 @@ import { ProfileStackParamList } from './stacks/ProfileStack'
 import { HomeStackParamList } from './stacks/HomeStack'
 import { EncyclopediaStackParamList } from './stacks/EncyclopediaStack'
 import { SettingsStackParamList } from './stacks/SettingsStack'
+import { QuizStackParamList } from './stacks/QuizStack'
 
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import MainNavigator, { MainStackParamList } from './MainNavigator'
@@ -30,6 +31,7 @@ export type GlobalParamList = MainStackParamList &
   ProfileStackParamList &
   HomeStackParamList &
   EncyclopediaStackParamList &
+  QuizStackParamList &
   SettingsStackParamList
 
 export type ScreenProps<T extends keyof GlobalParamList> = NativeStackScreenProps<
@@ -98,6 +100,14 @@ const loggedInLinking: LinkingOptions<GlobalParamList> = {
           About: 'about',
           Privacy: 'privacy_policy',
           Contact: 'contact_us',
+        },
+      },
+      // ===== Remaja Sehat ===== //
+      remaja_sehat: {
+        path: 'remaja-sehat',
+        screens: {
+          QuizList: '',
+          QuizWebView: 'webview',
         },
       },
     },

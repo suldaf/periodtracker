@@ -30,6 +30,7 @@ export interface AppTranslations {
   connect_account: string
   delete_account: string
   encyclopedia: string
+  remaja_sehat: string
   day: string
   quiz: string
   // survey: string,
