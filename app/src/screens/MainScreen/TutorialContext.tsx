@@ -167,16 +167,14 @@ export const TutorialProvider = ({ children }: React.PropsWithChildren) => {
   const stepConfig = tutorialConfig?.[step]
 
   React.useEffect(() => {
-    if (stepConfig) {
-      rotationAngle.value = withTiming(stepConfig.rotationAngle)
-      translateX.value = withTiming(stepConfig.translationX)
-      translateY.value = withTiming(stepConfig.translationY)
-      return
-    }
+    if (!stepConfig) return
+    rotationAngle.value = withTiming(stepConfig.rotationAngle)
+    translateX.value = withTiming(stepConfig.translationX)
+    translateY.value = withTiming(stepConfig.translationY)
+  })
 
-    if (!state.isPlaying || step) {
-      return
-    }
+  React.useEffect(() => {
+    if (!state.isPlaying || step) return
 
     setLoading(true, 'please_wait_back', () => {
       if (state.tutorial === 'tutorial_one') {
@@ -189,7 +187,7 @@ export const TutorialProvider = ({ children }: React.PropsWithChildren) => {
 
       dispatch({ type: 'reset' })
     })
-  })
+  }, [state.isPlaying, step, state.tutorial])
 
   useStopLoadingEffect()
 

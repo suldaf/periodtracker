@@ -1,5 +1,5 @@
 import React from 'react'
-import { Modal as RNModal, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { useTutorial } from '../screens/MainScreen/TutorialContext'
 import { useThrottledFunction } from '../hooks/useThrottledFunction'
 import { TutorialSkip } from '../screens/MainScreen/components/TutorialSkip'
@@ -24,43 +24,35 @@ export const TutorialContainer = ({ children }: TutorialContainerProps) => {
   // Prevent double clicking
   const continueThrottled = useThrottledFunction(onContinue, 350)
 
+  // While loading spinner is showing, render children normally so layouts get measured
+  if (loading) {
+    return <>{children}</>
+  }
+
   return (
-    <RNModal
-      visible={!loading}
-      animationType={'fade'}
-      transparent={true}
-      statusBarTranslucent={true}
-      supportedOrientations={['portrait', 'landscape']}
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: modalBackdropColor,
+          paddingTop: UIConfig.tutorial.paddingTop,
+          paddingBottom: UIConfig.tutorial.paddingBottom,
+        },
+      ]}
     >
-      <View
-        style={[
-          styles.container,
-          {
-            paddingTop: UIConfig.tutorial.paddingTop,
-            paddingBottom: UIConfig.tutorial.paddingBottom,
-          },
-        ]}
-      >
-        <TutorialSkip />
-        <View style={[styles.backDrop, { backgroundColor: modalBackdropColor }]} />
-        <TouchableOpacity style={styles.touchableOverlay} onPress={continueThrottled} />
-        {children}
-      </View>
-    </RNModal>
+      <TutorialSkip />
+      <TouchableOpacity style={styles.touchableOverlay} onPress={continueThrottled} />
+      {children}
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
-  backDrop: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: -1,
-  },
   touchableOverlay: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 999,
   },
   container: {
-    height: '100%',
-    width: '100%',
+    ...StyleSheet.absoluteFillObject,
   },
 })
