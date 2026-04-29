@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   helpCenterCard: {
     borderRadius: 20,
     width: '100%',
-    marginVertical: 4,
+    marginVertical: 8,
     padding: 24,
   },
   serviceKindTag: {

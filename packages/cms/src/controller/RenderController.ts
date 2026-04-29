@@ -161,7 +161,7 @@ export class RenderController {
       where: { lang: request.user.lang },
     })
     const helpCenterAttributes = await this.helpCenterAttributeRepository.find({
-      where: { lang: request.user.lang },
+      where: { lang: request.user.lang, isActive: true },
     })
 
     this.render(response, 'HelpCenter', {
