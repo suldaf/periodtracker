@@ -331,6 +331,28 @@ export function createHttpClient(
       return response.data
     },
     // TODO:
+    // eslint-disable-next-line
+    updateQuizScore: async ({
+      appToken,
+      quizId,
+      score,
+    }: any) => {
+      // TODO:
+      // eslint-disable-next-line
+      const response: AxiosResponse<{}> = await axios.post(
+        `${endpoint}/account/update-quiz-score`,
+        {
+          quizId,
+          score,
+        },
+        {
+          headers: { Authorization: `Bearer ${appToken}` },
+        },
+      )
+
+      return response.data
+    },
+    // TODO:
     // fetchContent: async ({ locale, timestamp = 0 }) => {
     //   const response: AxiosResponse<types.ContentResponse> = await axios.get(
     //     `${cmsEndpoint}/mobile/content/${locale}?timestamp=${timestamp}`

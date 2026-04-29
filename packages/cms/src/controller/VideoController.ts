@@ -36,7 +36,7 @@ export class VideoController {
   }
 
   async one(request: Request, response: Response, next: NextFunction) {
-    return this.videoRepository.findOne(request.params.id)
+    return this.videoRepository.findOne(request.params.id as unknown as number)
   }
 
   async save(request: Request, response: Response, next: NextFunction) {
@@ -63,7 +63,7 @@ export class VideoController {
       return { video: videoWithSameTitle, isExist: true }
     }
 
-    const videoToUpdate = await this.videoRepository.findOne(request.params.id)
+    const videoToUpdate = await this.videoRepository.findOne(request.params.id as unknown as number)
     const booleanFromString = request.body.live === 'true'
     videoToUpdate.title = request.body.title
     videoToUpdate.youtubeId = request.body.youtubeId
@@ -77,7 +77,7 @@ export class VideoController {
   }
 
   async remove(request: Request, response: Response, next: NextFunction) {
-    const itemToRemove = await this.videoRepository.findOne(request.params.id)
+    const itemToRemove = await this.videoRepository.findOne(request.params.id as unknown as number)
     await this.videoRepository.remove(itemToRemove)
     return itemToRemove
   }

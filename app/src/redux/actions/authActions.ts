@@ -73,3 +73,7 @@ export function journeyCompletion(payload: {
 export function setAuthError({ error }) {
   return createAction('SET_AUTH_ERROR', { error })
 }
+
+export function saveQuizScoreRequest(payload: { quizId: string; score: string }) {
+  return createAction('SAVE_QUIZ_SCORE_REQUEST', payload)
+}

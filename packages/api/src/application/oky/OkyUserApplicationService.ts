@@ -14,6 +14,7 @@ import { EditInfoCommand } from './commands/EditInfoCommand'
 import { EditSecretAnswerCommand } from './commands/EditSecretAnswerCommand'
 import { DeleteUserFromPasswordCommand } from './commands/DeleteUserFromPasswordCommand'
 import { UserVerifiedPeriodDaysCommand } from './commands/UserVerifiedPeriodDaysCommand'
+import { UpdateQuizScoreCommand } from './commands/UpdateQuizScoreCommand'
 
 @Service()
 export class OkyUserApplicationService {
@@ -176,6 +177,17 @@ export class OkyUserApplicationService {
     await user.updateUserVerifiedPeriodDays({
       metadata,
     })
+
+    return this.okyUserRepository.save(user)
+  }
+
+  public async updateQuizScore({ userId, quizId, score }: UpdateQuizScoreCommand) {
+    const user = await this.okyUserRepository.byId(userId)
+    if (!user) {
+      throw new Error(`Cannot update quiz score for missing ${userId} user`)
+    }
+
+    user.updateQuizScore({ quizId, score })
 
     return this.okyUserRepository.save(user)
   }

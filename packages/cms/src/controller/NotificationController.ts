@@ -60,7 +60,7 @@ export class NotificationController {
 
   async updatePermanentAlert(request: Request, response: Response, next: NextFunction) {
     const permanentNotificationToUpdate = await this.permanentNotificationRepository.findOne(
-      request.params.id,
+      request.params.id as unknown as number,
     )
     const booleanFromStringLive = request.body.live === 'true'
     const booleanFromStringIsPermanent = request.body.isPermanent === 'true'
@@ -74,13 +74,13 @@ export class NotificationController {
     return permanentNotificationToUpdate
   }
   async remove(request: Request, response: Response, next: NextFunction) {
-    const notificationToRemove = await this.notificationRepository.findOne(request.params.id)
+    const notificationToRemove = await this.notificationRepository.findOne(request.params.id as unknown as number)
     await this.notificationRepository.remove(notificationToRemove)
     return notificationToRemove
   }
 
   async removePermanentAlert(request: Request, response: Response, next: NextFunction) {
-    const itemToRemove = await this.permanentNotificationRepository.findOne(request.params.id)
+    const itemToRemove = await this.permanentNotificationRepository.findOne(request.params.id as unknown as number)
     await this.permanentNotificationRepository.remove(itemToRemove)
     return itemToRemove
   }

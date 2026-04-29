@@ -30,7 +30,7 @@ export class SuggestionController {
   }
 
   async remove(request: Request, response: Response, next: NextFunction) {
-    const surveyToRemove = await this.suggestionRepository.findOne(request.params.id)
+    const surveyToRemove = await this.suggestionRepository.findOne(request.params.id as unknown as number)
     await this.suggestionRepository.remove(surveyToRemove)
     return surveyToRemove
   }

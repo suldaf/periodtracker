@@ -49,6 +49,7 @@ const QuizListScreen: ScreenComponent<'QuizList'> = ({ navigation }) => {
     navigation.navigate('QuizWebView', {
       title: item.title,
       url: item.url,
+      quizId: item.id,
     })
   }
 

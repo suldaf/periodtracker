@@ -17,7 +17,7 @@ export class UserController {
   }
 
   async one(request: Request, response: Response, next: NextFunction) {
-    return this.userRepository.findOne(request.params.id)
+    return this.userRepository.findOne(request.params.id as unknown as number)
   }
 
   async save(request: Request, response: Response, next: NextFunction) {
@@ -46,7 +46,7 @@ export class UserController {
   }
 
   async update(request: Request, response: Response, next: NextFunction) {
-    const userToUpdate = await this.userRepository.findOne(request.params.id)
+    const userToUpdate = await this.userRepository.findOne(request.params.id as unknown as number)
     await bcrypt.hash(request.body.password, saltRounds).then(async hash => {
       userToUpdate.username = request.body.username
       userToUpdate.password = hash
@@ -58,7 +58,7 @@ export class UserController {
   }
 
   async remove(request: Request, response: Response, next: NextFunction) {
-    const userToRemove = await this.userRepository.findOne(request.params.id)
+    const userToRemove = await this.userRepository.findOne(request.params.id as unknown as number)
     await this.userRepository.remove(userToRemove)
     return userToRemove
   }

@@ -31,4 +31,16 @@ export class OkyUser {
 
   @Column()
   type: string
+
+  @Column({ nullable: true })
+  score_kespro: string
+
+  @Column({ nullable: true })
+  score_keswa: string
+
+  @Column({ nullable: true })
+  score_who5: string
+
+  @Column({ nullable: true })
+  score_imt: string
 }

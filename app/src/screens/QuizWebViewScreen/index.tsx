@@ -2,12 +2,14 @@ import * as React from 'react'
 import { ActivityIndicator, Platform, Pressable, StyleSheet, View } from 'react-native'
 import * as Linking from 'expo-linking'
 import { WebView } from 'react-native-webview'
+import { useDispatch } from 'react-redux'
 
 import { Screen } from '../../components/Screen'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Text } from '../../components/Text'
 import { ScreenComponent } from '../../navigation/RootNavigator'
 import { useColor } from '../../hooks/useColor'
+import { saveQuizScoreRequest } from '../../redux/actions/authActions'
 
 const IOS_SAFARI_USER_AGENT =
   'Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1'
@@ -128,8 +130,9 @@ const LIVEWIRE_RESULT_BRIDGE = `
 `
 
 const QuizWebViewScreen: ScreenComponent<'QuizWebView'> = ({ navigation, route }) => {
-  const { title, url } = route.params
+  const { title, url, quizId } = route.params
   const { palette } = useColor()
+  const dispatch = useDispatch()
 
   const normalizedUrl = React.useMemo(() => {
     if (url.startsWith('http://') || url.startsWith('https://')) {
@@ -301,6 +304,7 @@ const QuizWebViewScreen: ScreenComponent<'QuizWebView'> = ({ navigation, route }
                 console.log('Received message from WebView:', payload)
                 if (payload.type === 'SCORE_RESULT' && payload.score) {
                   setLastResultSnippet(`${payload.score}`)
+                  dispatch(saveQuizScoreRequest({ quizId, score: `${payload.score}` }))
 
                   setTimeout(() => {
                     if (navigation.canGoBack()) {

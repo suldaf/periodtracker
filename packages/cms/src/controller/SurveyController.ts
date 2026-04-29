@@ -73,7 +73,7 @@ export class SurveyController {
     })
   }
   async one(request: Request, response: Response, next: NextFunction) {
-    return this.surveyRepository.findOne(request.params.id)
+    return this.surveyRepository.findOne(request.params.id as unknown as number)
   }
 
   async save(request: Request, response: Response, next: NextFunction) {
@@ -135,7 +135,7 @@ export class SurveyController {
         })
       }
     }
-    const surveyToUpdate = await this.surveyRepository.findOne(request.params.id)
+    const surveyToUpdate = await this.surveyRepository.findOne(request.params.id as unknown as number)
     surveyToUpdate.lang = request.user.lang
     if (request.body.live) surveyToUpdate.live = request.body.live === 'true'
     else surveyToUpdate.live = surveyToUpdate.live
@@ -148,7 +148,7 @@ export class SurveyController {
   async remove(request: Request, response: Response, next: NextFunction) {
     const questions = await this.questionRepository.find({ where: { surveyId: request.params.id } })
     await this.questionRepository.remove(questions)
-    const surveyToRemove = await this.surveyRepository.findOne(request.params.id)
+    const surveyToRemove = await this.surveyRepository.findOne(request.params.id as unknown as number)
     await this.surveyRepository.remove(surveyToRemove)
     return surveyToRemove
   }

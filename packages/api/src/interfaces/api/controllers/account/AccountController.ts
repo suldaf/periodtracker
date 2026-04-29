@@ -23,6 +23,7 @@ import { EditInfoRequest } from './requests/EditInfoRequest'
 import { EditSecretAnswerRequest } from './requests/EditSecretAnswerRequest'
 import { DeleteUserFromPasswordRequest } from './requests/DeleteUserFromPasswordRequest'
 import { UpdateMetadataRequest } from './requests/UpdateMetadata'
+import { UpdateQuizScoreRequest } from './requests/UpdateQuizScoreRequest'
 
 @JsonController('/account')
 export class AccountController {
@@ -231,5 +232,21 @@ export class AccountController {
     })
 
     return { userId, metadata }
+  }
+
+  @Post('/update-quiz-score')
+  public async updateQuizScore(
+    @CurrentUser({ required: true }) userId: string,
+    @Body() request: UpdateQuizScoreRequest,
+  ) {
+    const { quizId, score } = request
+
+    await this.okyUserApplicationService.updateQuizScore({
+      userId,
+      quizId,
+      score,
+    })
+
+    return { userId, quizId, score }
   }
 }

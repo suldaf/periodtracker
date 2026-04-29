@@ -28,7 +28,7 @@ export class QuizController {
   }
 
   async one(request: Request, response: Response, next: NextFunction) {
-    return this.quizRepository.findOne(request.params.id)
+    return this.quizRepository.findOne(request.params.id as unknown as number)
   }
 
   async save(request: Request, response: Response, next: NextFunction) {
@@ -47,7 +47,7 @@ export class QuizController {
     const booleanFromStringLive = request.body.live === 'true'
     const booleanFromStringAge = request.body.isAgeRestricted === 'true'
 
-    const quizToUpdate = await this.quizRepository.findOne(request.params.id)
+    const quizToUpdate = await this.quizRepository.findOne(request.params.id as unknown as number)
     quizToUpdate.topic = request.body.topic
     quizToUpdate.question = request.body.question
     quizToUpdate.option1 = request.body.option1
@@ -64,7 +64,7 @@ export class QuizController {
   }
 
   async remove(request: Request, response: Response, next: NextFunction) {
-    const quizToRemove = await this.quizRepository.findOne(request.params.id)
+    const quizToRemove = await this.quizRepository.findOne(request.params.id as unknown as number)
     await this.quizRepository.remove(quizToRemove)
     return quizToRemove
   }

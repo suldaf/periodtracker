@@ -20,7 +20,7 @@ export class PrivacyPolicyController {
   }
 
   async one(request: Request, response: Response, next: NextFunction) {
-    return this.privacyPolicyRepository.findOne(request.params.id)
+    return this.privacyPolicyRepository.findOne(request.params.id as unknown as number)
   }
 
   async save(request: Request, response: Response, next: NextFunction) {
@@ -31,7 +31,7 @@ export class PrivacyPolicyController {
   }
 
   async update(request: Request, response: Response, next: NextFunction) {
-    const aboutToUpdate = await this.privacyPolicyRepository.findOne(request.params.id)
+    const aboutToUpdate = await this.privacyPolicyRepository.findOne(request.params.id as unknown as number)
     aboutToUpdate.json_dump = request.body.json_dump
 
     aboutToUpdate.lang = request.user.lang
@@ -40,7 +40,7 @@ export class PrivacyPolicyController {
   }
 
   async remove(request: Request, response: Response, next: NextFunction) {
-    const aboutToRemove = await this.privacyPolicyRepository.findOne(request.params.id)
+    const aboutToRemove = await this.privacyPolicyRepository.findOne(request.params.id as unknown as number)
     await this.privacyPolicyRepository.remove(aboutToRemove)
     return aboutToRemove
   }

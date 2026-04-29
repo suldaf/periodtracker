@@ -20,7 +20,7 @@ export class AboutController {
   }
 
   async one(request: Request, response: Response, next: NextFunction) {
-    return this.aboutRepository.findOne(request.params.id)
+    return this.aboutRepository.findOne(request.params.id as unknown as number)
   }
 
   async save(request: Request, response: Response, next: NextFunction) {
@@ -31,7 +31,7 @@ export class AboutController {
   }
 
   async update(request: Request, response: Response, next: NextFunction) {
-    const aboutToUpdate = await this.aboutRepository.findOne(request.params.id)
+    const aboutToUpdate = await this.aboutRepository.findOne(request.params.id as unknown as number)
     aboutToUpdate.json_dump = request.body.json_dump
 
     aboutToUpdate.lang = request.user.lang
@@ -40,7 +40,7 @@ export class AboutController {
   }
 
   async remove(request: Request, response: Response, next: NextFunction) {
-    const aboutToRemove = await this.aboutRepository.findOne(request.params.id)
+    const aboutToRemove = await this.aboutRepository.findOne(request.params.id as unknown as number)
     await this.aboutRepository.remove(aboutToRemove)
     return aboutToRemove
   }

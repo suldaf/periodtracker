@@ -14,7 +14,7 @@ export class SubcategoryController {
   }
 
   async one(request: Request, response: Response, next: NextFunction) {
-    return this.subCategoryRepository.findOne(request.params.id)
+    return this.subCategoryRepository.findOne(request.params.id as unknown as number)
   }
 
   async save(request: Request, response: Response, next: NextFunction) {
@@ -38,7 +38,7 @@ export class SubcategoryController {
       parent_category: request.body.parent_category,
     })
     if (sub_category && sub_category.id !== request.params.id) return { duplicate: true }
-    const subCategoryToUpdate = await this.subCategoryRepository.findOne(request.params.id)
+    const subCategoryToUpdate = await this.subCategoryRepository.findOne(request.params.id as unknown as number)
     subCategoryToUpdate.title = request.body.title
     subCategoryToUpdate.parent_category = request.body.parent_category
     subCategoryToUpdate.lang = request.user.lang
@@ -47,7 +47,7 @@ export class SubcategoryController {
   }
 
   async remove(request: Request, response: Response, next: NextFunction) {
-    const subCategoryToRemove = await this.subCategoryRepository.findOne(request.params.id)
+    const subCategoryToRemove = await this.subCategoryRepository.findOne(request.params.id as unknown as number)
     const articlesToRemove = await this.articleRepository.find({
       where: {
         subcategory: subCategoryToRemove.id,

@@ -9,6 +9,7 @@ export type QuizStackParamList = {
   QuizWebView: {
     title: string
     url: string
+    quizId: string
   }
 }
 

@@ -32,7 +32,7 @@ export class HelpCenterController {
   }
 
   async one(request: Request, response: Response, next: NextFunction) {
-    return this.helpCenterRepository.findOne(request.params.id)
+    return this.helpCenterRepository.findOne(request.params.id as unknown as number)
   }
 
   async save(request: Request, response: Response, next: NextFunction) {
@@ -42,7 +42,7 @@ export class HelpCenterController {
   }
 
   async update(request: Request, response: Response, next: NextFunction) {
-    const helpCenterToUpdate = await this.helpCenterRepository.findOne(request.params.id)
+    const helpCenterToUpdate = await this.helpCenterRepository.findOne(request.params.id as unknown as number)
     const updatedPayload = getFormContents(request, helpCenterToUpdate)
     await this.helpCenterRepository.save(updatedPayload)
     return helpCenterToUpdate
@@ -64,7 +64,7 @@ export class HelpCenterController {
   }
 
   async remove(request: Request, response: Response, next: NextFunction) {
-    const helpCenterToRemove = await this.helpCenterRepository.findOne(request.params.id)
+    const helpCenterToRemove = await this.helpCenterRepository.findOne(request.params.id as unknown as number)
     await this.helpCenterRepository.remove(helpCenterToRemove)
     return helpCenterToRemove
   }

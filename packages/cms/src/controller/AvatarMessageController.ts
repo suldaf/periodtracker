@@ -18,7 +18,7 @@ export class AvatarMessageController {
   }
 
   async one(request: Request, response: Response, next: NextFunction) {
-    return this.avatarMessageRepository.findOne(request.params.id)
+    return this.avatarMessageRepository.findOne(request.params.id as unknown as number)
   }
 
   async save(request: Request, response: Response, next: NextFunction) {
@@ -32,7 +32,7 @@ export class AvatarMessageController {
   async update(request: Request, response: Response, next: NextFunction) {
     const booleanFromStringLive = request.body.live === 'true'
 
-    const avatarMessageToUpdate = await this.avatarMessageRepository.findOne(request.params.id)
+    const avatarMessageToUpdate = await this.avatarMessageRepository.findOne(request.params.id as unknown as number)
     avatarMessageToUpdate.content = request.body.content
     avatarMessageToUpdate.lang = request.user.lang
     avatarMessageToUpdate.live = booleanFromStringLive
@@ -41,7 +41,7 @@ export class AvatarMessageController {
   }
 
   async remove(request: Request, response: Response, next: NextFunction) {
-    const avatarMessageToRemove = await this.avatarMessageRepository.findOne(request.params.id)
+    const avatarMessageToRemove = await this.avatarMessageRepository.findOne(request.params.id as unknown as number)
     await this.avatarMessageRepository.remove(avatarMessageToRemove)
     return avatarMessageToRemove
   }

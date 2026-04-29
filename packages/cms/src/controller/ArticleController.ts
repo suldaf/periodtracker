@@ -52,7 +52,7 @@ export class ArticleController {
   }
 
   async one(request: Request, response: Response, next: NextFunction) {
-    return this.articleRepository.findOne(request.params.id)
+    return this.articleRepository.findOne(request.params.id as unknown as number)
   }
 
   async save(request: Request, response: Response, next: NextFunction) {
@@ -82,7 +82,7 @@ export class ArticleController {
       return { article, isExist: true }
     }
     const booleanFromString = request.body.live === 'true'
-    const articleToUpdate = await this.articleRepository.findOne(request.params.id)
+    const articleToUpdate = await this.articleRepository.findOne(request.params.id as unknown as number)
     articleToUpdate.category = request.body.category
     articleToUpdate.subcategory = request.body.subcategory
     articleToUpdate.article_heading = request.body.article_heading
@@ -99,7 +99,7 @@ export class ArticleController {
   }
 
   async remove(request: Request, response: Response, next: NextFunction) {
-    const articleToRemove = await this.articleRepository.findOne(request.params.id)
+    const articleToRemove = await this.articleRepository.findOne(request.params.id as unknown as number)
     await this.articleRepository.remove(articleToRemove)
     return articleToRemove
   }

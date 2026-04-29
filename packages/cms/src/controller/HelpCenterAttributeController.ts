@@ -14,7 +14,7 @@ export class HelpCenterAttributeController {
   }
 
   async one(request: Request, response: Response, next: NextFunction) {
-    return this.helpCenterAttributeRepository.findOne(request.params.id)
+    return this.helpCenterAttributeRepository.findOne(request.params.id as unknown as number)
   }
 
   async save(request: Request, response: Response, next: NextFunction) {
@@ -25,7 +25,7 @@ export class HelpCenterAttributeController {
 
   async update(request: Request, response: Response, next: NextFunction) {
     const helpCenterAttributeToUpdate = await this.helpCenterAttributeRepository.findOne(
-      request.params.id,
+      request.params.id as unknown as number,
     )
     helpCenterAttributeToUpdate.isActive = request.body.isActive
     await this.helpCenterAttributeRepository.save(helpCenterAttributeToUpdate)
@@ -34,7 +34,7 @@ export class HelpCenterAttributeController {
 
   async remove(request: Request, response: Response, next: NextFunction) {
     const helpCenterAttributeToRemove = await this.helpCenterAttributeRepository.findOne(
-      request.params.id,
+      request.params.id as unknown as number,
     )
     await this.helpCenterAttributeRepository.remove(helpCenterAttributeToRemove)
     return helpCenterAttributeToRemove

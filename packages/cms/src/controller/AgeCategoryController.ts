@@ -18,7 +18,7 @@ export class AgeCategoryController {
   }
 
   async one(request: Request, response: Response, next: NextFunction) {
-    return this.ageCategoryRepository.findOne(request.params.id)
+    return this.ageCategoryRepository.findOne(request.params.id as unknown as number)
   }
 
   async save(request: Request, response: Response, next: NextFunction) {
@@ -46,7 +46,7 @@ export class AgeCategoryController {
     if (ageCategory && request.params.id !== ageCategory.id) {
       return { ageCategory, isExist: true }
     }
-    const ageCategoryToUpdate = await this.ageCategoryRepository.findOne(request.params.id)
+    const ageCategoryToUpdate = await this.ageCategoryRepository.findOne(request.params.id as unknown as number)
     ageCategoryToUpdate.name = request.body.name
     ageCategoryToUpdate.minAge = request.body.minAge ? Number(request.body.minAge) : null
     ageCategoryToUpdate.maxAge = request.body.maxAge ? Number(request.body.maxAge) : null
@@ -56,7 +56,7 @@ export class AgeCategoryController {
   }
 
   async remove(request: Request, response: Response, next: NextFunction) {
-    const ageCategoryToRemove = await this.ageCategoryRepository.findOne(request.params.id)
+    const ageCategoryToRemove = await this.ageCategoryRepository.findOne(request.params.id as unknown as number)
     await this.ageCategoryRepository.remove(ageCategoryToRemove)
     return ageCategoryToRemove
   }

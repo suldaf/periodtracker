@@ -16,7 +16,7 @@ export class DidYouKnowController {
     })
   }
   async one(request: Request, response: Response, next: NextFunction) {
-    return this.didYouKnowRepository.findOne(request.params.id)
+    return this.didYouKnowRepository.findOne(request.params.id as unknown as number)
   }
 
   async save(request: Request, response: Response, next: NextFunction) {
@@ -31,7 +31,7 @@ export class DidYouKnowController {
     const booleanFromStringLive = request.body.live === 'true'
     const booleanFromStringAge = request.body.isAgeRestricted === 'true'
 
-    const didYouKnowToUpdate = await this.didYouKnowRepository.findOne(request.params.id)
+    const didYouKnowToUpdate = await this.didYouKnowRepository.findOne(request.params.id as unknown as number)
     didYouKnowToUpdate.title = request.body.title
     didYouKnowToUpdate.content = request.body.content
     didYouKnowToUpdate.lang = request.user.lang
@@ -42,7 +42,7 @@ export class DidYouKnowController {
   }
 
   async remove(request: Request, response: Response, next: NextFunction) {
-    const didYouKnowToRemove = await this.didYouKnowRepository.findOne(request.params.id)
+    const didYouKnowToRemove = await this.didYouKnowRepository.findOne(request.params.id as unknown as number)
     await this.didYouKnowRepository.remove(didYouKnowToRemove)
     return didYouKnowToRemove
   }

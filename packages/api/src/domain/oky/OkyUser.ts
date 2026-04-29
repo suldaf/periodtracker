@@ -76,6 +76,18 @@ export class OkyUser {
   @Column({ name: 'metadata', type: 'json', nullable: false, default: {} })
   private metadata: UserMetadata
 
+  @Column({ name: 'score_kespro', nullable: true })
+  private scoreKespro: string | null
+
+  @Column({ name: 'score_keswa', nullable: true })
+  private scoreKeswa: string | null
+
+  @Column({ name: 'score_who5', nullable: true })
+  private scoreWho5: string | null
+
+  @Column({ name: 'score_imt', nullable: true })
+  private scoreImt: string | null
+
   private constructor(props?: OkyUserProps) {
     if (props !== undefined) {
       const {
@@ -228,6 +240,25 @@ export class OkyUser {
     this.metadata = metadata
   }
 
+  public updateQuizScore({ quizId, score }: { quizId: string; score: string }) {
+    switch (quizId) {
+      case 'kespro':
+        this.scoreKespro = score
+        break
+      case 'keswa':
+        this.scoreKeswa = score
+        break
+      case 'who-5':
+        this.scoreWho5 = score
+        break
+      case 'imt':
+        this.scoreImt = score
+        break
+      default:
+        throw new Error(`Unknown quizId: ${quizId}`)
+    }
+  }
+
   public getId() {
     return this.id
   }
@@ -269,5 +300,14 @@ export class OkyUser {
 
   public getMetadata() {
     return this.metadata
+  }
+
+  public getQuizScores() {
+    return {
+      score_kespro: this.scoreKespro ?? null,
+      score_keswa: this.scoreKeswa ?? null,
+      score_who5: this.scoreWho5 ?? null,
+      score_imt: this.scoreImt ?? null,
+    }
   }
 }

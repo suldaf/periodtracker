@@ -258,5 +258,21 @@ export function* authSaga() {
     takeLatest('CREATE_ACCOUNT_SUCCESS', onCreateAccountSuccess),
     takeLatest('CONVERT_GUEST_ACCOUNT', onConvertGuestAccount),
     takeLatest('JOURNEY_COMPLETION', onJourneyCompletion),
+    takeLatest('SAVE_QUIZ_SCORE_REQUEST', onSaveQuizScore),
   ])
+}
+
+function* onSaveQuizScore(action: ExtractActionFromActionType<'SAVE_QUIZ_SCORE_REQUEST'>) {
+  try {
+    // @ts-expect-error TODO:
+    const appToken = yield select(selectors.appTokenSelector)
+    if (!appToken) {
+      return
+    }
+
+    const { quizId, score } = action.payload
+    yield httpClient.updateQuizScore({ appToken, quizId, score })
+  } catch (_e) {
+    // ignore network errors, score will be retried on next submit
+  }
 }

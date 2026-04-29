@@ -17,7 +17,7 @@ export class CategoryController {
   }
 
   async one(request: Request, response: Response, next: NextFunction) {
-    return this.categoryRepository.findOne(request.params.id)
+    return this.categoryRepository.findOne(request.params.id as unknown as number)
   }
 
   async save(request: Request, response: Response, next: NextFunction) {
@@ -44,7 +44,7 @@ export class CategoryController {
     )
     if (category && category.length && category[0].id !== request.params.id)
       return { duplicate: true, category: category[0], body: request.body }
-    const categoryToUpdate = await this.categoryRepository.findOne(request.params.id)
+    const categoryToUpdate = await this.categoryRepository.findOne(request.params.id as unknown as number)
     categoryToUpdate.title = request.body.title
     categoryToUpdate.primary_emoji = request.body.primary_emoji
     categoryToUpdate.primary_emoji_name = request.body.primary_emoji_name
@@ -54,7 +54,7 @@ export class CategoryController {
   }
 
   async remove(request: Request, response: Response, next: NextFunction) {
-    const categoryToRemove = await this.categoryRepository.findOne(request.params.id)
+    const categoryToRemove = await this.categoryRepository.findOne(request.params.id as unknown as number)
     const subcategoriesToRemove = await this.subcategoryRepository.find({
       where: {
         parent_category: categoryToRemove.id,
