@@ -154,6 +154,18 @@ export const Routes = [
     controller: RenderController,
     action: 'renderAvatarMessages',
   },
+  {
+    method: 'get',
+    route: '/brin-tes-management',
+    controller: RenderController,
+    action: 'renderBrinTes',
+  },
+  {
+    method: 'get',
+    route: '/brin-tes-management/export-excel',
+    controller: RenderController,
+    action: 'exportBrinTes',
+  },
   // ------------ Access ----------------
   {
     method: 'get',

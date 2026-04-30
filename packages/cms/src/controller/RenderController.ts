@@ -26,6 +26,7 @@ import { Video } from '../entity/Video'
 import { HelpCenterAttribute } from '../entity/HelpCenterAttribute'
 import { contentFilterOptions, ageRestrictionOptions } from '../optional'
 import { AgeCategory } from '../entity/AgeCategory'
+import { OkyUser } from '../entity/OkyUser'
 // import { getStorage } from 'firebase-admin/storage'
 
 export class RenderController {
@@ -47,6 +48,7 @@ export class RenderController {
   private permanentNotificationRepository = getRepository(PermanentNotification)
   private avatarMessagesRepository = getRepository(AvatarMessages)
   private ageCategoryRepository = getRepository(AgeCategory)
+  private okyUserRepository = getRepository(OkyUser)
 
   // Apply global render options to all views here
   globalRenderOptions = {
@@ -451,6 +453,65 @@ export class RenderController {
     })
 
     this.render(response, 'AvatarMessages', { avatarMessages })
+  }
+
+  async renderBrinTes(request: Request, response: Response, next: NextFunction) {
+    const brinTesUsers = await this.okyUserRepository
+      .createQueryBuilder('okyUser')
+      .where('okyUser.score_kespro IS NOT NULL')
+      .orWhere('okyUser.score_keswa IS NOT NULL')
+      .orWhere('okyUser.score_who5 IS NOT NULL')
+      .orWhere('okyUser.score_imt IS NOT NULL')
+      .orderBy('okyUser.id', 'ASC')
+      .getMany()
+
+    this.render(response, 'BrinTes', { brinTesUsers, moment })
+  }
+
+  async exportBrinTes(request: Request, response: Response, next: NextFunction) {
+    const brinTesUsers = await this.okyUserRepository
+      .createQueryBuilder('okyUser')
+      .where('okyUser.score_kespro IS NOT NULL')
+      .orWhere('okyUser.score_keswa IS NOT NULL')
+      .orWhere('okyUser.score_who5 IS NOT NULL')
+      .orWhere('okyUser.score_imt IS NOT NULL')
+      .orderBy('okyUser.id', 'ASC')
+      .getMany()
+
+    const formatDate = (d: string | null) =>
+      d ? moment(d).format('DD/MM/YYYY HH:mm') : ''
+
+    const headers = ['ID', 'KesPro Score', 'KesPro Date', 'KesWa Score', 'KesWa Date', 'WHO-5 Score', 'WHO-5 Date', 'IMT Score', 'IMT Date']
+
+    const escapeCell = (val: string | number) => {
+      const str = String(val ?? '')
+      return /[,"\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str
+    }
+
+    const csvLines = [
+      headers.join(','),
+      ...brinTesUsers.map((user) =>
+        [
+          user.id,
+          user.score_kespro || '',
+          formatDate(user.score_kespro_date),
+          user.score_keswa || '',
+          formatDate(user.score_keswa_date),
+          user.score_who5 || '',
+          formatDate(user.score_who5_date),
+          user.score_imt || '',
+          formatDate(user.score_imt_date),
+        ]
+          .map(escapeCell)
+          .join(','),
+      ),
+    ]
+
+    const csv = csvLines.join('\n')
+    const filename = `brin-tes-${moment().format('YYYYMMDD-HHmmss')}.csv`
+    response.setHeader('Content-disposition', `attachment; filename=${filename}`)
+    response.setHeader('Content-type', 'text/csv; charset=utf-8')
+    response.send(csv)
   }
 
   async renderDataManagement(request: Request, response: Response, next: NextFunction) {

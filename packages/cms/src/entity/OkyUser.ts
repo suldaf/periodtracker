@@ -43,4 +43,16 @@ export class OkyUser {
 
   @Column({ nullable: true })
   score_imt: string
+
+  @Column({ type: 'timestamp', nullable: true })
+  score_kespro_date: string
+
+  @Column({ type: 'timestamp', nullable: true })
+  score_keswa_date: string
+
+  @Column({ type: 'timestamp', nullable: true })
+  score_who5_date: string
+
+  @Column({ type: 'timestamp', nullable: true })
+  score_imt_date: string
 }

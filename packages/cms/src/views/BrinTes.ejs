@@ -1,0 +1,49 @@
+<%- include('partials/Header') %>
+<div class="homePageContainer">
+  <div class="sideBar">
+    <%- include('partials/SideTab') %>
+  </div>
+  <div class="mainContentContainer">
+    <div class="homeTopTextContainer">
+      <h2>BRIN Tes</h2>
+      <a href="/brin-tes-management/export-excel" class="btn btn-primary">Download CSV</a>
+    </div>
+    <div class="homeTableContainer">
+      <table class="table table-striped table-borderless tableFixHead table-responsive">
+        <thead>
+          <tr>
+            <th style="width: 12%">ID</th>
+            <th style="width: 22%">KesPro</th>
+            <th style="width: 22%">KesWa</th>
+            <th style="width: 22%">WHO-5</th>
+            <th style="width: 22%">IMT</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% brinTesUsers.forEach((user) => { %>
+            <tr>
+              <td><%= user.id %></td>
+              <td>
+                <div>Tanggal: <%= user.score_kespro_date ? moment(user.score_kespro_date).format('D/M/YY HH:mm') : '-' %></div>
+                <div>Score: <%= user.score_kespro || '-' %></div>
+              </td>
+              <td>
+                <div>Tanggal: <%= user.score_keswa_date ? moment(user.score_keswa_date).format('D/M/YY HH:mm') : '-' %></div>
+                <div>Score: <%= user.score_keswa || '-' %></div>
+              </td>
+              <td>
+                <div>Tanggal: <%= user.score_who5_date ? moment(user.score_who5_date).format('D/M/YY HH:mm') : '-' %></div>
+                <div>Score: <%= user.score_who5 || '-' %></div>
+              </td>
+              <td>
+                <div>Tanggal: <%= user.score_imt_date ? moment(user.score_imt_date).format('D/M/YY HH:mm') : '-' %></div>
+                <div>Score: <%= user.score_imt || '-' %></div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<%- include('partials/Footer') %>

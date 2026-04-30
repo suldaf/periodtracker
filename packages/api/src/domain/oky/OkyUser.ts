@@ -88,6 +88,18 @@ export class OkyUser {
   @Column({ name: 'score_imt', nullable: true })
   private scoreImt: string | null
 
+  @Column({ name: 'score_kespro_date', type: 'timestamp', nullable: true })
+  private scoreKesproDate: Date | null
+
+  @Column({ name: 'score_keswa_date', type: 'timestamp', nullable: true })
+  private scoreKeswaDate: Date | null
+
+  @Column({ name: 'score_who5_date', type: 'timestamp', nullable: true })
+  private scoreWho5Date: Date | null
+
+  @Column({ name: 'score_imt_date', type: 'timestamp', nullable: true })
+  private scoreImtDate: Date | null
+
   private constructor(props?: OkyUserProps) {
     if (props !== undefined) {
       const {
@@ -241,18 +253,24 @@ export class OkyUser {
   }
 
   public updateQuizScore({ quizId, score }: { quizId: string; score: string }) {
+    const submittedAt = new Date()
+
     switch (quizId) {
       case 'kespro':
         this.scoreKespro = score
+        this.scoreKesproDate = submittedAt
         break
       case 'keswa':
         this.scoreKeswa = score
+        this.scoreKeswaDate = submittedAt
         break
       case 'who-5':
         this.scoreWho5 = score
+        this.scoreWho5Date = submittedAt
         break
       case 'imt':
         this.scoreImt = score
+        this.scoreImtDate = submittedAt
         break
       default:
         throw new Error(`Unknown quizId: ${quizId}`)
@@ -308,6 +326,10 @@ export class OkyUser {
       score_keswa: this.scoreKeswa ?? null,
       score_who5: this.scoreWho5 ?? null,
       score_imt: this.scoreImt ?? null,
+      score_kespro_date: this.scoreKesproDate ?? null,
+      score_keswa_date: this.scoreKeswaDate ?? null,
+      score_who5_date: this.scoreWho5Date ?? null,
+      score_imt_date: this.scoreImtDate ?? null,
     }
   }
 }
