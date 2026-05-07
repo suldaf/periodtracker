@@ -7,7 +7,7 @@ import ProfileStack, { ProfileStackParamList } from './stacks/ProfileStack'
 import HomeStack, { HomeStackParamList } from './stacks/HomeStack'
 import EncyclopediaStack, { EncyclopediaStackParamList } from './stacks/EncyclopediaStack'
 import SettingsStack, { SettingsStackParamList } from './stacks/SettingsStack'
-import QuizStack, { QuizStackParamList } from './stacks/QuizStack'
+import QuizStack, { QUIZ_ENABLED, QuizStackParamList } from './stacks/QuizStack'
 import { TabIcon } from './components/TabIcon'
 import { UserIcon } from '../components/icons/UserIcon'
 import { IS_IOS } from '../services/device'
@@ -20,7 +20,7 @@ export type MainStackParamList = {
   home: NavigatorScreenParams<HomeStackParamList>
   encyclopedia: NavigatorScreenParams<EncyclopediaStackParamList>
   game: undefined
-  remaja_sehat: NavigatorScreenParams<QuizStackParamList>
+  remaja_sehat?: NavigatorScreenParams<QuizStackParamList>
   settings: NavigatorScreenParams<SettingsStackParamList>
 }
 
@@ -101,18 +101,20 @@ function MainNavigator() {
           ),
         }}
       />
-      <Tab.Screen
-        name={'remaja_sehat'}
-        component={QuizStack}
-        options={{
-          ...options,
-          tabBarIcon: ({ focused, size }) => (
-            <TabIcon focused={focused} accessibilityLabel={'remaja_sehat'}>
-              <FontAwesome size={size} name={'file-text-o'} color={'#fff'} />
-            </TabIcon>
-          ),
-        }}
-      />
+      {QUIZ_ENABLED && (
+        <Tab.Screen
+          name={'remaja_sehat'}
+          component={QuizStack}
+          options={{
+            ...options,
+            tabBarIcon: ({ focused, size }) => (
+              <TabIcon focused={focused} accessibilityLabel={'remaja_sehat'}>
+                <FontAwesome size={size} name={'file-text-o'} color={'#fff'} />
+              </TabIcon>
+            ),
+          }}
+        />
+      )}
       <Tab.Screen
         name={'settings'}
         component={SettingsStack}

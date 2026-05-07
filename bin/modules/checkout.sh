@@ -17,6 +17,8 @@ SUBMODULE_PATHS=(
     $k8s_path
     $delete_account_path
     $flower_path
+    $ular_tangga_path
+    $quiz_path
 )
 
 # Loop over the list of submodule paths
