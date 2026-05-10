@@ -77,6 +77,40 @@ export const AvatarAndThemeSelect = ({ onConfirm }: AvatarAndThemeSelectProps) =
     return getAsset(`avatars.${avatar}.theme`)
   }
 
+  const renderAvatar = (avatar: AvatarName) => {
+    const { showCheck, checkStatus } = getCheckStatus({
+      isSelected: avatar === selectedAvatar,
+      isCurrent: avatar === currentAvatar,
+      changed: avatarChanged,
+      isInitialSelection,
+    })
+
+    const onPress = () => {
+      if (avatar === 'custom') {
+        setSelectedAvatar('custom')
+        navigation.navigate('CustomAvatar')
+      } else {
+        setSelectedAvatar(avatar)
+      }
+    }
+
+    return (
+      <TouchableOpacity key={avatar} onPress={onPress} style={[styles.avatar, globalStyles.shadow]}>
+        <View
+          style={[
+            styles.avatarBody,
+            { backgroundColor, borderColor: backgroundColor },
+            globalStyles.elevation,
+          ]}
+        >
+          <Image source={getAvatarImage(avatar)} style={styles.avatarImage} />
+          <Text style={[styles.name, { color: palette.secondary.text }]}>{avatar}</Text>
+          {showCheck && <CheckButton style={styles.check} status={checkStatus} />}
+        </View>
+      </TouchableOpacity>
+    )
+  }
+
   return (
     <SafeScreen style={styles.screen}>
       <ScrollView
@@ -90,86 +124,7 @@ export const AvatarAndThemeSelect = ({ onConfirm }: AvatarAndThemeSelectProps) =
           </Text>
         )}
         <View style={styles.avatarsContainer}>
-          {/* First row: 4 avatars */}
-          <View style={styles.avatarsRow}>
-            {allAvatars.slice(0, 4).map((avatar) => {
-              const { showCheck, checkStatus } = getCheckStatus({
-                isSelected: avatar === selectedAvatar,
-                isCurrent: avatar === currentAvatar,
-                changed: avatarChanged,
-                isInitialSelection,
-              })
-
-              const onPress = () => {
-                if (avatar === 'custom') {
-                  setSelectedAvatar('custom')
-                  navigation.navigate('CustomAvatar')
-                } else {
-                  setSelectedAvatar(avatar)
-                }
-              }
-
-              return (
-                <TouchableOpacity
-                  key={avatar}
-                  onPress={onPress}
-                  style={[styles.avatar, globalStyles.shadow]}
-                >
-                  <View
-                    style={[
-                      styles.avatarBody,
-                      { backgroundColor, borderColor: backgroundColor },
-                      globalStyles.elevation,
-                    ]}
-                  >
-                    <Image source={getAvatarImage(avatar)} style={styles.avatarImage} />
-                    <Text style={[styles.name, { color: palette.secondary.text }]}>{avatar}</Text>
-                    {showCheck && <CheckButton style={styles.check} status={checkStatus} />}
-                  </View>
-                </TouchableOpacity>
-              )
-            })}
-          </View>
-          {/* Second row: 3 avatars (centered) */}
-          <View style={styles.avatarsRow}>
-            {allAvatars.slice(4, 7).map((avatar) => {
-              const { showCheck, checkStatus } = getCheckStatus({
-                isSelected: avatar === selectedAvatar,
-                isCurrent: avatar === currentAvatar,
-                changed: avatarChanged,
-                isInitialSelection,
-              })
-
-              const onPress = () => {
-                if (avatar === 'custom') {
-                  setSelectedAvatar('custom')
-                  navigation.navigate('CustomAvatar')
-                } else {
-                  setSelectedAvatar(avatar)
-                }
-              }
-
-              return (
-                <TouchableOpacity
-                  key={avatar}
-                  onPress={onPress}
-                  style={[styles.avatar, globalStyles.shadow]}
-                >
-                  <View
-                    style={[
-                      styles.avatarBody,
-                      { backgroundColor, borderColor: backgroundColor },
-                      globalStyles.elevation,
-                    ]}
-                  >
-                    <Image source={getAvatarImage(avatar)} style={styles.avatarImage} />
-                    <Text style={[styles.name, { color: palette.secondary.text }]}>{avatar}</Text>
-                    {showCheck && <CheckButton style={styles.check} status={checkStatus} />}
-                  </View>
-                </TouchableOpacity>
-              )
-            })}
-          </View>
+          {allAvatars.map(renderAvatar)}
         </View>
 
         <View style={styles.themes}>
@@ -268,18 +223,16 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   avatarsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 24,
   },
-  avatarsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
   avatar: {
-    width: 80,
-    height: 80,
-    margin: 4,
+    width: '23%',
+    aspectRatio: 1,
+    marginBottom: 8,
   },
   themes: {
     flexDirection: 'row',
