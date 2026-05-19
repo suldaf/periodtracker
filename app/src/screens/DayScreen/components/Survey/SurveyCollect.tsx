@@ -2,13 +2,13 @@ import React from 'react'
 import { Checkbox } from '../../../../components/Checkbox'
 import { Input } from '../../../../components/Input'
 import { getSurveyQuestionOptions, useSurvey } from './SurveyContext'
+import { StyleSheet, View } from 'react-native'
 
 export const SurveyCollect = () => {
   const { state, dispatch } = useSurvey()
 
-  const onCheckboxPress = (value: number, text: string) => {
-    dispatch({ type: 'answerIndex', value })
-    dispatch({ type: 'answerDraft', value: text })
+  const onCheckboxPress = (value: number) => {
+    dispatch({ type: 'select_answer', value })
   }
 
   const setAnswerDraft = (value: string) => {
@@ -28,7 +28,7 @@ export const SurveyCollect = () => {
   return (
     <>
       {isMultiple ? (
-        <>
+        <View>
           {options.map((option, i) => {
             const checked = state.answerIndex === i
             const onPress = () => {
@@ -47,7 +47,7 @@ export const SurveyCollect = () => {
               />
             )
           })}
-        </>
+        </View>
       ) : (
         <Input
           value={state.answerDraft}
@@ -59,3 +59,5 @@ export const SurveyCollect = () => {
     </>
   )
 }
+
+const styles = StyleSheet.create({})

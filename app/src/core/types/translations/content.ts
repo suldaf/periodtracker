@@ -4,11 +4,11 @@ export interface Article {
   content: string
   category: string
   subCategory: string
-  isAgeRestricted: boolean
-  ageRestrictionLevel: number
   age_category_name?: string
   age_category_min_age?: number
   age_category_max_age?: number
+  isAgeRestricted?: boolean
+  ageRestrictionLevel?: number
   contentFilter?: number
   voiceOverKey?: string
   live?: boolean

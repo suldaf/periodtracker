@@ -36,35 +36,42 @@ export const Survey = () => {
 
   return (
     <View style={[styles.page, { backgroundColor }]}>
-      <ScrollView style={styles.body} contentContainerStyle={{ padding: 24 }}>
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: palette.secondary.text }]}>survey</Text>
-          <InfoButton title={'survey'} content={'info_button_survey'} />
-        </View>
-        <Text>anonymous_answer</Text>
-        <Text>choose_one</Text>
-        {state.hasAnsweredAll ? (
-          <Text style={styles.thanks} status={'danger'}>
-            thank_you_msg
-          </Text>
-        ) : state.consented ? (
-          <View style={{ minHeight: 150 }}>
-            <Text
-              style={[styles.question, { color: palette.secondary.text }]}
-              enableTranslate={false}
-            >
-              {question}
-            </Text>
-            <SurveyCollect />
+      <ScrollView
+        style={styles.body}
+        showsVerticalScrollIndicator={true}
+        persistentScrollbar={true} // For Android
+      >
+        <View style={{ padding: 24 }}>
+          <View style={styles.header}>
+            <Text style={[styles.title, { color: palette.secondary.text }]}>survey</Text>
+            <InfoButton title={'survey'} content={'info_button_survey'} />
           </View>
-        ) : (
-          <>
-            <Text style={[styles.question, { color: palette.secondary.text }]}>
-              {consentQuestion}
+          <Text>anonymous_answer</Text>
+          <Text>choose_one</Text>
+
+          {state.hasAnsweredAll ? (
+            <Text style={styles.thanks} status={'danger'}>
+              thank_you_msg
             </Text>
-            <SurveyConsent />
-          </>
-        )}
+          ) : state.consented ? (
+            <>
+              <Text
+                style={[styles.question, { color: palette.secondary.text }]}
+                enableTranslate={false}
+              >
+                {question}
+              </Text>
+              <SurveyCollect />
+            </>
+          ) : (
+            <>
+              <Text style={[styles.question, { color: palette.secondary.text }]}>
+                {consentQuestion}
+              </Text>
+              <SurveyConsent />
+            </>
+          )}
+        </View>
       </ScrollView>
 
       <Hr />
