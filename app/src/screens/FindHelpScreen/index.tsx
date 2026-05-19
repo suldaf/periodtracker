@@ -431,6 +431,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 17,
     marginBottom: 6,
+    color: '#000000',
   },
   provinceTotalBadge: {
     alignSelf: 'flex-start',
