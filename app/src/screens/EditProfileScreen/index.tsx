@@ -21,7 +21,7 @@ import { EditSecretModal } from './EditSecretModal'
 import { useMonths } from '../../hooks/useMonths'
 import { globalStyles } from '../../config/theme'
 import { useColor } from '../../hooks/useColor'
-import { genders } from '../../resources/translations'
+import {gendersList} from '../../config/options'
 
 type EditProfileState = {
   name: User['name']
@@ -252,7 +252,7 @@ const EditProfileScreen: ScreenComponent<'EditProfile'> = ({ navigation }) => {
         <View style={styles.segment}>
           <SegmentControl
             label={'your_gender'}
-            options={genders}
+            options={gendersList}
             selected={state.gender}
             onSelect={onChangeGender}
           />

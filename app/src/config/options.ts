@@ -1,5 +1,5 @@
 import { generateRange } from '../services/utils'
-
+import { genders } from '../resources/translations'
 export const locations = [
   { value: 'Urban', label: 'Urban', iconName: 'building' },
   { value: 'Rural', label: 'Rural', iconName: 'leaf' },
@@ -24,7 +24,7 @@ export const questionOptions = secretQuestions.map((item) => ({
 }))
 
 export const defaultEmoji = '💁‍♀️'
-export const genders = [
+export const gendersList = genders ?? [
   { value: 'Male', label: 'Male', iconName: 'male' },
   { value: 'Female', label: 'Female', iconName: 'female' },
   { value: 'Other', label: 'Other', iconName: 'genderless' },

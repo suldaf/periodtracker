@@ -17,8 +17,8 @@ import { StatusBar } from 'react-native'
 import { analytics } from './src/services/firebase'
 import { ReducedMotionConfig, ReduceMotion } from 'react-native-reanimated'
 import { SoundProvider } from './src/contexts/SoundProvider'
-import { ResponsiveDebugProvider } from './src/contexts/ResponsiveDebugContext'
-import { DebugNavigator } from './src/navigation/DebugNavigator'
+// import { ResponsiveDebugProvider } from './src/contexts/ResponsiveDebugContext'
+// import { DebugNavigator } from './src/navigation/DebugNavigator'
 
 function App() {
   useOrientationLock()
@@ -35,22 +35,22 @@ function App() {
           <PersistGate loading={null} persistor={persistor}>
             <AuthProvider>
               <PredictionProvider>
-                <ResponsiveDebugProvider>
+                {/* <ResponsiveDebugProvider> */}
                   <ResponsiveProvider>
                     <SoundProvider>
                       <EncyclopediaProvider>
                         <Background>
                           <LoadingProvider>
                             <StatusBar hidden />
-                            <DebugNavigator>
+                            {/* <DebugNavigator> */}
                               <RootNavigator />
-                            </DebugNavigator>
+                            {/* </DebugNavigator> */}
                           </LoadingProvider>
                         </Background>
                       </EncyclopediaProvider>
                     </SoundProvider>
                   </ResponsiveProvider>
-                </ResponsiveDebugProvider>
+                {/* </ResponsiveDebugProvider> */}
               </PredictionProvider>
             </AuthProvider>
           </PersistGate>

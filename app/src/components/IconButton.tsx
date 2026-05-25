@@ -1,5 +1,5 @@
 import React from 'react'
-import { StyleSheet, TextStyle, TouchableOpacity, ViewProps } from 'react-native'
+import { StyleSheet, TextStyle, TouchableOpacity, useColorScheme, ViewProps } from 'react-native'
 import { Text } from './Text'
 import { SvgIconProps } from './icons/types'
 import Cloud from './icons/Cloud'
@@ -33,7 +33,6 @@ export const IconButton = ({
   const { palette } = useColor()
   const theme = useSelector(currentThemeSelector)
   const Icon = IconForTheme?.[theme]?.[appearance] ?? Cloud
-
   return (
     <TouchableOpacity
       style={[styles.button, { width: size, height: size }, style]}
@@ -46,7 +45,7 @@ export const IconButton = ({
         style={[
           styles.text,
           textStyle,
-          appearance === 'outline' && { color: "#fff" },
+          { color: appearance === 'outline' ? palette[status].base : '#fff' },
         ]}
         enableTranslate={false}
       >

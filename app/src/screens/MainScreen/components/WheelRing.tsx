@@ -100,7 +100,7 @@ export const WheelRingButton = ({
       {...props}
     >
       <Text
-        style={[styles.text, appearance === 'outline' && { color: palette[status].base }]}
+        style={[styles.text, { color: appearance === 'outline' ? palette[status].base : '#fff' }]}
         enableTranslate={false}
       >
         {text}

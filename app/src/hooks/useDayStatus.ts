@@ -17,7 +17,7 @@ export const useDayStatus = (
 
   // @ts-expect-error TODO:
   const isVerified = day?.periodDay
-
+  // console.log('useDayStatus', JSON.stringify({ date: dataEntry.date, day, isVerified, dataEntry },null,2))
   if (dataEntry.onPeriod && isVerified) {
     return {
       status: 'danger',

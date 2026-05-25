@@ -32,7 +32,7 @@ export const SurveyCollect = () => {
           {options.map((option, i) => {
             const checked = state.answerIndex === i
             const onPress = () => {
-              onCheckboxPress(i, option)
+              onCheckboxPress(i)
             }
 
             return (
