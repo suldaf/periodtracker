@@ -13,6 +13,7 @@ $('#videoModal').on('show.bs.modal', (event) => {
     $('#colVideo3TableModal').val('')
     $('#colVideoAgeCategoryTableModal').val('')
     $('#colVideo4TableModal').prop('checked', false)
+    $('#colVideo5TableModal').prop('checked', false)
     $('#videoID').text(0)
     $('#countdown').text(40 + ' characters remaining.')
     $('#col1TableModal').attr('disabled', true)
@@ -29,6 +30,7 @@ $('#videoModal').on('show.bs.modal', (event) => {
   $('#colVideo3TableModal').val(videoInfo.assetName)
   $('#colVideoAgeCategoryTableModal').val(videoInfo.ageCategoryId || '')
   $('#colVideo4TableModal').prop('checked', videoInfo.live)
+  $('#colVideo5TableModal').prop('checked', videoInfo.isGlobal)
   $('#videoID').text(videoId)
   $('#countdown').text(40 - videoInfo.title.length + ' characters remaining.')
 })
@@ -41,6 +43,7 @@ $('#btnVideoConfirm').on('click', (el) => {
     assetName: $('#colVideo3TableModal').val(),
     ageCategoryId: $('#colVideoAgeCategoryTableModal').val() || null,
     live: $('#colVideo4TableModal').prop('checked'),
+    isGlobal: $('#colVideo5TableModal').prop('checked'),
   }
   console.log('*** DATA', data)
   if (
@@ -112,6 +115,7 @@ $(document).on('click', '.liveCheckbox', () => {
     assetName: videoInfo.assetName,
     ageCategoryId: videoInfo.ageCategoryId || null,
     live: button.prop('checked'),
+    isGlobal: videoInfo.isGlobal,
   }
 
   // if the ID is 0 we are creating a new entry
@@ -199,6 +203,12 @@ const initializeVideoDataTable = (data, ageCategories = []) => {
         return rowPayload.ageCategoryId && ageCategoryMap[rowPayload.ageCategoryId]
           ? ageCategoryMap[rowPayload.ageCategoryId]
           : '-'
+      },
+    },
+    {
+      data: 'isGlobal',
+      render: (_, __, rowPayload) => {
+        return rowPayload.isGlobal ? '🌐' : '-'
       },
     },
   ]

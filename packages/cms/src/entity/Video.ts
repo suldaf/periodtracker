@@ -21,6 +21,9 @@ export class Video {
   @Column()
   live: boolean
 
+  @Column({ default: false })
+  isGlobal: boolean
+
   @Column()
   lang: string
 

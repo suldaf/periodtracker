@@ -29,7 +29,7 @@ export class VideoController {
         'ag."minAge" as age_category_min_age',
         'ag."maxAge" as age_category_max_age',
       ])
-      .where('v.lang = :lang', { lang })
+      .where('(v.lang = :lang OR v."isGlobal" = true)', { lang })
       .andWhere('v.live = true')
       .orderBy('v."sortingKey"', 'ASC')
       .getRawMany()
@@ -50,6 +50,7 @@ export class VideoController {
     itemToSave.lang = request.user.lang
     itemToSave.id = uuid()
     itemToSave.live = request.body.live === 'true'
+    itemToSave.isGlobal = request.body.isGlobal === 'true'
     itemToSave.ageCategoryId = request.body.ageCategoryId || null
     await this.videoRepository.save(itemToSave)
     return itemToSave
@@ -69,6 +70,7 @@ export class VideoController {
     videoToUpdate.youtubeId = request.body.youtubeId
     videoToUpdate.assetName = request.body.assetName
     videoToUpdate.live = booleanFromString
+    videoToUpdate.isGlobal = request.body.isGlobal === 'true'
     videoToUpdate.lang = request.user.lang
     videoToUpdate.ageCategoryId = request.body.ageCategoryId || null
 
