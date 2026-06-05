@@ -259,7 +259,7 @@ const initializeVideoDataTable = (data, ageCategories = []) => {
         render: (_, __, row) => {
           return `
           <button
-          type="button" onclick="deleteVideo('${row.id}')" class="btn btn-sm"
+          type="button" data-video-id="${row.id}" class="btn btn-sm js-delete-video-row"
           >
             <i class="fas fa-trash" aria-hidden="true"></i>
           </button>
@@ -331,3 +331,11 @@ const saveVideoReorder = (isSave) => {
     },
   })
 }
+
+$(document).on('click', '.js-delete-video-row', function () {
+  deleteVideo($(this).data('video-id'))
+})
+
+$(document).on('click', '.js-save-video-reorder', function () {
+  saveVideoReorder(Number($(this).data('save')))
+})

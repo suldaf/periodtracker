@@ -13,7 +13,8 @@
     "outDir": "dist/",
     "baseUrl": "./src/",
     "listFiles": false,
-    "typeRoots": ["../../node_modules/@types", "./@types"]
+    "typeRoots": ["../../node_modules/@types", "./@types"],
+    "skipLibCheck": true
   },
   "include": ["src/**/*", "@types/*.d.ts", "ormconfig.ts", "src/migrations/.ts"],
   "references": [{ "path": "../core" }],

@@ -194,7 +194,7 @@ const initializeCategoriesDataTable = (data) => {
         searchable: false,
         render: (_, __, row) => {
           return `
-            <button type="button" onclick="deleteCategory('${row.id}')" class="btn btn-sm">
+            <button type="button" data-category-id="${row.id}" class="btn btn-sm js-delete-category">
               <i class="fas fa-trash" aria-hidden="true"></i>
             </button>  
          `
@@ -251,3 +251,11 @@ const saveCategoryReorder = (isSave) => {
     },
   })
 }
+
+$(document).on('click', '.js-delete-category', function () {
+  deleteCategory($(this).data('category-id'))
+})
+
+$(document).on('click', '.js-save-category-reorder', function () {
+  saveCategoryReorder(Number($(this).data('save')))
+})

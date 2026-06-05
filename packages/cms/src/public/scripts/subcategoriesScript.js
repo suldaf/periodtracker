@@ -164,7 +164,7 @@ const initializeSubcategoriesDataTable = (data) => {
         render: (_, __, row) => {
           return `
           <button
-          type="button" onclick="deleteSubcategory('${row.id}')" class="btn btn-sm"
+          type="button" data-subcategory-id="${row.id}" class="btn btn-sm js-delete-subcategory"
           >
             <i class="fas fa-trash" aria-hidden="true"></i>
           </button>
@@ -222,3 +222,11 @@ const saveSubcategoryReorder = (isSave) => {
     },
   })
 }
+
+$(document).on('click', '.js-delete-subcategory', function () {
+  deleteSubcategory($(this).data('subcategory-id'))
+})
+
+$(document).on('click', '.js-save-subcategory-reorder', function () {
+  saveSubcategoryReorder(Number($(this).data('save')))
+})

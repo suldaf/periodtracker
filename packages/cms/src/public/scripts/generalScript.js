@@ -14,3 +14,8 @@ $('.languageChange').on('click', event => {
     },
   })
 })
+
+$(document).on('click', '.js-history-back', event => {
+  event.preventDefault()
+  history.back()
+})

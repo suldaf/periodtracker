@@ -371,12 +371,12 @@ const initializeDataTable = (result) => {
           <div class="d-flex">
               <button
                 type="button"
-                class="btn btn-sm"
-                onclick="prepareEdit(${row.id})"
+                data-help-center-id="${row.id}"
+                class="btn btn-sm js-prepare-help-center-edit"
               >
                 <i class="fas fa-edit" aria-hidden="true"></i>
               </button>
-              <button type="button" class="btn btn-sm deleteArticle" onclick="deleteHelpCenter(${row.id})">
+              <button type="button" class="btn btn-sm deleteArticle js-delete-help-center" data-help-center-id="${row.id}">
                 <i class="fas fa-trash" aria-hidden="true"></i>
               </button>
           </div>
@@ -389,9 +389,7 @@ const initializeDataTable = (result) => {
         render: (data, type, row) => {
           return `
           <label class="switch">
-            <input onchange="toggleLive(${row.id}, ${
-            row.isActive
-          })" class='liveCheckbox' type="checkbox" ${row.isActive ? 'checked' : ''}/>
+            <input data-help-center-id="${row.id}" data-is-active="${row.isActive}" class='liveCheckbox js-toggle-help-center-live' type="checkbox" ${row.isActive ? 'checked' : ''}/>
             <span class="slider round"></span>
           </label>
         `
@@ -507,7 +505,7 @@ const prepareEdit = (id) => {
                 <input type="text" class="no-validate" class="website" aria-describedby="emailHelp" name="website" value="__REPLACE__">
               </div>
               <div class="col-md-2">
-                <button class="btn btn-danger text-white delete-button" type="button" onclick="deleteWebsite($(this))"><i class="fa-solid fa-trash"></i></button>
+                <button class="btn btn-danger text-white delete-button js-delete-website" type="button"><i class="fa-solid fa-trash"></i></button>
               </div>
             </div>
           `
@@ -579,7 +577,7 @@ $('#helpCenterModal').on('hidden.bs.modal', function () {
           <input type="text" class="no-validate" class="website" aria-describedby="emailHelp" name="website">
         </div>
         <div class="col-md-2">
-          <button class="btn btn-danger text-white delete-button" type="button" onclick="deleteWebsite($(this))"><i class="fa-solid fa-trash"></i></button>
+          <button class="btn btn-danger text-white delete-button js-delete-website" type="button"><i class="fa-solid fa-trash"></i></button>
         </div>
       </div>
     </div>
@@ -636,3 +634,23 @@ const saveReorder = (isSave) => {
     },
   })
 }
+
+$(document).on('click', '.js-prepare-help-center-edit', function () {
+  prepareEdit($(this).data('help-center-id'))
+})
+
+$(document).on('click', '.js-delete-help-center', function () {
+  deleteHelpCenter($(this).data('help-center-id'))
+})
+
+$(document).on('change', '.js-toggle-help-center-live', function () {
+  toggleLive($(this).data('help-center-id'), $(this).data('is-active'))
+})
+
+$(document).on('click', '.js-delete-website', function () {
+  deleteWebsite($(this))
+})
+
+$(document).on('click', '.js-save-help-center-reorder', function () {
+  saveReorder(Number($(this).data('save')))
+})

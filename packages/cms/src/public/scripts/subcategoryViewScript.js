@@ -490,7 +490,7 @@ const initializeDataTable = (result) => {
         searchable: false,
         render: (_, __, row) => {
           return `
-              <button type="button" onclick="deleteArticle('${row.id}')" class="btn btn-sm">
+              <button type="button" data-article-id="${row.id}" class="btn btn-sm js-delete-article-row">
                 <i class="fas fa-trash" aria-hidden="true"></i>
               </button>
            `
@@ -561,6 +561,14 @@ const saveReorder = (isSave) => {
     },
   })
 }
+
+$(document).on('click', '.js-delete-article-row', function () {
+  deleteArticle($(this).data('article-id'))
+})
+
+$(document).on('click', '.js-save-article-reorder', function () {
+  saveReorder(Number($(this).data('save')))
+})
 
 function makeLinksClickable(text) {
   return text.replace(
