@@ -22,6 +22,6 @@
     "strictNullChecks": false,
     "suppressImplicitAnyIndexErrors": false,
     "target": "es6",
-    "typeRoots": ["./node_modules/@types"]
+    "types": ["node"]
   }
 }

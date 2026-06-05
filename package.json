@@ -43,6 +43,7 @@
     "nohoist": []
   },
   "devDependencies": {
+    "@types/glob": "^9.0.0",
     "fs-extra": "^11.1.1",
     "husky": "^2.3.0",
     "lint-staged": "^8.1.7",
@@ -67,5 +68,6 @@
       "prettier --write",
       "git add"
     ]
-  }
+  },
+  "dependencies": {}
 }

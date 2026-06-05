@@ -9,8 +9,8 @@ WORKDIR /usr/src/app/packages/cms
 CMD [ "yarn", "run", "start" ]
 
 # Production stage
-FROM --platform=linux/amd64 node:16.13.1 as production
-# FROM node:16.13.1 as production
+FROM --platform=linux/amd64 node:20.16.0 as production
+# FROM node:20.16.0 as production
 
 ENV NODE_ENV=production
 WORKDIR /usr/src/app
