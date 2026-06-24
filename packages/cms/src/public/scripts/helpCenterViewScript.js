@@ -563,7 +563,6 @@ $('#helpCenterModal').on('hidden.bs.modal', function () {
     'id',
     'isAvailableNationwide',
     'isActive',
-    'isGlobal',
     'primaryAttribute',
     'serviceKind',
     'title',
