@@ -1,3 +1,6 @@
+const voiceOverBaseUrlElement = document.getElementById('voiceOverBaseUrl')
+const voiceOverBaseUrl = voiceOverBaseUrlElement ? voiceOverBaseUrlElement.textContent.trim() : ''
+
 const initializeVoiceOver = (articles) => {
   const columnItems = JSON.parse(articles).map((article) => {
     const id = article.id
@@ -75,7 +78,7 @@ function renderNoVoiceOver(item) {
 }
 
 function renderHasVoiceOver(item) {
-  const voiceOverUrl = `${window.VOICE_OVER_BASE_URL}${item.data.voiceOverKey}?alt=media`
+  const voiceOverUrl = `${voiceOverBaseUrl}${item.data.voiceOverKey}?alt=media`
 
   const audioElement = document.createElement('audio')
   audioElement.setAttribute('controls', '')

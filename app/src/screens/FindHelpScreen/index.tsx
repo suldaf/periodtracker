@@ -514,6 +514,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff1e8',
   },
   modalTitle: {
+    color: '#000000',
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -531,6 +532,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   emptyResultText: {
+    color: '#1f2937',
     paddingVertical: 24,
     textAlign: 'center',
   },

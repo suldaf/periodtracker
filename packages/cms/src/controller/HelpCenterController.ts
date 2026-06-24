@@ -1,7 +1,10 @@
 import { getRepository } from 'typeorm'
 import { NextFunction, Request, Response } from 'express'
 import { HelpCenter } from '../entity/HelpCenter'
-import { getFormContents } from '../helpers/HelpCenterService'
+import {
+  asHelpCenterLocale,
+  getFormContents,
+} from '../helpers/HelpCenterService'
 import { bulkUpdateRowReorder } from '../helpers/common'
 import { helpCenterData } from '../optional'
 
@@ -10,7 +13,7 @@ export class HelpCenterController {
 
   async all(request: Request, response: Response, next: NextFunction) {
     return this.helpCenterRepository.find({
-      where: { lang: request.user.lang },
+      where: [{ lang: request.user.lang }, { isGlobal: true }],
       order: {
         sortingKey: 'ASC',
       },
@@ -18,17 +21,24 @@ export class HelpCenterController {
   }
 
   async mobileHelpCenterByLanguage(request: Request, response: Response, next: NextFunction) {
+    const lang = Array.isArray(request.params.lang) ? request.params.lang[0] : request.params.lang
     const helpCenters: HelpCenter[] | any = await this.helpCenterRepository.find({
-      where: {
-        lang: request.params.lang,
-        isActive: true,
-      },
+      where: [
+        {
+          lang,
+          isActive: true,
+        },
+        {
+          isGlobal: true,
+          isActive: true,
+        },
+      ],
       order: {
         sortingKey: 'ASC',
       },
     })
 
-    return helpCenters
+    return helpCenters.map((helpCenter) => asHelpCenterLocale(helpCenter, lang))
   }
 
   async one(request: Request, response: Response, next: NextFunction) {
@@ -54,9 +64,7 @@ export class HelpCenterController {
     }
 
     return await this.helpCenterRepository.find({
-      where: {
-        lang: request.params.lang,
-      },
+      where: [{ lang: request.user.lang }, { isGlobal: true }],
       order: {
         sortingKey: 'ASC',
       },

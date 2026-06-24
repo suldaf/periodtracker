@@ -104,7 +104,7 @@ $('#regionDropdown').on('change', (e, params) => {
   }
 })
 
-$('#add-website-btn').on('click', () => {
+$(document).on('click', '#add-website-btn', () => {
   $('#website-input-group').clone().find('input').val('').end().appendTo($('#website-section'))
   if ($('.website-input-group').length > 1) {
     $('.delete-button').removeAttr('style')
@@ -299,6 +299,10 @@ const initializeDataTable = (result) => {
       },
     },
     { data: 'serviceKind' },
+    {
+      data: 'isGlobal',
+      render: (meta) => (meta ? '🌐' : '-'),
+    },
     { data: 'website' },
   ]
   $('#helpCenterTable thead tr').clone(true).addClass('filters').appendTo('#helpCenterTable thead')
@@ -364,7 +368,7 @@ const initializeDataTable = (result) => {
         targets: 0,
       },
       {
-        targets: 10, //column number in array
+        targets: 11, //column number in array
         searchable: false,
         render: (data, type, row) => {
           return `
@@ -384,7 +388,7 @@ const initializeDataTable = (result) => {
         },
       },
       {
-        targets: 11, //column number in array
+        targets: 12, //column number in array
         searchable: false,
         render: (data, type, row) => {
           return `
@@ -481,12 +485,21 @@ const prepareEdit = (id) => {
         if (key === 'region') {
           const regionValue = result[key] === 'ind' ? 'ID' : result[key]
           $(`[name='${key}']`).val(regionValue)
-        } else if (key !== 'website' && key !== 'otherAttributes' && key !== 'primaryAttributeId') {
+        } else if (
+          key !== 'website' &&
+          key !== 'otherAttributes' &&
+          key !== 'primaryAttributeId' &&
+          key !== 'isGlobal'
+        ) {
           $(`[name='${key}']`).val(result[key])
         }
 
         if (key === 'isAvailableNationwide' && result[key]) {
           $('#isAvailableNationwide').attr('checked', true)
+        }
+
+        if (key == 'isGlobal') {
+          $(`[name='isGlobal'][value='${result[key] ? 'true' : 'false'}']`).prop('checked', true)
         }
 
         if (key == 'primaryAttributeId') {
@@ -549,6 +562,9 @@ $('#helpCenterModal').on('hidden.bs.modal', function () {
     'contactTwo',
     'id',
     'isAvailableNationwide',
+    'isActive',
+    'isGlobal',
+    'primaryAttribute',
     'serviceKind',
     'title',
     'otherAttributes',
@@ -556,11 +572,12 @@ $('#helpCenterModal').on('hidden.bs.modal', function () {
 
   keys.forEach((key) => {
     $(`[name='${key}']`).val('')
-    if (key === 'otherAttributes') {
-      $('#other-attributes-container').html('')
-      prepareAttributes()
-    }
   })
+  $('#isAvailableNationwide').prop('checked', false)
+  $('#isActive').prop('checked', false)
+  $(`[name='isGlobal'][value='false']`).prop('checked', true)
+  prepareAttributes()
+
   const fixedRegionCode = 'ID'
   $('#regionDropdown').val(fixedRegionCode)
   if (selectedSubRegions && selectedSubRegions.length > 0) {
@@ -568,7 +585,6 @@ $('#helpCenterModal').on('hidden.bs.modal', function () {
   } else {
     $('#regionDropdown').trigger('change')
   }
-  $(`[name='primaryAttrubute']`).val(0)
   $('.website-root').html(`
     <div id="website-section">
       <label for="website" class="form-label">Website</label>
@@ -592,6 +608,13 @@ const prepareAttributes = () => {
 
   const primaryAttributeDropdown = $('#primary-attribute-select')
   const otherAttributesContainer = $('#other-attributes-container')
+  primaryAttributeDropdown.find('option:not([value=""])').remove()
+  otherAttributesContainer.html(`
+    <div class="col-md-12">
+      <label class="form-label">Other attributes</label>
+    </div>
+  `)
+
   $.each(attributes, (key, attribute) => {
     primaryAttributeDropdown.append(
       $('<option></option>')

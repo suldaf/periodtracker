@@ -6,6 +6,8 @@ Before deploying, make sure to run the tests and fix any issues. Read more about
 
 There are several ways to create release builds, the recommended way is with eas, these builds can be created locally or via eas servers, building online is free within certain usage limits, however building locally is always free
 
+If Google Play Console reports an Android 16 KB page size issue, follow the runbook here: [Mengatasi Android 16 KB Page Size Issue](./android_16kb_page_size.md).
+
 This command has the `--local` tag meaning that the build is created locally on your machine, not on eas servers.
 
 ```bash

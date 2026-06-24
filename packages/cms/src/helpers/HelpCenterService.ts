@@ -4,6 +4,13 @@ import { Request } from 'express'
 // import * as fuzz from 'fuzzball'
 // import { HelpCenterAttribute } from '@oky/core'
 
+export const HELP_CENTER_ATTRIBUTE_LANG = 'id'
+
+export const asHelpCenterLocale = (helpCenter: HelpCenter, lang: string | string[]) => ({
+  ...helpCenter,
+  lang: Array.isArray(lang) ? lang[0] : lang,
+})
+
 export const getFormContents = (req: Request, helpCenterPayload?: HelpCenter) => {
   const {
     title,
@@ -16,6 +23,7 @@ export const getFormContents = (req: Request, helpCenterPayload?: HelpCenter) =>
     primaryAttribute,
     otherAttributes,
     isActive,
+    isGlobal,
     region,
     subRegion,
     serviceKind,
@@ -40,6 +48,7 @@ export const getFormContents = (req: Request, helpCenterPayload?: HelpCenter) =>
     helpCenterPayload.primaryAttributeId = primaryAttribute
     helpCenterPayload.otherAttributes = otherAttributes
     helpCenterPayload.isActive = isActive === 'true' ? true : false
+    helpCenterPayload.isGlobal = isGlobal === 'true' ? true : false
     helpCenterPayload.website = website
     helpCenterPayload.serviceKind = serviceKind
 
@@ -57,6 +66,7 @@ export const getFormContents = (req: Request, helpCenterPayload?: HelpCenter) =>
     primaryAttributeId: Number(primaryAttribute),
     otherAttributes,
     isActive: isActive ? true : false,
+    isGlobal: isGlobal === 'true' ? true : false,
     lang: req.user.lang,
     region,
     subRegion,

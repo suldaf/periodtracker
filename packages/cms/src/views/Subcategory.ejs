@@ -50,11 +50,8 @@
   <span id="articlesJSON" hidden><%= JSON.stringify(articles); %> </span>
   <span id="categoriesJSON" hidden><%= JSON.stringify(categories); %> </span>
   <span id="subcategoriesJSON" hidden><%= JSON.stringify(subcategories); %> </span>
+  <span id="voiceOverBaseUrl" hidden><%= VOICE_OVER_BASE_URL %></span>
   <script type="application/javascript" src="/scripts/voiceOvers.js"></script>
-  <!-- VOICE OVER SETUP -->
-  <script>
-    window.VOICE_OVER_BASE_URL = "<%= VOICE_OVER_BASE_URL %>"
-  </script>
   <script type="application/javascript" src="/scripts/subcategoryViewScript.js"></script>
 </div>
 <%- include('partials/Footer') %>

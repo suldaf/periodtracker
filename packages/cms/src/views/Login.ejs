@@ -9,7 +9,7 @@
       <input type="text" name="username" required value=""/>
       <div class="row">
         <h5>Password</h5>
-        <i id="pass-status" class="fas fa-eye-slash" aria-hidden="true" onClick="viewPassword()"></i>
+        <i id="pass-status" class="fas fa-eye-slash" aria-hidden="true"></i>
       </div>
       <input id="password-field" type="password" name="password" pattern=".{5,10}" required value=""/>
       <button type="submit">login</button>
@@ -22,21 +22,5 @@
   </div>
 </div>
 <div class="bottom-bar"></div>
-<script>
-  function viewPassword()
-    {
-      var passwordInput = document.getElementById('password-field');
-      var passStatus = document.getElementById('pass-status');
-    
-      if (passwordInput.type == 'password'){
-        passwordInput.type='text';
-        passStatus.className='fa fa-eye';
-      }
-      else{
-        passwordInput.type='password';
-        passStatus.className='fa fa-eye-slash';
-      }
-    }
-</script>
+<script type="application/javascript" src="/scripts/loginScript.js"></script>
 <%- include('partials/Footer') %>
-

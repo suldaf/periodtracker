@@ -1,12 +1,13 @@
 import { getRepository } from 'typeorm'
 import { NextFunction, Request, Response } from 'express'
 import { HelpCenterAttribute } from '../entity/HelpCenterAttribute'
+import { HELP_CENTER_ATTRIBUTE_LANG } from '../helpers/HelpCenterService'
 
 export class HelpCenterAttributeController {
   private helpCenterAttributeRepository = getRepository(HelpCenterAttribute)
 
   async mobileHelpCenterAttributes(request: Request, response: Response, next: NextFunction) {
-    return this.helpCenterAttributeRepository.find({ where: { lang: request.params.lang } })
+    return this.helpCenterAttributeRepository.find({ where: { lang: HELP_CENTER_ATTRIBUTE_LANG } })
   }
 
   async all(request: Request, response: Response, next: NextFunction) {

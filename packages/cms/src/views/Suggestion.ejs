@@ -6,7 +6,13 @@
   <div class="mainContentContainer">
     <div class="homeTopTextContainer mb-2">
       <h2><%= __('User messages')%></h2>
-      <form method="GET" id="filter_form" class="pr-3">
+      <form
+        method="GET"
+        id="filter_form"
+        class="pr-3"
+        data-current-order-key="<%= orderKey %>"
+        data-current-order-sequence="<%= orderSequence %>"
+      >
           <div class="form-group float-right mr-3">
             <select class="form-control" id="reason_filter" name="reason">
               <option value="">All</option>
@@ -73,57 +79,6 @@
       </table>
     </div>
   </div>
-  <script>
-    $('#reason_filter').on('change', function () {
-      $('#filter_form').submit()
-    })
-    $('.js-set-order').on('click', function (e) {
-      e.preventDefault();
-      var chosenOrderKey = $(this).attr('data-order_key');
-      var currentOrderKey = '<%=orderKey%>';
-      var currentOrderSequence = '<%=orderSequence%>';
-      $('#order_key').val(chosenOrderKey);
-      var chosenOrderSequence = chosenOrderKey === currentOrderKey && currentOrderSequence === 'ASC' ? 'DESC' : 'ASC';
-      $('#order_sequence').val(chosenOrderSequence);
-      $('#filter_form').submit()
-    })
-    $('input[type="radio"]').on('change', function() {
-      var _this = $(this);
-      $.ajax({
-        url: '/toggle-suggestions-status',
-        method: 'POST',
-        data: {
-          id: $(this).attr('data-suggestion_id'),
-          status: $(this).val(),
-        },
-        beforeSend: function () {
-          $('input[type="radio"][name="suggestion_' + _this.attr('data-suggestion_id') + '"]').attr('disabled', 'disabled')
-        },
-        success: function (r) {
-          $('input[type="radio"][name="suggestion_' + _this.attr('data-suggestion_id') + '"]').removeAttr('disabled')
-        }
-      })
-    })
-    $('.deleteSuggestion').on('click', event => {
-      var button = $(event.currentTarget) // currentTarget is the outer
-      var suggestionID = button.data('value') // Extract info from data-* attributes
-      var result = confirm('Are you sure? This will permanently delete the item')
-      if (result) {
-        $.ajax({
-          url: '/suggestions/' + suggestionID,
-          type: 'DELETE',
-          success: result => {
-            location.reload()
-          },
-          error: error => {
-            console.log(error)
-          },
-        })
-      }
-    })
-
-  
-  
-  </script>
+  <script type="application/javascript" src="/scripts/suggestionScript.js"></script>
 </div>
 <%- include('partials/Footer') %>

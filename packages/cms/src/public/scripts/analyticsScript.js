@@ -11,6 +11,14 @@ var usersProvinces = JSON.parse($('#usersProvincesJSON').text())
 var userShares = JSON.parse($('#usersSharesJSON').text())
 var directDownloads = JSON.parse($('#directDownloadsJSON').text())
 
+document.querySelectorAll('.date-picker').forEach((node) => {
+  if (typeof node.datepicker === 'function') {
+    node.datepicker({
+      uiLibrary: 'bootstrap4',
+    })
+  }
+})
+
 $('#currentCountry').change(() => {
   dashBarChart(usersProvinces[$('#currentCountry').val()], 'usersProvincesGraph')
 })

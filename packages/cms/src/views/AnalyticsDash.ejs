@@ -1,6 +1,6 @@
 <%- include('partials/Header') %>
 <%- include('modals/GraphModal') %>
-<script src="//www.amcharts.com/lib/4/themes/material.js"></script>
+<script src="https://cdn.amcharts.com/lib/4/themes/material.js"></script>
 
 
 <div class="homePageContainer">
@@ -97,7 +97,9 @@
         <div style="height: 310px;" class="row">
             <div class="col-lg-12">
                 <div class="panel panel-primary">
-                  <div class="panel-heading"><%= __('User Countries')%></div>
+                  <div class="panel-heading" style="display: flex; flex-direction: row; align-items: center; justify-content: center;"><%= __('User Countries')%>
+                    
+                  </div>
                     <div class="panel-body">
                         <div class="graphContainer" id="userCountriesGraph" ></div>
                         <a href="#" class="fill-div"         
@@ -112,13 +114,12 @@
         <div style="height: 310px;" class="row">
             <div class="col-lg-12">
                 <div class="panel panel-primary">
-                  <div class="panel-heading" style="display: flex; flex-direction: row; align-items: center; justify-content: center;"><%= __('User Provinces')%>
-                    <select class="custom-select" id="currentCountry">
+                  <div class="panel-heading"><%= __('User Provinces')%> <select class="custom-select" id="currentCountry">
                       <% Object.keys(usersCountries).sort().forEach((item, index) =>{ %>
                       <option value="<%= item %>"><%= item %></option>
                       <% }) %>
-                    </select>
-                  </div>
+                    </select></div>
+                    
                     <div class="panel-body">
                         <div class="graphContainer" id="usersProvincesGraph" ></div>
                         <a href="#" class="fill-div"         
@@ -130,6 +131,7 @@
                 </div>
               </div>
         </div>
+        
         <div style="height: 310px;" class="row">
             <div class="col-lg-12">
                 <div class="panel panel-primary">
@@ -153,13 +155,6 @@
     </div>
   </div>
 </div>
-<script>
-  document.querySelectorAll('.datepicker').forEach(node => {
-    node.datepicker({
-        uiLibrary: 'bootstrap4'
-    })
-  })
-</script>
 <span id="userLocationsJSON" hidden>
     <%= JSON.stringify(usersLocations); %>
 </span>

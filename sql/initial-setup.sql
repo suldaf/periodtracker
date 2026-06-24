@@ -331,6 +331,7 @@ ADD "isAvailableNationwide" boolean DEFAULT true,
 ADD "primaryAttributeId" integer DEFAULT NULL,
 ADD "otherAttributes" text DEFAULT NULL,
 ADD "isActive" boolean DEFAULT false,
+ADD "isGlobal" boolean DEFAULT false,
 ADD "sortingKey" integer DEFAULT nextval('periodtracker.help_center_sorting_key') NOT NULL;
 
 CREATE SEQUENCE periodtracker.help_center_attribute_id_seq INCREMENT 1 MINVALUE 1 MAXVALUE 9223372036854775806 START 1 CACHE 1;

@@ -28,6 +28,7 @@ import {
 } from '@oky/core'
 // import { EncyclopediaResponse, EncyclopediaResponseItem } from '@oky/core/src/api/types'
 import { env } from '../env'
+import { asHelpCenterLocale } from '../helpers/HelpCenterService'
 
 export class DataController {
   private articleRepository = getRepository(Article)
@@ -88,10 +89,12 @@ export class DataController {
 
     // ========== Help ========== //
     const helpCentersRaw = await this.helpCenterRepository.find({
-      where: { lang: request.user.lang },
+      where: [{ lang: request.user.lang }, { isGlobal: true }],
     })
 
-    const { helpCenters } = fromHelpCenters(helpCentersRaw)
+    const { helpCenters } = fromHelpCenters(
+      helpCentersRaw.map((helpCenter) => asHelpCenterLocale(helpCenter, request.user.lang)),
+    )
 
     // ========== Avatars ========== //
     const avatarMessagesRaw = await this.avatarMessagesRepository.find({

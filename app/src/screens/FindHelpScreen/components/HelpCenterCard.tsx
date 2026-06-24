@@ -11,7 +11,6 @@ import { useSelector } from '../../../redux/useSelector'
 import { currentUserSelector, helpCenterAttributesSelector } from '../../../redux/selectors'
 import { analytics } from '../../../services/firebase'
 import { useAuth } from '../../../contexts/AuthContext'
-import { useColor } from '../../../hooks/useColor'
 
 export const HelpCenterCard = ({
   helpCenter,
@@ -28,7 +27,6 @@ export const HelpCenterCard = ({
   const user = useSelector(currentUserSelector)
   const { isLoggedIn } = useAuth()
   const hasAccess = user && isLoggedIn
-  const { backgroundColor } = useColor()
 
   const onPress = () => {
     toggleExpanded()
@@ -81,7 +79,7 @@ export const HelpCenterCard = ({
   return (
     <TouchableOpacity
       onPress={onPress}
-      style={[styles.helpCenterCard, globalStyles.shadow, { backgroundColor }]}
+      style={[styles.helpCenterCard, globalStyles.shadow]}
     >
       {serviceKindLabel && (
         <View style={[styles.serviceKindTag, { backgroundColor: serviceKindBackground }]}>
@@ -158,6 +156,7 @@ const defaultEmoji = '😊'
 
 const styles = StyleSheet.create({
   helpCenterCard: {
+    backgroundColor: '#ffffff',
     borderRadius: 20,
     width: '100%',
     marginVertical: 8,
@@ -191,17 +190,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   text: {
+    color: '#1f2937',
     marginBottom: 8,
   },
   title: {
+    color: '#000000',
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 8,
   },
   subtitle: {
+    color: '#000000',
     fontWeight: 'bold',
   },
   caption: {
+    color: '#1f2937',
     marginBottom: 8,
   },
   emoji: {

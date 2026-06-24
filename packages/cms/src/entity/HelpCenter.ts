@@ -32,6 +32,9 @@ export class HelpCenter {
   @Column()
   lang: string
 
+  @Column({ default: false })
+  isGlobal: boolean
+
   @Column()
   isAvailableNationwide: boolean
 

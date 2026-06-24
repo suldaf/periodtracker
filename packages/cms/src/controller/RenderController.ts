@@ -27,6 +27,7 @@ import { HelpCenterAttribute } from '../entity/HelpCenterAttribute'
 import { contentFilterOptions, ageRestrictionOptions } from '../optional'
 import { AgeCategory } from '../entity/AgeCategory'
 import { OkyUser } from '../entity/OkyUser'
+import { HELP_CENTER_ATTRIBUTE_LANG } from '../helpers/HelpCenterService'
 // import { getStorage } from 'firebase-admin/storage'
 
 export class RenderController {
@@ -160,10 +161,10 @@ export class RenderController {
 
   async renderHelpCenter(request: Request, response: Response, next: NextFunction) {
     const helpCenters = await this.helpCenterRepository.find({
-      where: { lang: request.user.lang },
+      where: [{ lang: request.user.lang }, { isGlobal: true }],
     })
     const helpCenterAttributes = await this.helpCenterAttributeRepository.find({
-      where: { lang: request.user.lang, isActive: true },
+      where: { lang: HELP_CENTER_ATTRIBUTE_LANG, isActive: true },
     })
 
     this.render(response, 'HelpCenter', {
