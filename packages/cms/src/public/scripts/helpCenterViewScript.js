@@ -299,10 +299,7 @@ const initializeDataTable = (result) => {
       },
     },
     { data: 'serviceKind' },
-    {
-      data: 'isGlobal',
-      render: (meta) => (meta ? '🌐' : '-'),
-    },
+    { data: 'isGlobal' },
     { data: 'website' },
   ]
   $('#helpCenterTable thead tr').clone(true).addClass('filters').appendTo('#helpCenterTable thead')
@@ -366,6 +363,18 @@ const initializeDataTable = (result) => {
         sortable: false,
         className: 'reorder',
         targets: 0,
+      },
+      {
+        targets: 9, //column number in array
+        searchable: false,
+        render: (data, type, row) => {
+          return `
+          <label class="switch">
+            <input data-help-center-id="${row.id}" data-is-global="${row.isGlobal}" class='js-toggle-help-center-global' type="checkbox" ${row.isGlobal ? 'checked' : ''}/>
+            <span class="slider round"></span>
+          </label>
+        `
+        },
       },
       {
         targets: 11, //column number in array
@@ -455,6 +464,24 @@ const toggleLive = (id, isActive) => {
   })
 }
 
+const toggleGlobal = (id, isGlobal) => {
+  $.ajax({
+    url: `/help-center/${id}`,
+    type: 'PUT',
+    data: {
+      isGlobal: isGlobal ? false : true,
+      toggleOnly: 1,
+      toggleField: 'isGlobal',
+    },
+    success: (result) => {
+      location.reload()
+    },
+    error: (error) => {
+      console.log(error)
+    },
+  })
+}
+
 const deleteHelpCenter = (id) => {
   //temp
   const isDelete = window.confirm('Are you sure?')
@@ -499,7 +526,7 @@ const prepareEdit = (id) => {
         }
 
         if (key == 'isGlobal') {
-          $(`[name='isGlobal'][value='${result[key] ? 'true' : 'false'}']`).prop('checked', true)
+          $('#isGlobal').prop('checked', !!result[key])
         }
 
         if (key == 'primaryAttributeId') {
@@ -574,7 +601,7 @@ $('#helpCenterModal').on('hidden.bs.modal', function () {
   })
   $('#isAvailableNationwide').prop('checked', false)
   $('#isActive').prop('checked', false)
-  $(`[name='isGlobal'][value='false']`).prop('checked', true)
+  $('#isGlobal').prop('checked', false)
   prepareAttributes()
 
   const fixedRegionCode = 'ID'
@@ -667,6 +694,10 @@ $(document).on('click', '.js-delete-help-center', function () {
 
 $(document).on('change', '.js-toggle-help-center-live', function () {
   toggleLive($(this).data('help-center-id'), $(this).data('is-active'))
+})
+
+$(document).on('change', '.js-toggle-help-center-global', function () {
+  toggleGlobal($(this).data('help-center-id'), $(this).data('is-global'))
 })
 
 $(document).on('click', '.js-delete-website', function () {

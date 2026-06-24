@@ -42,7 +42,7 @@ export class ArticleController {
       INNER JOIN ${env.db.schema}.subcategory sc  
       ON ar.subcategory = sc.id::varchar
       LEFT JOIN ${env.db.schema}.age_category ag
-      ON ar."ageCategoryId" = ag.id::uuid AND ag.lang = ar.lang
+      ON ar."ageCategoryId" = ag.id::uuid
       WHERE ar.lang = $1
       AND ar.live = true
       ORDER BY ca."sortingKey" ASC, sc."sortingKey" ASC, ar."sortingKey" ASC

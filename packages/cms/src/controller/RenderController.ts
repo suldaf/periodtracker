@@ -271,7 +271,7 @@ export class RenderController {
       where: { lang: request.user.lang },
     })
     const ageCategories = await this.ageCategoryRepository.find({
-      where: { lang: request.user.lang },
+      where: [{ lang: request.user.lang }, { isGlobal: true }],
       order: { sortingKey: 'ASC' },
     })
     this.render(response, 'Encyclopedia', {
@@ -354,7 +354,7 @@ export class RenderController {
       order: { sortingKey: 'ASC' },
     })
     const ageCategories = await this.ageCategoryRepository.find({
-      where: { lang: request.user.lang },
+      where: [{ lang: request.user.lang }, { isGlobal: true }],
       order: { sortingKey: 'ASC' },
     })
 
@@ -521,7 +521,7 @@ export class RenderController {
 
   async renderAgeCategoriesManagement(request: Request, response: Response, next: NextFunction) {
     const ageCategories = await this.ageCategoryRepository.find({
-      where: { lang: request.user.lang },
+      where: [{ lang: request.user.lang }, { isGlobal: true }],
       order: { sortingKey: 'ASC' },
     })
 

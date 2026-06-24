@@ -15,12 +15,13 @@ export class VideoController {
 
     return this.videoRepository
       .createQueryBuilder('v')
-      .leftJoin('v.ageCategory', 'ag', 'ag.lang = v.lang')
+      .leftJoin('v.ageCategory', 'ag')
       .select([
         'v.id as id',
         'v.title as title',
         'v."youtubeId" as "youtubeId"',
         'v."assetName" as "assetName"',
+        'v.date_created as date_created',
         'v.live as live',
         'v."sortingKey" as "sortingKey"',
         'v.lang as lang',
@@ -31,7 +32,7 @@ export class VideoController {
       ])
       .where('(v.lang = :lang OR v."isGlobal" = true)', { lang })
       .andWhere('v.live = true')
-      .orderBy('v."sortingKey"', 'ASC')
+      .orderBy('v.date_created', 'DESC')
       .getRawMany()
   }
 

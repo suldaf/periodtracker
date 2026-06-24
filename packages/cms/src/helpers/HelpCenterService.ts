@@ -31,6 +31,11 @@ export const getFormContents = (req: Request, helpCenterPayload?: HelpCenter) =>
 
   if (helpCenterPayload) {
     if (Number(req.body.toggleOnly) > 0) {
+      if (req.body.toggleField === 'isGlobal') {
+        helpCenterPayload.isGlobal = isGlobal === 'true' ? true : false
+        return helpCenterPayload
+      }
+
       helpCenterPayload.isActive = isActive === 'true' ? true : false
 
       return helpCenterPayload

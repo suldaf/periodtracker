@@ -8,9 +8,7 @@ export class AgeCategoryController {
 
   async all(request: Request, response: Response, next: NextFunction) {
     return this.ageCategoryRepository.find({
-      where: {
-        lang: request.user.lang,
-      },
+      where: [{ lang: request.user.lang }, { isGlobal: true }],
       order: {
         sortingKey: 'ASC',
       },
@@ -23,8 +21,16 @@ export class AgeCategoryController {
 
   async save(request: Request, response: Response, next: NextFunction) {
     const ageCategory = await this.ageCategoryRepository.findOne({
-      name: request.body.name,
-      lang: request.user.lang,
+      where: [
+        {
+          name: request.body.name,
+          lang: request.user.lang,
+        },
+        {
+          name: request.body.name,
+          isGlobal: true,
+        },
+      ],
     })
     if (ageCategory) {
       return { ageCategory, isExist: true }
@@ -32,6 +38,7 @@ export class AgeCategoryController {
     const ageCategoryToSave = request.body
     ageCategoryToSave.minAge = request.body.minAge ? Number(request.body.minAge) : null
     ageCategoryToSave.maxAge = request.body.maxAge ? Number(request.body.maxAge) : null
+    ageCategoryToSave.isGlobal = request.body.isGlobal === 'true'
     ageCategoryToSave.lang = request.user.lang
     ageCategoryToSave.id = uuid()
     await this.ageCategoryRepository.save(ageCategoryToSave)
@@ -39,17 +46,34 @@ export class AgeCategoryController {
   }
 
   async update(request: Request, response: Response, next: NextFunction) {
+    const ageCategoryToUpdate = await this.ageCategoryRepository.findOne(request.params.id as unknown as number)
+
+    if (Number(request.body.toggleOnly) > 0) {
+      ageCategoryToUpdate.isGlobal = request.body.isGlobal === 'true'
+      await this.ageCategoryRepository.save(ageCategoryToUpdate)
+      return ageCategoryToUpdate
+    }
+
     const ageCategory = await this.ageCategoryRepository.findOne({
-      name: request.body.name,
-      lang: request.user.lang,
+      where: [
+        {
+          name: request.body.name,
+          lang: request.user.lang,
+        },
+        {
+          name: request.body.name,
+          isGlobal: true,
+        },
+      ],
     })
     if (ageCategory && request.params.id !== ageCategory.id) {
       return { ageCategory, isExist: true }
     }
-    const ageCategoryToUpdate = await this.ageCategoryRepository.findOne(request.params.id as unknown as number)
+
     ageCategoryToUpdate.name = request.body.name
     ageCategoryToUpdate.minAge = request.body.minAge ? Number(request.body.minAge) : null
     ageCategoryToUpdate.maxAge = request.body.maxAge ? Number(request.body.maxAge) : null
+    ageCategoryToUpdate.isGlobal = request.body.isGlobal === 'true'
     ageCategoryToUpdate.lang = request.user.lang
     await this.ageCategoryRepository.save(ageCategoryToUpdate)
     return ageCategoryToUpdate

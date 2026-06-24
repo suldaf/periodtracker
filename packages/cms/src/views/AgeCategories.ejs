@@ -26,6 +26,7 @@
             <th style="width: 60%"><%= __('Name')%></th>
             <th style="width: 15%"><%= __('Min Age')%></th>
             <th style="width: 15%"><%= __('Max Age')%></th>
+            <th style="width: 5%"><%= __('Global')%></th>
             <th style="width: 5%"><%= __('Edit')%></th>
             <th style="width: 5%"><%= __('Delete')%></th>
           </tr>
@@ -36,6 +37,12 @@
           <td><%= ageCategory.name %></td>
           <td><%= ageCategory.minAge || '-' %></td>
           <td><%= ageCategory.maxAge || '-' %></td>
+          <td>
+            <label class="switch">
+              <input data-age-category-id="<%= ageCategory.id %>" data-is-global="<%= ageCategory.isGlobal %>" class="js-toggle-age-category-global" type="checkbox" <%= ageCategory.isGlobal ? 'checked' : '' %>/>
+              <span class="slider round"></span>
+            </label>
+          </td>
           <td>
             <button
               type="button"

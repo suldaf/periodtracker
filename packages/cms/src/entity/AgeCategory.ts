@@ -20,6 +20,9 @@ export class AgeCategory {
   @Column()
   lang: string
 
+  @Column({ default: false })
+  isGlobal: boolean
+
   @OneToMany(() => Article, (article) => article.ageCategory)
   articles?: Article[]
 

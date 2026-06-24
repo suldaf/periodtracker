@@ -9,6 +9,7 @@ $('#ageCategoryModal').on('show.bs.modal', (event) => {
     $('#colAgeCategory0TableModal').val('')
     $('#colAgeCategory1TableModal').val('')
     $('#colAgeCategory2TableModal').val('')
+    $('#colAgeCategory3TableModal').prop('checked', false)
     $('#itemID').text(0)
     return
   }
@@ -22,6 +23,7 @@ $('#ageCategoryModal').on('show.bs.modal', (event) => {
   $('#colAgeCategory0TableModal').val(ageCategoryInfo.name)
   $('#colAgeCategory1TableModal').val(ageCategoryInfo.minAge || '')
   $('#colAgeCategory2TableModal').val(ageCategoryInfo.maxAge || '')
+  $('#colAgeCategory3TableModal').prop('checked', !!ageCategoryInfo.isGlobal)
   $('#itemID').text(ageCategoryId)
 })
 
@@ -32,6 +34,7 @@ $('#btnAgeCategoryConfirm').on('click', () => {
     name: $('#colAgeCategory0TableModal').val(),
     minAge: Number($('#colAgeCategory1TableModal').val()) || null,
     maxAge: Number($('#colAgeCategory2TableModal').val()) || null,
+    isGlobal: $('#colAgeCategory3TableModal').prop('checked'),
   }
 
   if (data.name === '') {
@@ -54,6 +57,27 @@ $('#btnAgeCategoryConfirm').on('click', () => {
       console.log(error)
     },
   })
+})
+
+const toggleAgeCategoryGlobal = (id, isGlobal) => {
+  $.ajax({
+    url: '/age-categories/' + id,
+    type: 'PUT',
+    data: {
+      isGlobal: isGlobal ? false : true,
+      toggleOnly: 1,
+    },
+    success: () => {
+      location.reload()
+    },
+    error: (error) => {
+      console.log(error)
+    },
+  })
+}
+
+$(document).on('change', '.js-toggle-age-category-global', function () {
+  toggleAgeCategoryGlobal($(this).data('age-category-id'), $(this).data('is-global'))
 })
 
 // ==================== Deletion =============================
