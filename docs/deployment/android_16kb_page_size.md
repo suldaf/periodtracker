@@ -18,16 +18,17 @@ Masalah ini biasanya terlihat saat upload `.aab` atau `.apk` ke Google Play Cons
 
 Project ini adalah aplikasi Expo/React Native dan membawa beberapa dependency native. Karena itu, meskipun kode aplikasi sebagian besar TypeScript, artifact Android tetap berisi native library.
 
-Dependency penting yang sudah digunakan saat dokumentasi ini dibuat:
+Dependency penting pada build yang sudah diverifikasi:
 
-- `expo` `^53.0.0`
-- `react-native` `0.79.6`
+- `expo` `~54.0.37`
+- `react-native` `0.81.5`
 - `@react-native-firebase/*` `^24.0.0`
-- `react-native-reanimated` `~3.17.4`
-- `react-native-screens` `~4.11.1`
-- `@shopify/react-native-skia` `2.0.0-next.4`
+- `react-native-reanimated` `~4.1.1`
+- `react-native-worklets` `0.5.1`
+- `react-native-screens` `~4.16.0`
+- `@shopify/react-native-skia` `2.2.12`
 
-Solusi yang dipakai adalah menaikkan stack Android ke versi yang lebih baru, hardcode Android NDK 28+ untuk native library Skia, lalu membuat ulang native Android build secara lokal.
+Solusi yang dipakai adalah Expo SDK 54/React Native 0.81, Android API 36, Android Gradle Plugin 8.11, Gradle 8.14.3, dan Android NDK 28. Build release kemudian diverifikasi dari AAB, bukan hanya dari nilai konfigurasi.
 
 ## Langkah Perbaikan
 
@@ -39,14 +40,16 @@ Masuk ke folder app:
 cd app
 ```
 
-Pastikan versi utama di `app/package.json` sudah menggunakan stack yang mendukung Android 15 dan 16 KB page size:
+Pastikan versi utama di `app/package.json` menggunakan stack API 36 dan 16 KB berikut:
 
 ```json
-"expo": "^53.0.0",
-"react-native": "0.79.6"
+"expo": "~54.0.37",
+"react-native": "0.81.5",
+"react-native-reanimated": "~4.1.1",
+"react-native-worklets": "0.5.1"
 ```
 
-Jika dependency native lain masih lama, upgrade dengan versi yang kompatibel dengan Expo SDK 53:
+Periksa kompatibilitas dependency terhadap Expo SDK 54:
 
 ```bash
 npx expo install --check
@@ -88,7 +91,7 @@ Gunakan `--clean` agar folder Android lama tidak menyimpan konfigurasi native da
 
 ### 4. Hardcode Android NDK 28+ di Expo config dan Gradle
 
-Untuk issue ini, build dilakukan secara lokal karena EAS server build belum bisa memakai NDK 28+ sesuai kebutuhan native library Skia.
+Konfigurasi Expo dan native lokal sama-sama mengunci NDK 28 agar hasil prebuild EAS dan validasi lokal konsisten.
 
 Pertama, pastikan `app/src/resources/app.json` memakai `expo-build-properties` dan mengunci versi NDK ke 28+. Ini berguna untuk konfigurasi Expo/prebuild, tetapi belum cukup untuk native Android local build:
 
@@ -97,9 +100,9 @@ Pertama, pastikan `app/src/resources/app.json` memakai `expo-build-properties` d
   "expo-build-properties",
   {
     "android": {
-      "compileSdkVersion": 35,
-      "targetSdkVersion": 35,
-      "buildToolsVersion": "35.0.0",
+      "compileSdkVersion": 36,
+      "targetSdkVersion": 36,
+      "buildToolsVersion": "36.0.0",
       "ndkVersion": "28.0.12433566"
     }
   }
@@ -143,7 +146,7 @@ $ANDROID_HOME/ndk/<ndk-version>
 
 ### 5. Build ulang release artifact dari native Android
 
-Build dilakukan langsung dari native Android/Gradle agar proses memakai Android SDK dan NDK dari machine lokal. Jangan memakai EAS server build untuk kasus ini karena environment-nya belum bisa memakai NDK 28+ sesuai kebutuhan Skia.
+Build validasi dilakukan langsung dari native Android/Gradle agar versi SDK, NDK, manifest, dan alignment bisa diperiksa sebelum mengirim build EAS/Play Store.
 
 ```bash
 cd app
@@ -184,7 +187,28 @@ app/android/app/build/outputs/apk/release/app-release.apk
 
 ### 6. Verifikasi native library
 
-Cara termudah adalah upload ulang `.aab` ke Play Console dan pastikan warning 16 KB page size sudah hilang.
+Validasi lokal untuk build API 36 saat ini harus menghasilkan:
+
+- `compileSdkVersion` dan `targetSdkVersion` 36.
+- `versionCode` lebih tinggi daripada versi terakhir di Play Console.
+- Bundle config `PAGE_ALIGNMENT_16K`.
+- Tidak ada library `arm64-v8a` atau `x86_64` yang `UNALIGNED`.
+- Tidak ada permission storage lama, `RECORD_AUDIO`, atau `SYSTEM_ALERT_WINDOW` pada manifest release.
+
+Periksa bundle config dengan:
+
+```bash
+bundletool validate --bundle=app-release.aab
+bundletool dump config --bundle=app-release.aab
+```
+
+Periksa manifest hasil bundle dengan:
+
+```bash
+bundletool dump manifest --bundle=app-release.aab --module=base
+```
+
+Setelah verifikasi lokal, upload `.aab` ke internal testing Play Console dan pastikan warning 16 KB page size sudah hilang.
 
 Untuk verifikasi lokal, gunakan APK Analyzer di Android Studio:
 
@@ -223,5 +247,14 @@ Jika package belum punya versi yang mendukung 16 KB page size, opsinya adalah me
 - Jangan hanya menaikkan `targetSdkVersion`. Masalah ini ada di native library alignment, jadi artifact harus benar-benar dibuild ulang dengan dependency dan toolchain yang kompatibel.
 - Jangan hanya mengubah `expo-build-properties`. Untuk native Android local build, `ndkVersion` harus ada juga di Gradle native Android.
 - Jangan submit artifact lama setelah dependency diubah. Build ulang `.aab` dari awal.
-- Untuk kasus Skia dan NDK 28+, gunakan native Android local build sampai EAS server build menyediakan environment NDK 28+ yang sesuai.
 - Simpan artifact build yang lolos Play Console sebagai referensi jika perlu rollback.
+
+## Checklist Internal Testing Android 16
+
+- Install build pada Android 16/API 36 dan minimal satu device Android lama yang masih didukung (API 24+).
+- Cek launch/splash, login/daftar, kalender utama, pencatatan siklus, navigasi, deep link, notifikasi, Firebase Analytics/Crashlytics, dan pemutaran audio.
+- Cek seluruh layar penting dalam portrait dan landscape untuk overlap status/navigation bar setelah edge-to-edge aktif.
+- Cek tombol dan gesture back pada root screen, nested screen, modal, serta WebView.
+- Cek update dari versi production sebelumnya tanpa menghapus data aplikasi.
+- Pastikan `versionCode` build yang di-upload lebih besar daripada versi tertinggi di Play Console.
+- Pastikan Pre-launch report dan warning policy Play Console bersih sebelum mempromosikan build ke production.

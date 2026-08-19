@@ -13,7 +13,9 @@ const esModules = [
   '@expo/vector-icons',
   'expo-asset',
   'expo-linking',
+  'react-native-gesture-handler',
   'react-native-reanimated',
+  'react-native-worklets',
   'react-native-calendars',
   'expo-constants',
 ].join('|')

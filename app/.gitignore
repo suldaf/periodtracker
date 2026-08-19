@@ -3,9 +3,11 @@ node_modules
 .expo
 .expo-shared
 .env
+.env*.local
 eas.json
 android
 ios
 certs/
 *.keystore
+*.jks
 *.p12
